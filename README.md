@@ -27,11 +27,11 @@ LOG_LEVEL=ERROR
 
 CONFIG_DIR=/path/to/isimip-publisher-config
 
-TMP_DIR=/path/to/tmp/%(simulation_run)s/%(sector)s/%(model)s
-PUB_DIR=/path/to/pub/%(simulation_run)s/%(sector)s/%(model)s
+TMP_DIR=/path/to/tmp/%(simulation_round)s/%(sector)s/%(model)s
+PUB_DIR=/path/to/pub/%(simulation_round)s/%(sector)s/%(model)s
 
 REMOTE_DEST=user@example.com
-REMOTE_DIR=/path/to/data/%(simulation_run)s/OutputData/%(sector)s/%(model)s
+REMOTE_DIR=/path/to/data/%(simulation_round)s/OutputData/%(sector)s/%(model)s
 ```
 
 
@@ -40,35 +40,35 @@ Usage
 
 ```bash
 # list remote files
-isimip-publisher <simulation_run> <sector> <model> list_remote
+isimip-publisher <simulation_round> <sector> <model> list_remote
 
 # copy remote files to TMP_DIR
-isimip-publisher <simulation_run> <sector> <model> fetch
+isimip-publisher <simulation_round> <sector> <model> fetch
 
 # list local files
-isimip-publisher <simulation_run> <sector> <model> list_local
+isimip-publisher <simulation_round> <sector> <model> list_local
 
 # validate file pathes
-isimip-publisher <simulation_run> <sector> <model> validate_path
+isimip-publisher <simulation_round> <sector> <model> validate_path
 
 # validate files
-isimip-publisher <simulation_run> <sector> <model> validate
+isimip-publisher <simulation_round> <sector> <model> validate
 
 # update the global attributes accoding to the config
-isimip-publisher <simulation_run> <sector> <model> update
+isimip-publisher <simulation_round> <sector> <model> update
 
 # ingest the metadata from the files into the database
-isimip-publisher <simulation_run> <sector> <model> ingest
+isimip-publisher <simulation_round> <sector> <model> ingest
 
 # copy files from TMP_DIR to PUP_DIR
-isimip-publisher <simulation_run> <sector> <model> publish
+isimip-publisher <simulation_round> <sector> <model> publish
 
 # cleanup the TMP_DIR
-isimip-publisher <simulation_run> <sector> <model> clean
+isimip-publisher <simulation_round> <sector> <model> clean
 ```
 
 For all commands but `list_remote` and `list_local` a list of files *relative* to `REMOTE_DIR` or `TMP_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
-isimip-publisher <simulation_run> <sector> <model> fetch -f /path/to/files.txt
+isimip-publisher <simulation_round> <sector> <model> fetch -f /path/to/files.txt
 ```
