@@ -13,7 +13,7 @@ setup(
     maintainer=metadata['author'],
     maintainer_email=metadata['email'],
     license=metadata['license'],
-    url='https://github.com/ISIMIP/isimip-publisher',
+    url='https://github.com/ISI-MIP/isimip-publisher',
     description=u'',
     long_description=open('README.md').read(),
     install_requires=[
