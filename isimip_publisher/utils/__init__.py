@@ -1,0 +1,20 @@
+import os
+import logging
+
+from collections import OrderedDict
+
+from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
+
+
+def setup_env():
+    load_dotenv()
+
+
+def setup_logging():
+    logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+
+
+def order_dict(unsorted):
+    return OrderedDict([(key, unsorted[key]) for key in sorted(unsorted)])
