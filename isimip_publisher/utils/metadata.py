@@ -10,4 +10,10 @@ def get_metadata(config, identifiers):
     model_metadata = model_config.get('metadata', {}) or {}
     metadata.update(model_metadata)
 
+    # add templated metadata
+    templates = {}
+    for key, template in config['templates'].items():
+        templates[key] = template % metadata
+
+    metadata.update(templates)
     return metadata

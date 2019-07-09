@@ -53,6 +53,10 @@ def parse_config(args):
             logger.error('%s does not exist', config_file)
             sys.exit()
 
+    # check model
+    assert config['model'].lower() in config['models'], \
+        'Model %(model)s is not configured for %(simulation_round)s %(sector)s' % config
+
     logger.debug(config)
     return config
 

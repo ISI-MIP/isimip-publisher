@@ -2,8 +2,7 @@ import os
 import re
 
 from isimip_publisher.utils.netcdf import (
-    get_netcdf_variables,
-    get_netcdf_global_attributes
+    get_netcdf_dimensions
 )
 
 
@@ -34,7 +33,7 @@ def validate_file_path(config, file):
 
     assert filename_groups['model'] in config['models'], \
         'Model mismatch: %s not in %s for %s' % \
-        (filename_groups['model'], config['models'], file)
+        (filename_groups['model'], list(config['models']), file)
 
     dirname_groups.update(filename_groups)
     return dirname_groups
@@ -42,15 +41,11 @@ def validate_file_path(config, file):
 
 def validate_file(config, file):
     identifiers = validate_file_path(config, file)
-    variables = config['variables'] + [str(identifiers['variable'])]
-    netcdf_variables = [str(variable) for variable in get_netcdf_variables(file)]
-    netcdf_global_attributes = get_netcdf_global_attributes(file)
 
-    assert variables == [str(variable) for variable in netcdf_variables], \
-        'Variables do not match (%s != %s)' % (variables, netcdf_variables)
+    netcdf_dimensions = list(get_netcdf_dimensions(file))
 
-    for global_attribute in config['global_attributes']:
-        assert global_attribute in netcdf_global_attributes, \
-            '"%s" not global attributes' % global_attribute
+    assert config['dimensions'] == netcdf_dimensions, \
+        'Dimensions do not match (%s != %s) for %s' % \
+        (config['dimensions'], netcdf_dimensions, file)
 
     return identifiers

@@ -40,22 +40,25 @@ Usage
 
 ```bash
 # list remote files
-isimip-publisher <simulation_round> <sector> <model> list_remote
+isimip-publisher <simulation_round> <sector> <model> list --remote
 
 # copy remote files to TMP_DIR
-isimip-publisher <simulation_round> <sector> <model> fetch
+isimip-publisher <simulation_round> <sector> <model> copy
 
 # list local files
-isimip-publisher <simulation_round> <sector> <model> list_local
-
-# validate file pathes
-isimip-publisher <simulation_round> <sector> <model> validate_path
+isimip-publisher <simulation_round> <sector> <model> list
 
 # validate files
 isimip-publisher <simulation_round> <sector> <model> validate
 
 # update the global attributes accoding to the config
 isimip-publisher <simulation_round> <sector> <model> update
+
+# create a JSON file with metadata
+isimip-publisher <simulation_round> <sector> <model> json
+
+# create a checksum file with the sha256 checksum of the file
+isimip-publisher <simulation_round> <sector> <model> checksum
 
 # ingest the metadata from the files into the database
 isimip-publisher <simulation_round> <sector> <model> ingest

@@ -46,24 +46,27 @@ def list_local_files(config, filelist=None):
 
 def copy_files(config, files):
     remote_dest = os.environ['REMOTE_DEST']
-    remote_dir = os.environ['REMOTE_DIR'] % config
+    remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
+    local_dir = os.path.join(os.environ['TMP_DIR'] % config, '')
 
-    local_dir = os.environ['TMP_DIR'] % config
+    return rsync_files(remote_dest + ':' + remote_dir, local_dir, [file.replace(remote_dir, '') for file in files])
 
-    os.makedirs(local_dir, exist_ok=True)
 
-    # copy files using rsync and include
-    source = remote_dest + ':' + os.path.join(remote_dir, '')
-    destination = os.path.join(local_dir, '')
+def publish_files(config, files):
+    tmp_dir = os.path.join(os.environ['TMP_DIR'] % config, '')
+    pub_dir = os.path.join(os.environ['PUB_DIR'] % config, '')
 
-    # make sure the destination exists
+    return rsync_files(tmp_dir, pub_dir, [file.replace(tmp_dir, '') for file in files])
+
+
+def rsync_files(source, destination, files):
     os.makedirs(destination, exist_ok=True)
 
     # write file list in temporary file
     include_file = 'rsync-include.txt'
     with open(include_file, 'w') as f:
         for file in files:
-            f.write(file.replace(remote_dir, '') + os.linesep)
+            f.write(file.replace(source, '') + os.linesep)
 
     p = subprocess.Popen([
         'rsync', '-av', '--include=*/', '--include-from=%s' % include_file, '--exclude=*', source, destination
@@ -74,10 +77,16 @@ def copy_files(config, files):
 
     os.remove(include_file)
 
-    return [file.replace(remote_dir, local_dir) for file in files]
+    return [destination + file for file in files]
 
 
 def chmod_files(files):
     for file_path in files:
         logger.debug('chmod 644 %s', file_path)
         os.chmod(file_path, 0o644)
+
+
+def delete_files(files):
+    for file_path in files:
+        logger.debug('rm %s', file_path)
+        os.remove(file_path)

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_env():
-    load_dotenv()
+    load_dotenv(os.path.join(os.getcwd(), '.env'))
 
 
 def setup_logging():

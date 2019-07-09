@@ -1,7 +1,6 @@
 import argparse
 
-from isimip_publisher.commands import clean, fetch, ingest, \
-                                      list_remote, list_local, \
+from isimip_publisher.commands import checksum, clean, copy, ingest, json, list, \
                                       publish, update, validate
 
 from isimip_publisher.utils import setup_logging, setup_env
@@ -14,15 +13,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('simulation_round', help='name of the simulation_round')
     parser.add_argument('sector', help='name of the sector')
-    parser.add_argument('model', help='name of the model')
+    parser.add_argument('model', help='models to process')
 
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
+    checksum.parser(subparsers)
     clean.parser(subparsers)
-    fetch.parser(subparsers)
+    copy.parser(subparsers)
     ingest.parser(subparsers)
-    list_remote.parser(subparsers)
-    list_local.parser(subparsers)
+    json.parser(subparsers)
+    list.parser(subparsers)
     publish.parser(subparsers)
     update.parser(subparsers)
     validate.parser(subparsers)

@@ -13,5 +13,6 @@ def parser(subparsers):
 def main(args):
     config = parse_config(args)
     filelist = parse_filelist(args)
+
     for file in list_local_files(config, filelist):
         validate_file(config, file)
