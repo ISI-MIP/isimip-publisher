@@ -26,7 +26,7 @@ def list_remote_files(config, filelist=None):
 
 
 def list_local_files(config, filelist=None):
-    local_dir = os.environ['TMP_DIR'] % config
+    local_dir = os.environ['WORK_DIR'] % config
 
     output = subprocess.check_output([
         'find', local_dir, '-type', 'f', '-name', '*.nc4'])
@@ -47,16 +47,20 @@ def list_local_files(config, filelist=None):
 def copy_files(config, files):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
-    local_dir = os.path.join(os.environ['TMP_DIR'] % config, '')
+    local_dir = os.path.join(os.environ['WORK_DIR'] % config, '')
 
     return rsync_files(remote_dest + ':' + remote_dir, local_dir, [file.replace(remote_dir, '') for file in files])
 
 
 def publish_files(config, files):
-    tmp_dir = os.path.join(os.environ['TMP_DIR'] % config, '')
-    pub_dir = os.path.join(os.environ['PUB_DIR'] % config, '')
+    WORK_DIR = os.path.join(os.environ['WORK_DIR'] % config, '')
+    PUBLIC_DIR = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
 
-    return rsync_files(tmp_dir, pub_dir, [file.replace(tmp_dir, '') for file in files])
+    netcdf_files = [file.replace(WORK_DIR, '') for file in files]
+    json_files = [file.replace('.nc4', '.json') for file in netcdf_files]
+    sha256_files = [file.replace('.nc4', '.sha256') for file in netcdf_files]
+
+    return rsync_files(WORK_DIR, PUBLIC_DIR, netcdf_files + json_files + sha256_files)
 
 
 def rsync_files(source, destination, files):
