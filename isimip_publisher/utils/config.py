@@ -36,8 +36,8 @@ def parse_config(args):
 
     config_files = [
         os.path.join(config_dir, 'default.yml'),
-        os.path.join(config_dir, args.simulation_round, 'default.yml'),
-        os.path.join(config_dir, args.simulation_round, 'sectors', args.sector + '.yml')
+        os.path.join(config_dir, args.simulation_round.lower(), 'default.yml'),
+        os.path.join(config_dir, args.simulation_round.lower(), 'sectors', args.sector + '.yml')
     ]
 
     for config_file in config_files:
