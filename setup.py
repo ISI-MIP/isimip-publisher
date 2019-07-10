@@ -17,9 +17,11 @@ setup(
     description=u'',
     long_description=open('README.md').read(),
     install_requires=[
-        'PyYAML',
         'netCDF4',
-        'python-dotenv'
+        'psycopg2-binary',
+        'PyYAML',
+        'python-dotenv',
+        'SQLAlchemy'
     ],
     classifiers=[
         # https://pypi.org/classifiers/

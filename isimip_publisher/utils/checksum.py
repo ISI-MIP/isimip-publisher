@@ -2,7 +2,7 @@ import hashlib
 import os
 
 
-def write_checksum(file):
+def get_checksum(file):
     m = hashlib.sha256()
 
     with open(file, 'rb') as f:
@@ -10,5 +10,9 @@ def write_checksum(file):
         for block in iter(lambda: f.read(4096), b''):
             m.update(block)
 
+    return m.hexdigest()
+
+
+def write_checksum(file):
     with open(file.replace('.nc4', '.sha256'), 'w') as f:
-        f.write(m.hexdigest() + '  ' + os.path.basename(file) + os.linesep)
+        f.write(get_checksum(file) + '  ' + os.path.basename(file) + os.linesep)
