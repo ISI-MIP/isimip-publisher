@@ -43,11 +43,8 @@ def parse_config(args):
     for config_file in config_files:
         try:
             with open(config_file) as f:
-                try:
-                    merge_config(config, yaml.safe_load(f.read()))
-                except TypeError:
-                    logger.error('%s is empty', config_file)
-                    sys.exit()
+                file_config = yaml.safe_load(f.read())
+                merge_config(config, file_config)
 
         except OSError:
             logger.error('%s does not exist', config_file)

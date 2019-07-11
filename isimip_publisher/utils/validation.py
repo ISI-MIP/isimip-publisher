@@ -2,10 +2,6 @@ import os
 import re
 
 
-def pluralize(string):
-    return string + 's'
-
-
 def validate_file_path(config, file):
     # compile patterns
     dirname_pattern = re.compile(config['dirname_pattern'])
@@ -21,17 +17,23 @@ def validate_file_path(config, file):
     dirgroups = dirmatch.groupdict()
     for key, value in dirgroups.items():
         if key == 'sector':
+
             assert value == config['sector'], \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['sector'], file)
+
         elif key == 'model':
+
             assert value == config['model'], \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['model'], file)
+
         elif key in config['dirname_validation']:
-            assert value in config[pluralize(key)], \
+            values = config[config['dirname_validation'][key]]
+
+            assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
-                (key, value, config[pluralize(key)], file)
+                (key, value, values, file)
 
     # try to match the filename
     filematch = filename_pattern.match(filename)
@@ -40,17 +42,23 @@ def validate_file_path(config, file):
     filegroups = filematch.groupdict()
     for key, value in filegroups.items():
         if key == 'sector':
+
             assert value == config['sector'].lower(), \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['sector'], file)
+
         elif key == 'model':
+
             assert value == config['model'].lower(), \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['model'], file)
+
         elif key in config['filename_validation']:
-            assert value in config[pluralize(key)], \
+            values = config[config['filename_validation'][key]]
+
+            assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
-                (key, value, config[pluralize(key)], file)
+                (key, value, values, file)
 
     dirgroups.update(filegroups)
     return dirgroups
