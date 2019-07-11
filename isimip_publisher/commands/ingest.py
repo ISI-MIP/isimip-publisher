@@ -1,7 +1,7 @@
 from isimip_publisher.utils.config import parse_config, parse_filelist
 from isimip_publisher.utils.files import list_local_files
 from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_metadata
+from isimip_publisher.utils.metadata import get_database_metadata
 from isimip_publisher.utils.database import init_database_session, insert_file
 
 
@@ -20,7 +20,7 @@ def main(args):
 
     for file in list_local_files(config, filelist):
         identifiers = validate_file(config, file)
-        metadata = get_metadata(config, identifiers)
+        metadata = get_database_metadata(config, identifiers)
         insert_file(config, session, metadata, file)
 
     session.commit()

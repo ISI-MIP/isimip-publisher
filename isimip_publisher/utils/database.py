@@ -20,11 +20,10 @@ def init_database_session():
 
 def insert_file(config, session, metadata, file):
     # filter metadata according to config
-    metadata = order_dict({key: value for key, value in metadata.items() if key in list(config['db_metadata'])})
     file = File(
         name=os.path.basename(file),
         path=file,
         checksum=get_checksum(file),
-        attributes=metadata
+        attributes=order_dict(metadata)
     )
     session.add(file)

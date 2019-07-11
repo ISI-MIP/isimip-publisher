@@ -54,7 +54,7 @@ def parse_config(args):
             sys.exit()
 
     # check model
-    assert config['model'].lower() in config['models'], \
+    assert config['model'] in config['models'], \
         'Model %(model)s is not configured for %(simulation_round)s %(sector)s' % config
 
     logger.debug(config)

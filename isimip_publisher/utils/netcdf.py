@@ -25,9 +25,6 @@ def get_netcdf_global_attributes(file):
 
 
 def update_netcdf_global_attributes(config, metadata, file):
-    # filter metadata according to config
-    metadata = {key: value for key, value in metadata.items() if key in list(config['netcdf_metadata'])}
-
     with Dataset(file, 'a', format='NETCDF4') as rootgrp:
         # remove all attributes, but keep some
         for attr in rootgrp.__dict__:

@@ -2,7 +2,7 @@ from isimip_publisher.utils.config import parse_config, parse_filelist
 from isimip_publisher.utils.files import list_local_files
 from isimip_publisher.utils.netcdf import update_netcdf_global_attributes
 from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_metadata
+from isimip_publisher.utils.metadata import get_netcdf_metadata
 
 
 def parser(subparsers):
@@ -18,5 +18,5 @@ def main(args):
 
     for file in list_local_files(config, filelist):
         identifiers = validate_file(config, file)
-        metadata = get_metadata(config, identifiers)
+        metadata = get_netcdf_metadata(config, identifiers)
         update_netcdf_global_attributes(config, metadata, file)

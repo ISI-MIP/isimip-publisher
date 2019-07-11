@@ -32,6 +32,8 @@ PUB_DIR=/path/to/pub/%(simulation_round)s/%(sector)s/%(model)s
 
 REMOTE_DEST=user@example.com
 REMOTE_DIR=/path/to/data/%(simulation_round)s/OutputData/%(sector)s/%(model)s
+
+DATABASE=postgresql+psycopg2://user:password@host:port/dbname
 ```
 
 

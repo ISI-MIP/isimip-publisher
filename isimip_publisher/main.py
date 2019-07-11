@@ -1,6 +1,7 @@
 import argparse
 
-from isimip_publisher.commands import checksum, clean, copy, ingest, json, list, \
+from isimip_publisher.commands import checksum, clean, copy, ingest, json, \
+                                      list_remote, list_local, \
                                       publish, update, validate
 
 from isimip_publisher.utils import setup_logging, setup_env
@@ -22,7 +23,8 @@ def main():
     copy.parser(subparsers)
     ingest.parser(subparsers)
     json.parser(subparsers)
-    list.parser(subparsers)
+    list_remote.parser(subparsers)
+    list_local.parser(subparsers)
     publish.parser(subparsers)
     update.parser(subparsers)
     validate.parser(subparsers)
