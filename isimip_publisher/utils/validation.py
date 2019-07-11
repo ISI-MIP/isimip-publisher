@@ -40,7 +40,7 @@ def validate_file_path(config, file):
     filegroups = filematch.groupdict()
     for key, value in filegroups.items():
         if key == 'sector':
-            assert value == config['sector'], \
+            assert value == config['sector'].lower(), \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['sector'], file)
         elif key == 'model':
