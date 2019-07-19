@@ -56,15 +56,18 @@ def validate_file_path(config, file):
     for key, value in filegroups.items():
         if key == 'sector':
 
-            assert value == config['sector'].lower(), \
+            assert value == config['sector'], \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['sector'], file)
 
-        elif key == 'model':
+        elif key == 'modelname':
+            # compare with a modelname from the config or model.lower()
+            model = config['model']
+            modelname = config['models'][model].get('modelname', model.lower())
 
-            assert value == config['model'].lower(), \
+            assert value == modelname, \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, config['model'], file)
+                (key, value, modelname, file)
 
         elif key in config['filename_validation']:
             values = config[config['filename_validation'][key]]

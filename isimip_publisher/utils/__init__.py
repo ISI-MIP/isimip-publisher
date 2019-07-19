@@ -18,3 +18,7 @@ def setup_logging():
 
 def order_dict(unsorted):
     return OrderedDict([(key, unsorted[key]) for key in sorted(unsorted)])
+
+
+def get_subparser_title(module):
+    return module.split('.')[-1]

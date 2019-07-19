@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -84,13 +85,26 @@ def rsync_files(source, destination, files):
     return [destination + file for file in files]
 
 
-def chmod_files(files):
-    for file_path in files:
-        logger.debug('chmod 644 %s', file_path)
-        os.chmod(file_path, 0o644)
+def chmod_file(file_path):
+    logger.debug('chmod 644 %s', file_path)
+    os.chmod(file_path, 0o644)
 
 
-def delete_files(files):
-    for file_path in files:
-        logger.debug('rm %s', file_path)
-        os.remove(file_path)
+def delete_file(file_path):
+    logger.debug('rm %s', file_path)
+    os.remove(file_path)
+
+
+def add_version_to_file(file_path, version):
+    root, ext = os.path.splitext(file_path)
+
+    # check if there is already a version
+    match = re.search('(\\d{8})$', root)
+    if match:
+        assert version == match.group(1), \
+            'version mismatch in %s' % file_path
+    else:
+        new_file_path = '%s_%s%s' % (root, version, ext)
+
+        logger.debug('mv %s %s', file_path, new_file_path)
+        os.rename(file_path, new_file_path)

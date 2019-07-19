@@ -13,6 +13,10 @@ def get_checksum(file):
     return m.hexdigest()
 
 
+def get_checksum_type():
+    return 'sha256'
+
+
 def write_checksum(file):
     with open(file.replace('.nc4', '.sha256'), 'w') as f:
         f.write(get_checksum(file) + '  ' + os.path.basename(file) + os.linesep)

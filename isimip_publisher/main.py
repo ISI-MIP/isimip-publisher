@@ -2,14 +2,16 @@ import argparse
 
 from isimip_publisher.commands import (
     clean,
-    copy,
-    checksum,
-    json,
-    list_files,
-    publish,
-    ingest,
-    update,
-    validate
+    copy_files,
+    create_checksums,
+    create_jsons,
+    list_local,
+    list_remote,
+    publish_files,
+    update_database,
+    update_files,
+    validate_local,
+    validate_remote,
 )
 
 from isimip_publisher.utils import setup_logging, setup_env
@@ -27,14 +29,16 @@ def main():
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
     clean.parser(subparsers)
-    copy.parser(subparsers)
-    checksum.parser(subparsers)
-    json.parser(subparsers)
-    list_files.parser(subparsers)
-    publish.parser(subparsers)
-    ingest.parser(subparsers)
-    update.parser(subparsers)
-    validate.parser(subparsers)
+    copy_files.parser(subparsers)
+    create_checksums.parser(subparsers)
+    create_jsons.parser(subparsers)
+    list_local.parser(subparsers)
+    list_remote.parser(subparsers)
+    publish_files.parser(subparsers)
+    update_database.parser(subparsers)
+    update_files.parser(subparsers)
+    validate_local.parser(subparsers)
+    validate_remote.parser(subparsers)
 
     args = parser.parse_args()
 

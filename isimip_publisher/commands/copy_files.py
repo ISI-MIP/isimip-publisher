@@ -1,6 +1,6 @@
 from isimip_publisher.utils import get_subparser_title
 from isimip_publisher.utils.config import parse_config, parse_filelist
-from isimip_publisher.utils.files import list_local_files, delete_file
+from isimip_publisher.utils.files import list_remote_files, copy_files, chmod_file
 
 
 def parser(subparsers):
@@ -13,6 +13,8 @@ def parser(subparsers):
 def main(args):
     config = parse_config(args.simulation_round, args.sector, args.model)
     filelist = parse_filelist(args.filelist_file)
+    remote_files = list_remote_files(config, filelist)
+    local_files = copy_files(config, remote_files)
 
-    for file_path in list_local_files(config, filelist):
-        delete_file(file_path)
+    for file_path in local_files:
+        chmod_file(file_path)
