@@ -7,16 +7,16 @@ logger = logging.getLogger(__name__)
 
 def validate_file_path(config, file):
     # compile patterns
-    dirname_pattern = re.compile(config['dirname_pattern'])
-    filename_pattern = re.compile(config['filename_pattern'])
+    dirname_pattern = config['dirname_pattern'].replace(os.linesep, '')
+    filename_pattern = config['filename_pattern'].replace(os.linesep, '')
 
     # split file path
     dirname, filename = os.path.split(file)
 
     # try to match the dirname
     logger.debug(dirname)
-    logger.debug(config['dirname_pattern'])
-    dirmatch = dirname_pattern.search(dirname)
+    logger.debug(dirname_pattern)
+    dirmatch = re.search(dirname_pattern, dirname)
     assert dirmatch is not None, 'No directory match for %s' % dirname
 
     # get the identifiers from the match
@@ -37,7 +37,7 @@ def validate_file_path(config, file):
                 (key, value, config['model'], file)
 
         elif key in config['dirname_validation']:
-            values = config[config['dirname_validation'][key]]
+            values = config['dirname_validation'][key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
@@ -45,8 +45,8 @@ def validate_file_path(config, file):
 
     # try to match the filename
     logger.debug(filename)
-    logger.debug(config['filename_pattern'])
-    filematch = filename_pattern.match(filename)
+    logger.debug(filename_pattern)
+    filematch = re.match(filename_pattern, filename)
     assert filematch is not None, 'No filename match for %s' % filename
 
     # get the identifiers from the match
@@ -70,7 +70,7 @@ def validate_file_path(config, file):
                 (key, value, modelname, file)
 
         elif key in config['filename_validation']:
-            values = config[config['filename_validation'][key]]
+            values = config['filename_validation'][key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
