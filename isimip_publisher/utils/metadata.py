@@ -6,8 +6,12 @@ def get_json_metadata(config, identifiers):
     return get_metadata(config, identifiers, config['json_metadata'])
 
 
-def get_database_metadata(config, identifiers):
-    return get_metadata(config, identifiers, config['database_metadata'])
+def get_dataset_metadata(config, identifiers):
+    return get_metadata(config, identifiers, config['dataset_metadata'])
+
+
+def get_file_metadata(config, identifiers):
+    return get_metadata(config, identifiers, config['file_metadata'])
 
 
 def get_metadata(config, identifiers, filter_list=None):

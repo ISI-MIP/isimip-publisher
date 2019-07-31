@@ -3,13 +3,13 @@ import re
 
 
 def find_datasets(config, files):
-    datasets = []
+    datasets = {}
 
     for file_path in files:
-        dataset = find_dataset_for_file(config, file_path)
+        dataset, identifiers = find_dataset_for_file(config, file_path)
 
         if dataset not in datasets:
-            datasets.append(dataset)
+            datasets[dataset] = identifiers
 
     return datasets
 
@@ -21,4 +21,4 @@ def find_dataset_for_file(config, file_path):
     match = re.search(dataset_pattern, file_name)
 
     assert match is not None, 'No dataset match for %s' % file_path
-    return match.group(0)
+    return match.group(0), match.groupdict()

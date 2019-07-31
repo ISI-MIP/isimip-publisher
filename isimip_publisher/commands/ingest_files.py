@@ -3,7 +3,7 @@ from ..utils.config import parse_config, parse_filelist, parse_version
 from ..utils.database import init_database_session, insert_file
 from ..utils.datasets import find_dataset_for_file
 from ..utils.files import list_local_files
-from ..utils.metadata import get_database_metadata
+from ..utils.metadata import get_file_metadata
 from ..utils.validation import validate_file
 
 
@@ -26,8 +26,8 @@ def main(args):
 
     for file in files:
         identifiers = validate_file(config, file)
-        metadata = get_database_metadata(config, identifiers)
-        dataset = find_dataset_for_file(config, file)
+        metadata = get_file_metadata(config, identifiers)
+        dataset, _ = find_dataset_for_file(config, file)
 
         insert_file(session, file, dataset, metadata, version)
 

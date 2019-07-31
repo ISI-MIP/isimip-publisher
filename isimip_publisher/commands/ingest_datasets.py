@@ -3,6 +3,7 @@ from ..utils.config import parse_config, parse_filelist, parse_version
 from ..utils.database import init_database_session, insert_dataset
 from ..utils.datasets import find_datasets
 from ..utils.files import list_local_files
+from ..utils.metadata import get_dataset_metadata
 
 
 def parser(subparsers):
@@ -23,7 +24,8 @@ def main(args):
 
     session = init_database_session()
 
-    for dataset in datasets:
-        insert_dataset(session, dataset, {}, version)
+    for dataset, identifiers in datasets.items():
+        metadata = get_dataset_metadata(config, identifiers)
+        insert_dataset(session, dataset, metadata, version)
 
     session.commit()
