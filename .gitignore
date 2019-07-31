@@ -14,3 +14,6 @@ dist
 
 env
 .env
+
+testing/work
+testing/public
