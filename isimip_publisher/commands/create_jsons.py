@@ -1,9 +1,9 @@
-from isimip_publisher.utils import get_subparser_title
-from isimip_publisher.utils.config import parse_config, parse_filelist
-from isimip_publisher.utils.files import list_local_files
-from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_json_metadata
-from isimip_publisher.utils.json import write_json
+from ..utils import get_subparser_title
+from ..utils.config import parse_config, parse_filelist
+from ..utils.files import list_local_files
+from ..utils.json import write_json
+from ..utils.metadata import get_json_metadata
+from ..utils.validation import validate_file
 
 
 def parser(subparsers):

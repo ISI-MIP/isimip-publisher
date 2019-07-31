@@ -1,6 +1,6 @@
 import json as python_json
 
-from isimip_publisher.utils import order_dict
+from . import order_dict
 
 
 def write_json(config, metadata, file):

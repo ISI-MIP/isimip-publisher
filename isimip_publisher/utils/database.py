@@ -1,15 +1,52 @@
 import logging
 import os
+import uuid
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, ForeignKey, String, Text, create_engine
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
 
-from isimip_publisher.database.models import Base, Dataset, File
-
-from isimip_publisher.utils import order_dict
-from isimip_publisher.utils.checksum import get_checksum, get_checksum_type
+from . import order_dict
+from .checksum import get_checksum, get_checksum_type
 
 logger = logging.getLogger(__name__)
+
+Base = declarative_base()
+
+
+class Dataset(Base):
+
+    __tablename__ = 'datasets'
+
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    name = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
+    attributes = Column(JSONB, nullable=False)
+
+    files = relationship('File', back_populates='dataset')
+
+    def __repr__(self):
+        return str(self.id)
+
+
+class File(Base):
+
+    __tablename__ = 'files'
+
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    dataset_id = Column(UUID, ForeignKey('datasets.id'))
+    name = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
+    path = Column(Text, nullable=False)
+    checksum = Column(Text, nullable=False)
+    checksum_type = Column(Text, nullable=False)
+    attributes = Column(JSONB, nullable=False)
+
+    dataset = relationship('Dataset', back_populates='files')
+
+    def __repr__(self):
+        return str(self.id)
 
 
 def init_database_session():

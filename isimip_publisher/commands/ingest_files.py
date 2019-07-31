@@ -1,11 +1,10 @@
-from isimip_publisher.database.utils import init_database_session, insert_file
-
-from isimip_publisher.utils import get_subparser_title
-from isimip_publisher.utils.config import parse_config, parse_filelist, parse_version
-from isimip_publisher.utils.files import list_local_files
-from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_database_metadata
-from isimip_publisher.utils.datasets import find_dataset_for_file
+from ..utils import get_subparser_title
+from ..utils.config import parse_config, parse_filelist, parse_version
+from ..utils.database import init_database_session, insert_file
+from ..utils.datasets import find_dataset_for_file
+from ..utils.files import list_local_files
+from ..utils.metadata import get_database_metadata
+from ..utils.validation import validate_file
 
 
 def parser(subparsers):

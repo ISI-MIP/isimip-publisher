@@ -1,21 +1,10 @@
 import argparse
 
-from isimip_publisher.commands import (
-    clean,
-    copy_files,
-    create_checksums,
-    create_jsons,
-    ingest_datasets,
-    ingest_files,
-    list_local,
-    list_remote,
-    publish_files,
-    update_files,
-    validate_local,
-    validate_remote,
-)
-
-from isimip_publisher.utils import setup_logging, setup_env
+from .commands import (clean, copy_files, create_checksums, create_jsons,
+                       ingest_datasets, ingest_files, list_local, list_remote,
+                       publish_files, update_files, validate_local,
+                       validate_remote)
+from .utils import setup_env, setup_logging
 
 
 def main():

@@ -1,10 +1,9 @@
-from isimip_publisher.netcdf.utils import update_netcdf_global_attributes
-
-from isimip_publisher.utils import get_subparser_title
-from isimip_publisher.utils.config import parse_config, parse_filelist, parse_version
-from isimip_publisher.utils.files import list_local_files, add_version_to_file
-from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_netcdf_metadata
+from ..utils import get_subparser_title
+from ..utils.config import parse_config, parse_filelist, parse_version
+from ..utils.files import add_version_to_file, list_local_files
+from ..utils.metadata import get_netcdf_metadata
+from ..utils.netcdf import update_netcdf_global_attributes
+from ..utils.validation import validate_file
 
 
 def parser(subparsers):

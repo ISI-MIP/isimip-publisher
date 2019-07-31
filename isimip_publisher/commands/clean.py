@@ -1,6 +1,6 @@
-from isimip_publisher.utils import get_subparser_title
-from isimip_publisher.utils.config import parse_config, parse_filelist
-from isimip_publisher.utils.files import list_local_files, delete_file
+from ..utils import get_subparser_title
+from ..utils.config import parse_config, parse_filelist
+from ..utils.files import delete_file, list_local_files
 
 
 def parser(subparsers):

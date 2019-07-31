@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 import sys
+from datetime import date, datetime
 
 import yaml
-
-from datetime import datetime, date
 
 logger = logging.getLogger(__name__)
 

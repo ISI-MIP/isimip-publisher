@@ -1,10 +1,9 @@
 import logging
-
 from datetime import datetime
 
 from netCDF4 import Dataset
 
-from isimip_publisher.utils import order_dict
+from . import order_dict
 
 logger = logging.getLogger(__name__)
 
