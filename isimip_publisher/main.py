@@ -4,12 +4,12 @@ from isimip_publisher.commands import (
     clean,
     copy_files,
     create_checksums,
-    create_datasets,
     create_jsons,
+    ingest_datasets,
+    ingest_files,
     list_local,
     list_remote,
     publish_files,
-    update_database,
     update_files,
     validate_local,
     validate_remote,
@@ -32,12 +32,12 @@ def main():
     clean.parser(subparsers)
     copy_files.parser(subparsers)
     create_checksums.parser(subparsers)
-    create_datasets.parser(subparsers)
     create_jsons.parser(subparsers)
+    ingest_datasets.parser(subparsers)
+    ingest_files.parser(subparsers)
     list_local.parser(subparsers)
     list_remote.parser(subparsers)
     publish_files.parser(subparsers)
-    update_database.parser(subparsers)
     update_files.parser(subparsers)
     validate_local.parser(subparsers)
     validate_remote.parser(subparsers)

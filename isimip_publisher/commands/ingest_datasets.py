@@ -1,10 +1,9 @@
-from isimip_publisher.database.utils import init_database_session, insert_file
+from isimip_publisher.database.utils import init_database_session, insert_dataset
 
 from isimip_publisher.utils import get_subparser_title
 from isimip_publisher.utils.config import parse_config, parse_filelist, parse_version
+from isimip_publisher.utils.datasets import find_datasets
 from isimip_publisher.utils.files import list_local_files
-from isimip_publisher.utils.validation import validate_file
-from isimip_publisher.utils.metadata import get_database_metadata
 
 
 def parser(subparsers):
@@ -20,12 +19,12 @@ def main(args):
     version = parse_version(args.version)
     config = parse_config(args.simulation_round, args.sector, args.model, version)
     filelist = parse_filelist(args.filelist_file)
+    files = list_local_files(config, filelist)
+    datasets = find_datasets(config, files)
 
     session = init_database_session()
 
-    for file in list_local_files(config, filelist):
-        identifiers = validate_file(config, file)
-        metadata = get_database_metadata(config, identifiers)
-        insert_file(session, metadata, file, version)
+    for dataset in datasets:
+        insert_dataset(session, dataset, {}, version)
 
     session.commit()

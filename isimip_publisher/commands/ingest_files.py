@@ -1,9 +1,11 @@
-from isimip_publisher.database.utils import init_database_session, insert_dataset
+from isimip_publisher.database.utils import init_database_session, insert_file
 
 from isimip_publisher.utils import get_subparser_title
 from isimip_publisher.utils.config import parse_config, parse_filelist, parse_version
-from isimip_publisher.utils.datasets import find_datasets
 from isimip_publisher.utils.files import list_local_files
+from isimip_publisher.utils.validation import validate_file
+from isimip_publisher.utils.metadata import get_database_metadata
+from isimip_publisher.utils.datasets import find_dataset_for_file
 
 
 def parser(subparsers):
@@ -23,7 +25,11 @@ def main(args):
 
     session = init_database_session()
 
-    for dataset, files in find_datasets(config, files).items():
-        insert_dataset(session, dataset, files, version)
+    for file in files:
+        identifiers = validate_file(config, file)
+        metadata = get_database_metadata(config, identifiers)
+        dataset = find_dataset_for_file(config, file)
+
+        insert_file(session, file, dataset, metadata, version)
 
     session.commit()
