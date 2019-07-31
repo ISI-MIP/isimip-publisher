@@ -34,10 +34,6 @@ def parse_config(simulation_round, sector, model, version=None):
         'model': model
     }
 
-    # check or create version string
-
-
-
     # parse yaml config files
 
     config_files = [

@@ -4,7 +4,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from isimip_publisher.database.models import Base, File
+from isimip_publisher.database.models import Base, Dataset, File
 
 from isimip_publisher.utils import order_dict
 from isimip_publisher.utils.checksum import get_checksum, get_checksum_type
@@ -44,7 +44,7 @@ def insert_file(session, metadata, file_path, version):
             raise RuntimeError('%s has been changed but the version is the same' % name)
     else:
         # insert a new row for this file
-        logger.debug('insert %s', name)
+        logger.debug('insert file %s', name)
         file = File(
             name=name,
             version=version,
@@ -54,3 +54,28 @@ def insert_file(session, metadata, file_path, version):
             attributes=attributes
         )
         session.add(file)
+
+
+def insert_dataset(session, dataset_name, dataset_files, version):
+
+    dataset = session.query(Dataset).filter(Dataset.name == dataset_name, Dataset.version == version).one_or_none()
+
+    if dataset:
+        raise RuntimeError('A dataset with the name %s and the version %s already exists' % (dataset_name, version))
+    else:
+        # insert a new row for this file
+        logger.debug('insert dataset %s', dataset_name)
+        dataset = Dataset(
+            name=dataset_name,
+            version=version,
+            attributes={}
+        )
+        session.add(dataset)
+        session.commit()
+
+        for dataset_file in dataset_files:
+            logger.debug('update file %s with dataset_id=%s', dataset_file, dataset.id)
+            file = session.query(File).filter(File.name == dataset_file, File.version == version)
+            file.dataset_id = dataset.id
+
+        session.commit()

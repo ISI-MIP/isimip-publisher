@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def validate_file_path(config, file):
-    # compile patterns
     dirname_pattern = config['dirname_pattern'].replace(os.linesep, '')
     filename_pattern = config['filename_pattern'].replace(os.linesep, '')
 

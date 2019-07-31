@@ -4,6 +4,7 @@ from isimip_publisher.commands import (
     clean,
     copy_files,
     create_checksums,
+    create_datasets,
     create_jsons,
     list_local,
     list_remote,
@@ -31,6 +32,7 @@ def main():
     clean.parser(subparsers)
     copy_files.parser(subparsers)
     create_checksums.parser(subparsers)
+    create_datasets.parser(subparsers)
     create_jsons.parser(subparsers)
     list_local.parser(subparsers)
     list_remote.parser(subparsers)
