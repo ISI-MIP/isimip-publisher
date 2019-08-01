@@ -1,10 +1,9 @@
 from ..utils import get_subparser_title
 from ..utils.config import parse_config, parse_filelist, parse_version
 from ..utils.database import init_database_session, insert_file
-from ..utils.datasets import find_dataset_for_file
 from ..utils.files import list_local_files
 from ..utils.metadata import get_file_metadata
-from ..utils.validation import validate_file
+from ..utils.patterns import match_file, match_dataset
 
 
 def parser(subparsers):
@@ -25,9 +24,9 @@ def main(args):
     session = init_database_session()
 
     for file in files:
-        identifiers = validate_file(config, file)
+        file_name, identifiers = match_file(config, file)
         metadata = get_file_metadata(config, identifiers)
-        dataset, _ = find_dataset_for_file(config, file)
+        dataset, _ = match_dataset(config, file)
 
         insert_file(session, file, dataset, metadata, version)
 

@@ -3,7 +3,7 @@ from ..utils.config import parse_config, parse_filelist
 from ..utils.files import list_local_files
 from ..utils.json import write_json
 from ..utils.metadata import get_json_metadata
-from ..utils.validation import validate_file
+from ..utils.patterns import match_file
 
 
 def parser(subparsers):
@@ -18,6 +18,6 @@ def main(args):
     filelist = parse_filelist(args.filelist_file)
 
     for file in list_local_files(config, filelist):
-        identifiers = validate_file(config, file)
+        file_name, identifiers = match_file(config, file)
         metadata = get_json_metadata(config, identifiers)
         write_json(config, metadata, file)

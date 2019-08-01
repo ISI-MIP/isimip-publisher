@@ -1,7 +1,7 @@
 from ..utils import get_subparser_title
 from ..utils.config import parse_config, parse_filelist
 from ..utils.files import list_local_files
-from ..utils.validation import validate_file_path
+from ..utils.patterns import match_file
 
 
 def parser(subparsers):
@@ -16,6 +16,6 @@ def main(args):
     filelist = parse_filelist(args.filelist_file)
 
     for file in list_local_files(config, filelist):
-        validate_file_path(config, file)
+        file_name, identifiers = match_file(config, file)
 
     print('Success!')

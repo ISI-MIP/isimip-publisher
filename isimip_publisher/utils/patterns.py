@@ -5,12 +5,22 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def validate_file_path(config, file):
+def match_dataset(config, file_path):
+    dataset_pattern = config['dataset_pattern'].replace(os.linesep, '')
+
+    file_name = os.path.basename(file_path)
+    match = re.search(dataset_pattern, file_name)
+
+    assert match is not None, 'No dataset match for %s' % file_path
+    return match.group(0), match.groupdict()
+
+
+def match_file(config, file_path):
     dirname_pattern = config['dirname_pattern'].replace(os.linesep, '')
     filename_pattern = config['filename_pattern'].replace(os.linesep, '')
 
     # split file path
-    dirname, filename = os.path.split(file)
+    dirname, filename = os.path.split(file_path)
 
     # try to match the dirname
     logger.debug(dirname)
@@ -27,20 +37,20 @@ def validate_file_path(config, file):
 
             assert value == config['sector'], \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, config['sector'], file)
+                (key, value, config['sector'], file_path)
 
         elif key == 'model':
 
             assert value == config['model'], \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, config['model'], file)
+                (key, value, config['model'], file_path)
 
         elif key in config['dirname_validation']:
             values = config['dirname_validation'][key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
-                (key, value, values, file)
+                (key, value, values, file_path)
 
     # try to match the filename
     logger.debug(filename)
@@ -57,7 +67,7 @@ def validate_file_path(config, file):
 
             assert value == config['sector'], \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, config['sector'], file)
+                (key, value, config['sector'], file_path)
 
         elif key == 'modelname':
             # compare with a modelname from the config or model.lower()
@@ -66,18 +76,13 @@ def validate_file_path(config, file):
 
             assert value == modelname, \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, modelname, file)
+                (key, value, modelname, file_path)
 
         elif key in config['filename_validation']:
             values = config['filename_validation'][key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
-                (key, value, values, file)
+                (key, value, values, file_path)
 
-    dirgroups.update(filegroups)
-    return dirgroups
-
-
-def validate_file(config, file):
-    return validate_file_path(config, file)
+    return filename, dict(**dirgroups, **filegroups)

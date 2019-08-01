@@ -2,13 +2,21 @@ import os
 import pytest
 import shutil
 
+from isimip_publisher.utils import setup_env
+from isimip_publisher.utils.database import Dataset, File, init_database_session
+
 
 @pytest.fixture(scope='session')
 def setup():
-    test_dir = os.path.dirname(os.path.abspath(__file__))
+    setup_env()
 
-    shutil.rmtree(os.path.join(test_dir, 'work'), ignore_errors=True)
-    shutil.rmtree(os.path.join(test_dir, 'public'), ignore_errors=True)
+    shutil.rmtree(os.getenv('WORK_DIR'), ignore_errors=True)
+    shutil.rmtree(os.getenv('PUBLIC_DIR'), ignore_errors=True)
+
+    session = init_database_session()
+    session.query(Dataset).delete()
+    session.query(File).delete()
+    session.commit()
 
 
 def test_empty(setup, script_runner):
