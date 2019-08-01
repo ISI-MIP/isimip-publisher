@@ -3,10 +3,12 @@ egg: spam
 templates:
   eggspam: '%(egg)s is spam!'
 
+netcdf_metadata_keep:
+- Conventions
+- contact
+- institution
+
 netcdf_metadata:
-- simulation_round
-- sector
-- model
 - version
 
 json_metadata:

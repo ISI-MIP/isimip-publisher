@@ -27,11 +27,9 @@ def update_netcdf_global_attributes(config, metadata, file):
     with Dataset(file, 'a', format='NETCDF4') as rootgrp:
         # remove all attributes, but keep some
         for attr in rootgrp.__dict__:
-            if attr in config['netcdf_metadata'] and attr not in metadata:
-                metadata[attr] = rootgrp.getncattr(attr)
-
-            logger.debug('delete %s in %s', attr, file)
-            rootgrp.delncattr(attr)
+            if attr not in config['netcdf_metadata_keep']:
+                logger.debug('delete %s in %s', attr, file)
+                rootgrp.delncattr(attr)
 
         for attr, value in order_dict(metadata).items():
             logger.debug('set %s to %s in %s', attr, value, file)
