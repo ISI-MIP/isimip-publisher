@@ -12,7 +12,12 @@ def setup_env():
 
 
 def setup_logging():
-    logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+    filename = os.getenv('LOG_FILE')
+    level = os.getenv('LOG_LEVEL', 'INFO')
+    if filename:
+        logging.basicConfig(level=level, filename=filename)
+    else:
+        logging.basicConfig(level=level)
 
 
 def order_dict(unsorted):
