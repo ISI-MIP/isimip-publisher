@@ -1,0 +1,31 @@
+dirname_pattern: |
+  (?P<sector>[a-z0-9-._]+)/
+  (?P<model>[A-Za-z0-9-.]+)$
+
+filename_pattern: |
+  ^(?P<modelname>[a-z0-9-.]+)
+  _(?P<a>[a-z0-9-]+)
+  _(?P<b>[a-z0-9-.]+)
+  _(?P<c>[a-z0-9-.]+)
+  _(?P<d>[a-z0-9-.]+)
+  _(?P<var>[a-z0-9-.]+)
+  _(?P<region>[a-z0-9-]+)
+  _(?P<timestep>[a-z0-9-.]+)
+  _(?P<start_year>\d{4})
+  _(?P<end_year>\d{4})
+
+dataset_pattern: |
+  ^(?P<modelname>[a-z0-9-.]+)
+  _(?P<a>[a-z0-9-]+)
+  _(?P<b>[a-z0-9-.]+)
+  _(?P<c>[a-z0-9-.]+)
+  _(?P<d>[a-z0-9-.]+)
+  _(?P<var>[a-z0-9-.]+)
+  _(?P<region>[a-z0-9-]+)
+  _(?P<timestep>[a-z0-9-.]+)
+
+filename_validation:
+  a:
+  - a
+  b:
+  - b

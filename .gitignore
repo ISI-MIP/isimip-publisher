@@ -10,8 +10,6 @@ dist
 *.swp
 .DS_Store
 
-*.yml
-
 env
 .env
 
