@@ -12,7 +12,13 @@ def match_dataset(config, file_path):
     match = re.search(dataset_pattern, file_name)
 
     assert match is not None, 'No dataset match for %s' % file_path
-    return match.group(0), match.groupdict()
+
+    # get the identifiers from the match
+    dataset = match.group(0)
+    datasetgroups = match.groupdict()
+    logger.debug(datasetgroups)
+
+    return dataset, datasetgroups
 
 
 def match_file(config, file_path):
@@ -85,4 +91,5 @@ def match_file(config, file_path):
                 '%s mismatch: %s not in %s for %s' % \
                 (key, value, values, file_path)
 
-    return filename, dict(**dirgroups, **filegroups)
+    filegroups.update(dirgroups)
+    return filename, filegroups

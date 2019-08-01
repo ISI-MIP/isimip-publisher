@@ -14,8 +14,8 @@ def setup():
     shutil.rmtree(os.getenv('PUBLIC_DIR'), ignore_errors=True)
 
     session = init_database_session()
-    session.query(Dataset).delete()
     session.query(File).delete()
+    session.query(Dataset).delete()
     session.commit()
 
 
