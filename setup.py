@@ -5,6 +5,9 @@ from setuptools import setup, find_packages
 with open('isimip_publisher/__init__.py') as f:
     metadata = dict(re.findall(r'__(.*)__ = [\']([^\']*)[\']', f.read()))
 
+with open('requirements/common.txt') as f:
+    install_requires = f.readlines()
+
 setup(
     name=metadata['title'],
     version=metadata['version'],
@@ -16,13 +19,7 @@ setup(
     url='https://github.com/ISI-MIP/isimip-publisher',
     description=u'',
     long_description=open('README.md').read(),
-    install_requires=[
-        'netCDF4',
-        'psycopg2-binary',
-        'PyYAML',
-        'python-dotenv',
-        'SQLAlchemy'
-    ],
+    install_requires=install_requires,
     classifiers=[
         # https://pypi.org/classifiers/
         'Development Status :: 1 - Planning',

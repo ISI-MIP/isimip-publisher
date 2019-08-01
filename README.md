@@ -42,13 +42,15 @@ Usage
 
 ```bash
 # list remote files
-isimip-publisher <simulation_round> <sector> <model> list --remote
+isimip-publisher <simulation_round> <sector> <model> list_remote
+
+# 
 
 # copy remote files to TMP_DIR
-isimip-publisher <simulation_round> <sector> <model> copy
+isimip-publisher <simulation_round> <sector> <model> copy_files
 
 # list local files
-isimip-publisher <simulation_round> <sector> <model> list
+isimip-publisher <simulation_round> <sector> <model> list_local
 
 # validate files
 isimip-publisher <simulation_round> <sector> <model> validate
@@ -76,4 +78,21 @@ For all commands but `list_remote` and `list_local` a list of files *relative* t
 
 ```bash
 isimip-publisher <simulation_round> <sector> <model> fetch -f /path/to/files.txt
+```
+
+Test
+----
+
+Install test dependencies
+
+```
+pip install -r requirements/dev.txt
+```
+
+Copy `.env.pytest` to `.env`.
+
+Run:
+
+```
+pytest
 ```
