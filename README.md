@@ -3,7 +3,7 @@ ISIMIP publisher
 
 A command line tool to publish climate impact data from the ISIMIP project.
 
-**This is work in progress.**
+**This is still work in progress.**
 
 Setup
 -----
@@ -24,14 +24,15 @@ Create a `.env` file with the following (enviroment) variables:
 
 ```
 LOG_LEVEL=ERROR
+LOG_FILE=/path/to/logfile
 
 CONFIG_DIR=/path/to/isimip-publisher-config
 
-TMP_DIR=/path/to/tmp/%(simulation_round)s/%(sector)s/%(model)s
-PUB_DIR=/path/to/pub/%(simulation_round)s/%(sector)s/%(model)s
+WORK_DIR=/path/to/work/%(simulation_round)s/%(sector)s/%(model)s
+PUBLIC_DIR=/path/to/public/%(simulation_round)s/%(sector)s/%(model)s
 
-REMOTE_DEST=user@example.com
-REMOTE_DIR=/path/to/data/%(simulation_round)s/OutputData/%(sector)s/%(model)s
+REMOTE_DEST=localhost
+REMOTE_DIR=/path/to/remote/%(simulation_round)s/output/%(sector)s/%(model)s
 
 DATABASE=postgresql+psycopg2://user:password@host:port/dbname
 ```
@@ -44,7 +45,8 @@ Usage
 # list remote files
 isimip-publisher <simulation_round> <sector> <model> list_remote
 
-# 
+# validate remote files
+isimip-publisher <simulation_round> <sector> <model> validate_remote
 
 # copy remote files to TMP_DIR
 isimip-publisher <simulation_round> <sector> <model> copy_files
@@ -52,32 +54,35 @@ isimip-publisher <simulation_round> <sector> <model> copy_files
 # list local files
 isimip-publisher <simulation_round> <sector> <model> list_local
 
-# validate files
-isimip-publisher <simulation_round> <sector> <model> validate
+# validate local files
+isimip-publisher <simulation_round> <sector> <model> validate_local
 
 # update the global attributes accoding to the config
-isimip-publisher <simulation_round> <sector> <model> update
+isimip-publisher <simulation_round> <sector> <model> update_files
 
 # create a JSON file with metadata
-isimip-publisher <simulation_round> <sector> <model> json
+isimip-publisher <simulation_round> <sector> <model> create_jsons
 
 # create a checksum file with the sha256 checksum of the file
-isimip-publisher <simulation_round> <sector> <model> checksum
+isimip-publisher <simulation_round> <sector> <model> create_checksums
+
+# finds datasets and ingest their metadata into the database
+isimip-publisher <simulation_round> <sector> <model> ingest_datasets
 
 # ingest the metadata from the files into the database
-isimip-publisher <simulation_round> <sector> <model> ingest
+isimip-publisher <simulation_round> <sector> <model> ingest_files
 
-# copy files from TMP_DIR to PUP_DIR
-isimip-publisher <simulation_round> <sector> <model> publish
+# copy files from WORK_DIR to PUPLIC_DIR
+isimip-publisher <simulation_round> <sector> <model> publish_files
 
-# cleanup the TMP_DIR
+# cleanup the WORK_DIR
 isimip-publisher <simulation_round> <sector> <model> clean
 ```
 
-For all commands but `list_remote` and `list_local` a list of files *relative* to `REMOTE_DIR` or `TMP_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
+For all commands but `list_remote` and `list_local` a list of files *relative* to `REMOTE_DIR` or `WORK_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
-isimip-publisher <simulation_round> <sector> <model> fetch -f /path/to/files.txt
+isimip-publisher <simulation_round> <sector> <model> copy_files -f /path/to/files.txt
 ```
 
 Test
@@ -89,7 +94,7 @@ Install test dependencies
 pip install -r requirements/dev.txt
 ```
 
-Copy `.env.pytest` to `.env`.
+Copy `.env.pytest` to `.env`. This sets the environment variables to the directories in `testing`.
 
 Run:
 
