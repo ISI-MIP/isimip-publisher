@@ -101,3 +101,9 @@ Run:
 ```
 pytest
 ```
+
+Run a specific test, e.g.:
+
+```
+pytest isimip_publisher/tests/test_commands.py::test_empty
+```

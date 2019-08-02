@@ -10,8 +10,13 @@ from isimip_publisher.utils.database import Dataset, File, init_database_session
 def setup():
     setup_env()
 
-    shutil.rmtree(os.getenv('WORK_DIR'), ignore_errors=True)
-    shutil.rmtree(os.getenv('PUBLIC_DIR'), ignore_errors=True)
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    test_dir = os.path.join(base_dir, 'testing')
+    work_dir = os.path.join(test_dir, 'work')
+    public_dir = os.path.join(test_dir, 'public')
+
+    shutil.rmtree(work_dir, ignore_errors=True)
+    shutil.rmtree(public_dir, ignore_errors=True)
 
     session = init_database_session()
     session.query(File).delete()
@@ -44,13 +49,25 @@ def test_list_remote(setup, script_runner):
     assert len(response.stdout.splitlines()) == 3
 
 
-def test_validate_remote(setup, script_runner):
+def test_match_remote_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
         'testsector',
         'testmodel',
-        'validate_remote')
+        'match_remote_files')
+    assert response.success, response.stderr
+    assert response.stdout.strip() == 'Success!', response.stdout
+    assert not response.stderr
+
+
+def test_match_remote_datasets(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'testround',
+        'testsector',
+        'testmodel',
+        'match_remote_datasets')
     assert response.success, response.stderr
     assert response.stdout.strip() == 'Success!', response.stdout
     assert not response.stderr
@@ -65,6 +82,43 @@ def test_copy_files(setup, script_runner):
         'copy_files')
     assert response.success, response.stderr
     assert not response.stdout
+    assert not response.stderr
+
+
+def test_list_local(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'testround',
+        'testsector',
+        'testmodel',
+        'list_local')
+    assert response.success, response.stderr
+    assert response.stdout
+    assert not response.stderr
+    assert len(response.stdout.splitlines()) == 3
+
+
+def test_match_local_files(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'testround',
+        'testsector',
+        'testmodel',
+        'match_local_files')
+    assert response.success, response.stderr
+    assert response.stdout.strip() == 'Success!', response.stdout
+    assert not response.stderr
+
+
+def test_match_local_datasets(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'testround',
+        'testsector',
+        'testmodel',
+        'match_local_datasets')
+    assert response.success, response.stderr
+    assert response.stdout.strip() == 'Success!', response.stdout
     assert not response.stderr
 
 

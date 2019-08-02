@@ -16,6 +16,6 @@ def main(args):
     filelist = parse_filelist(args.filelist_file)
 
     for file in list_local_files(config, filelist):
-        file_name, identifiers = match_file(config, file)
+        match_file(config, file)
 
     print('Success!')

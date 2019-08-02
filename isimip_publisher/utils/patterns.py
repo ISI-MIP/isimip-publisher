@@ -8,9 +8,11 @@ logger = logging.getLogger(__name__)
 def match_dataset(config, file_path):
     dataset_pattern = config['dataset_pattern'].replace(os.linesep, '')
 
-    file_name = os.path.basename(file_path)
-    match = re.search(dataset_pattern, file_name)
+    filename = os.path.basename(file_path)
 
+    logger.debug(filename)
+    logger.debug(dataset_pattern)
+    match = re.search(dataset_pattern, filename)
     assert match is not None, 'No dataset match for %s' % file_path
 
     # get the identifiers from the match
