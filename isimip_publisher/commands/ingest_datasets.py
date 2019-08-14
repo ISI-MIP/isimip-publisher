@@ -26,6 +26,6 @@ def main(args):
 
     for dataset, identifiers in datasets.items():
         metadata = get_dataset_metadata(config, identifiers)
-        insert_dataset(session, dataset, metadata, version)
+        insert_dataset(config, session, dataset, metadata, version)
 
     session.commit()

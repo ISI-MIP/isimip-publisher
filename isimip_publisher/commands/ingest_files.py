@@ -28,6 +28,6 @@ def main(args):
         metadata = get_file_metadata(config, identifiers)
         dataset, _ = match_dataset(config, file)
 
-        insert_file(session, file, dataset, metadata, version)
+        insert_file(config, session, file, dataset, metadata, version)
 
     session.commit()

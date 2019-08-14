@@ -2,8 +2,8 @@ import logging
 import os
 import uuid
 
-from sqlalchemy import Column, ForeignKey, String, Text, create_engine
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Column, ForeignKey, String, Text, Index, create_engine, func
+from sqlalchemy.dialects.postgresql import JSONB, UUID, TSVECTOR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -18,11 +18,15 @@ Base = declarative_base()
 class Dataset(Base):
 
     __tablename__ = 'datasets'
+    __table_args__ = (
+        Index('datasets_search_vector_idx', 'search_vector', postgresql_using='gin'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
-    name = Column(Text, nullable=False)
-    version = Column(String(8), nullable=False)
+    name = Column(Text, nullable=False, index=True)
+    version = Column(String(8), nullable=False, index=True)
     attributes = Column(JSONB, nullable=False)
+    search_vector = Column(TSVECTOR, nullable=False)
 
     files = relationship('File', back_populates='dataset')
 
@@ -33,20 +37,33 @@ class Dataset(Base):
 class File(Base):
 
     __tablename__ = 'files'
+    __table_args__ = (
+        Index('files_search_vector_idx', 'search_vector', postgresql_using='gin'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
-    name = Column(Text, nullable=False)
-    version = Column(String(8), nullable=False)
+    name = Column(Text, nullable=False, index=True)
+    version = Column(String(8), nullable=False, index=True)
     path = Column(Text, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
+    search_vector = Column(TSVECTOR, nullable=False)
 
     dataset = relationship('Dataset', back_populates='files')
 
     def __repr__(self):
         return str(self.id)
+
+
+def create_search_vector(config, name, attributes):
+    vector = func.setweight(func.to_tsvector(name), 'B')
+
+    for key in config['database_metadata_search']:
+        vector = vector.concat(func.setweight(func.to_tsvector(attributes[key]), 'A'))
+
+    return vector
 
 
 def init_database_session():
@@ -58,8 +75,9 @@ def init_database_session():
     return Session()
 
 
-def insert_dataset(session, dataset_name, metadata, version):
+def insert_dataset(config, session, dataset_name, metadata, version):
     attributes = order_dict(metadata)
+    search_vector = create_search_vector(config, dataset_name, attributes)
 
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
@@ -70,6 +88,7 @@ def insert_dataset(session, dataset_name, metadata, version):
     if dataset:
         if dataset.attributes != attributes:
             dataset.attributes = attributes
+            dataset.search_vector = search_vector
             logger.debug('update dataset %s', dataset_name)
         else:
             logger.debug('skip dataset %s', dataset_name)
@@ -81,16 +100,18 @@ def insert_dataset(session, dataset_name, metadata, version):
         dataset = Dataset(
             name=dataset_name,
             version=version,
-            attributes=attributes
+            attributes=attributes,
+            search_vector=search_vector
         )
         session.add(dataset)
 
 
-def insert_file(session, file_path, dataset_name, metadata, version):
+def insert_file(config, session, file_path, dataset_name, metadata, version):
     file_name = os.path.basename(file_path)
     checksum = get_checksum(file_path)
     checksum_type = get_checksum_type()
     attributes = order_dict(metadata)
+    search_vector = create_search_vector(config, file_name, attributes)
 
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
@@ -112,6 +133,7 @@ def insert_file(session, file_path, dataset_name, metadata, version):
             # the file has not changed
             if file.attributes != attributes:
                 file.attributes = attributes
+                file.search_vector = search_vector
                 logger.debug('update file %s', file_name)
             else:
                 logger.debug('skip file %s', file_name)
@@ -129,6 +151,7 @@ def insert_file(session, file_path, dataset_name, metadata, version):
             checksum=checksum,
             checksum_type=checksum_type,
             attributes=attributes,
-            dataset=dataset
+            dataset=dataset,
+            search_vector=search_vector
         )
         session.add(file)
