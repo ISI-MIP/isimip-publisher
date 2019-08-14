@@ -107,7 +107,10 @@ def insert_dataset(config, session, dataset_name, metadata, version):
 
 
 def insert_file(config, session, file_path, dataset_name, metadata, version):
+    local_dir = os.path.join(os.environ['WORK_DIR'] % config, '')
+
     file_name = os.path.basename(file_path)
+    path = file_path.replace(local_dir, '')
     checksum = get_checksum(file_path)
     checksum_type = get_checksum_type()
     attributes = order_dict(metadata)
@@ -147,7 +150,7 @@ def insert_file(config, session, file_path, dataset_name, metadata, version):
         file = File(
             name=file_name,
             version=version,
-            path=file_path,
+            path=path,
             checksum=checksum,
             checksum_type=checksum_type,
             attributes=attributes,
