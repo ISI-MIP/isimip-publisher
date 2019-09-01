@@ -45,8 +45,11 @@ Usage
 # list remote files
 isimip-publisher <simulation_round> <sector> <model> list_remote
 
-# validate remote files
-isimip-publisher <simulation_round> <sector> <model> validate_remote
+# match remote datasets
+isimip-publisher <simulation_round> <sector> <model> match_remote_datasets
+
+# match remote files
+isimip-publisher <simulation_round> <sector> <model> match_remote_files
 
 # copy remote files to TMP_DIR
 isimip-publisher <simulation_round> <sector> <model> copy_files
@@ -54,8 +57,11 @@ isimip-publisher <simulation_round> <sector> <model> copy_files
 # list local files
 isimip-publisher <simulation_round> <sector> <model> list_local
 
-# validate local files
-isimip-publisher <simulation_round> <sector> <model> validate_local
+# match local datasets
+isimip-publisher <simulation_round> <sector> <model> match_local_datasets
+
+# match local files
+isimip-publisher <simulation_round> <sector> <model> match_local_files
 
 # update the global attributes accoding to the config
 isimip-publisher <simulation_round> <sector> <model> update_files

@@ -9,7 +9,7 @@ def parser(subparsers):
 
 
 def main(args):
-    config = parse_config(args.simulation_round, args.sector, args.model)
+    config = parse_config(args.simulation_round, args.product, args.sector, args.model)
 
     for file in list_remote_files(config):
         print(file)

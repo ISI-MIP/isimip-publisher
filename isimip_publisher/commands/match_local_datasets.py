@@ -1,7 +1,7 @@
 from ..utils import get_subparser_title
 from ..utils.config import parse_config, parse_filelist
 from ..utils.files import list_local_files
-from ..utils.patterns import match_file
+from ..utils.patterns import match_dataset
 
 
 def parser(subparsers):
@@ -12,10 +12,10 @@ def parser(subparsers):
 
 
 def main(args):
-    config = parse_config(args.simulation_round, args.sector, args.model)
+    config = parse_config(args.simulation_round, args.product, args.sector, args.model)
     filelist = parse_filelist(args.filelist_file)
 
     for file in list_local_files(config, filelist):
-        match_file(config, file)
+        match_dataset(config, file)
 
     print('Success!')

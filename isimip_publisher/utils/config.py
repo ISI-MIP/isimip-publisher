@@ -13,32 +13,35 @@ def merge_config(destination, source):
     Credit: https://stackoverflow.com/a/20666342
     '''
 
-    for key, value in source.items():
-        if isinstance(value, dict):
-            # get node or create one
-            node = destination.setdefault(key, {})
-            merge_config(node, value)
-        else:
-            destination[key] = value
+    if isinstance(source, dict):
+        for key, value in source.items():
+            if isinstance(value, dict):
+                # get node or create one
+                node = destination.setdefault(key, {})
+                merge_config(node, value)
+            else:
+                destination[key] = value
 
     return destination
 
 
-def parse_config(simulation_round, sector, model, version=None):
+def parse_config(simulation_round, product, sector, model, version=None):
     config_dir = os.environ['CONFIG_DIR']
 
     config = {
         'simulation_round': simulation_round,
+        'product': product,
         'sector': sector,
-        'model': model
+        'model': model,
+        'version': version
     }
 
     # parse yaml config files
-
     config_files = [
-        os.path.join(config_dir, 'default.yml'),
-        os.path.join(config_dir, simulation_round, 'default.yml'),
-        os.path.join(config_dir, simulation_round, 'sectors', sector + '.yml')
+        os.path.join(config_dir, '_default.yml'),
+        os.path.join(config_dir, simulation_round, '_default.yml'),
+        os.path.join(config_dir, simulation_round, product, '_default.yml'),
+        os.path.join(config_dir, simulation_round, product, sector + '.yml')
     ]
 
     for config_file in config_files:
@@ -52,7 +55,7 @@ def parse_config(simulation_round, sector, model, version=None):
             sys.exit()
 
     # check model
-    assert config['model'] in config['models'], \
+    assert model in config['models'], \
         'Model %(model)s is not configured for %(simulation_round)s %(sector)s' % config
 
     logger.debug(config)

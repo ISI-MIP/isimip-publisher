@@ -13,6 +13,7 @@ netcdf_metadata:
 
 json_metadata:
 - simulation_round
+- product
 - sector
 - model
 - a
@@ -22,6 +23,7 @@ json_metadata:
 
 dataset_metadata:
 - simulation_round
+- product
 - sector
 - model
 - a
@@ -31,9 +33,15 @@ dataset_metadata:
 
 file_metadata:
 - simulation_round
+- product
 - sector
 - model
 - a
 - b
 - c
 - d
+
+database_metadata_search:
+- simulation_round
+- product
+- sector

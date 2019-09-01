@@ -11,7 +11,7 @@ def parser(subparsers):
 
 
 def main(args):
-    config = parse_config(args.simulation_round, args.sector, args.model)
+    config = parse_config(args.simulation_round, args.product, args.sector, args.model)
     filelist = parse_filelist(args.filelist_file)
     remote_files = list_remote_files(config, filelist)
     local_files = copy_files(config, remote_files)

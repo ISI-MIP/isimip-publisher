@@ -14,7 +14,7 @@ def parser(subparsers):
 
 
 def main(args):
-    config = parse_config(args.simulation_round, args.sector, args.model)
+    config = parse_config(args.simulation_round, args.product, args.sector, args.model)
     filelist = parse_filelist(args.filelist_file)
 
     for file in list_local_files(config, filelist):

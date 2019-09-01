@@ -14,6 +14,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('simulation_round', help='name of the simulation_round')
+    parser.add_argument('product', help='type of data product')
     parser.add_argument('sector', help='name of the sector')
     parser.add_argument('model', help='models to process')
 

@@ -40,6 +40,7 @@ def test_list_remote(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'list_remote')
@@ -53,6 +54,7 @@ def test_match_remote_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'match_remote_files')
@@ -65,6 +67,7 @@ def test_match_remote_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'match_remote_datasets')
@@ -77,6 +80,7 @@ def test_copy_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'copy_files')
@@ -89,6 +93,7 @@ def test_list_local(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'list_local')
@@ -102,6 +107,7 @@ def test_match_local_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'match_local_files')
@@ -114,6 +120,7 @@ def test_match_local_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'match_local_datasets')
@@ -126,6 +133,7 @@ def test_update_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'update_files')
@@ -138,6 +146,7 @@ def test_create_checksums(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'create_checksums')
@@ -150,6 +159,7 @@ def test_create_jsons(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'create_jsons')
@@ -162,6 +172,7 @@ def test_ingest_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'ingest_datasets')
@@ -174,6 +185,7 @@ def test_ingest_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'ingest_files')
@@ -186,6 +198,7 @@ def test_publish_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'testround',
+        'testproduct',
         'testsector',
         'testmodel',
         'publish_files')
