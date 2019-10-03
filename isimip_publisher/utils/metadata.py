@@ -1,9 +1,7 @@
+from . import order_dict
+
 def get_netcdf_metadata(config, identifiers):
     return get_metadata(config, identifiers, config['netcdf_metadata'])
-
-
-def get_json_metadata(config, identifiers):
-    return get_metadata(config, identifiers, config['json_metadata'])
 
 
 def get_dataset_metadata(config, identifiers):
@@ -14,27 +12,26 @@ def get_file_metadata(config, identifiers):
     return get_metadata(config, identifiers, config['file_metadata'])
 
 
-def get_metadata(config, identifiers, filter_list=None):
-
+def get_metadata(config, identifiers, metadata_keys):
     # get everything from config which is a str
-    metadata = {key: value for key, value in config.items() if isinstance(value, str)}
+    values = {key: value for key, value in config.items() if isinstance(value, str)}
 
     # add identifiers
-    metadata.update(identifiers)
+    values.update(identifiers)
 
     # add everything from model config which is a str
     model_config = config['models'].get(config['model'], {}) or {}
-    model_metadata = {key: value for key, value in model_config.items() if isinstance(value, str)}
-    metadata.update(model_metadata)
+    model_values = {key: value for key, value in model_config.items() if isinstance(value, str)}
+    values.update(model_values)
 
-    # add template metadata
-    templates = {}
-    for key, template in config['templates'].items():
-        templates[key] = template % metadata
-    metadata.update(templates)
+    # return values for keys or templates
+    metadata = {}
+    for key in metadata_keys:
+        template_key = '%s_template' % key
+        if key in values:
+            metadata[key] = values[key]
+        elif template_key in values:
+            metadata[key] = values[template_key] % values
 
-    # return everyting or filter
-    if filter_list:
-        return {key: value for key, value in metadata.items() if key in filter_list}
-    else:
-        return metadata
+    # order metadata and return
+    return order_dict(metadata)

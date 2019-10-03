@@ -43,46 +43,46 @@ Usage
 
 ```bash
 # list remote files
-isimip-publisher <simulation_round> <sector> <model> list_remote
+isimip-publisher <simulation_round> <product> <sector> <model> list_remote
 
 # match remote datasets
-isimip-publisher <simulation_round> <sector> <model> match_remote_datasets
+isimip-publisher <simulation_round> <product> <sector> <model> match_remote_datasets
 
 # match remote files
-isimip-publisher <simulation_round> <sector> <model> match_remote_files
+isimip-publisher <simulation_round> <product> <sector> <model> match_remote_files
 
 # copy remote files to TMP_DIR
-isimip-publisher <simulation_round> <sector> <model> copy_files
+isimip-publisher <simulation_round> <product> <sector> <model> copy_files
 
 # list local files
-isimip-publisher <simulation_round> <sector> <model> list_local
+isimip-publisher <simulation_round> <product> <sector> <model> list_local
 
 # match local datasets
-isimip-publisher <simulation_round> <sector> <model> match_local_datasets
+isimip-publisher <simulation_round> <product> <sector> <model> match_local_datasets
 
 # match local files
-isimip-publisher <simulation_round> <sector> <model> match_local_files
+isimip-publisher <simulation_round> <product> <sector> <model> match_local_files
 
 # update the global attributes accoding to the config
-isimip-publisher <simulation_round> <sector> <model> update_files
+isimip-publisher <simulation_round> <product> <sector> <model> update_files
 
 # create a JSON file with metadata
-isimip-publisher <simulation_round> <sector> <model> create_jsons
+isimip-publisher <simulation_round> <product> <sector> <model> create_jsons
 
 # create a checksum file with the sha256 checksum of the file
-isimip-publisher <simulation_round> <sector> <model> create_checksums
+isimip-publisher <simulation_round> <product> <sector> <model> create_checksums
 
 # finds datasets and ingest their metadata into the database
-isimip-publisher <simulation_round> <sector> <model> ingest_datasets
+isimip-publisher <simulation_round> <product> <sector> <model> ingest_datasets
 
 # ingest the metadata from the files into the database
-isimip-publisher <simulation_round> <sector> <model> ingest_files
+isimip-publisher <simulation_round> <product> <sector> <model> ingest_files
 
 # copy files from WORK_DIR to PUPLIC_DIR
-isimip-publisher <simulation_round> <sector> <model> publish_files
+isimip-publisher <simulation_round> <product> <sector> <model> publish_files
 
 # cleanup the WORK_DIR
-isimip-publisher <simulation_round> <sector> <model> clean
+isimip-publisher <simulation_round> <product> <sector> <model> clean
 ```
 
 For all commands but `list_remote` and `list_local` a list of files *relative* to `REMOTE_DIR` or `WORK_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:

@@ -41,6 +41,8 @@ def match_file(config, file_path):
     logger.debug(dirgroups)
 
     for key, value in dirgroups.items():
+        validation_key = '%s_validation' % key
+
         if key == 'sector':
 
             assert value == config['sector'], \
@@ -53,8 +55,8 @@ def match_file(config, file_path):
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['model'], file_path)
 
-        elif key in config['dirname_validation']:
-            values = config['dirname_validation'][key]
+        elif validation_key in config:
+            values = config[validation_key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
@@ -71,6 +73,8 @@ def match_file(config, file_path):
     logger.debug(filegroups)
 
     for key, value in filegroups.items():
+        validation_key = '%s_validation' % key
+
         if key == 'sector':
 
             assert value == config['sector'], \
@@ -86,8 +90,8 @@ def match_file(config, file_path):
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, modelname, file_path)
 
-        elif key in config['filename_validation']:
-            values = config['filename_validation'][key]
+        elif validation_key in config:
+            values = config[validation_key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \

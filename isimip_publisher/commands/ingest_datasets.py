@@ -24,8 +24,8 @@ def main(args):
 
     session = init_database_session()
 
-    for dataset, identifiers in datasets.items():
-        metadata = get_dataset_metadata(config, identifiers)
-        insert_dataset(config, session, dataset, metadata, version)
+    for dataset_path, dataset in datasets.items():
+        metadata = get_dataset_metadata(config, dataset['identifiers'])
+        insert_dataset(config, session, dataset['name'], metadata, version)
 
     session.commit()

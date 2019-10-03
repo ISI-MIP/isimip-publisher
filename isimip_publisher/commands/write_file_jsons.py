@@ -1,8 +1,8 @@
-from ..utils import get_subparser_title, add_version_to_path
+from ..utils import get_subparser_title
 from ..utils.config import parse_config, parse_filelist, parse_version
-from ..utils.files import list_local_files, rename_file
-from ..utils.metadata import get_netcdf_metadata
-from ..utils.netcdf import update_netcdf_global_attributes
+from ..utils.files import list_local_files
+from ..utils.json import write_file_json
+from ..utils.metadata import get_file_metadata
 from ..utils.patterns import match_file
 
 
@@ -19,9 +19,9 @@ def main(args):
     version = parse_version(args.version)
     config = parse_config(args.simulation_round, args.product, args.sector, args.model, version)
     filelist = parse_filelist(args.filelist_file)
+    files = list_local_files(config, filelist)
 
-    for file_path in list_local_files(config, filelist):
+    for file_path in files:
         file_name, identifiers = match_file(config, file_path)
-        metadata = get_netcdf_metadata(config, identifiers)
-        update_netcdf_global_attributes(config, metadata, file_path)
-        rename_file(file_path, add_version_to_path(file_path, version))
+        metadata = get_file_metadata(config, identifiers)
+        write_file_json(config, metadata, file_path)

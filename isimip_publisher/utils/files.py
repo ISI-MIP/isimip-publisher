@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -95,16 +94,6 @@ def delete_file(file_path):
     os.remove(file_path)
 
 
-def add_version_to_file(file_path, version):
-    root, ext = os.path.splitext(file_path)
-
-    # check if there is already a version
-    match = re.search('(\\d{8})$', root)
-    if match:
-        assert version == match.group(1), \
-            'version mismatch in %s' % file_path
-    else:
-        new_file_path = '%s_%s%s' % (root, version, ext)
-
-        logger.debug('mv %s %s', file_path, new_file_path)
-        os.rename(file_path, new_file_path)
+def rename_file(file_path, new_file_path):
+    logger.debug('mv %s %s', file_path, new_file_path)
+    os.rename(file_path, new_file_path)
