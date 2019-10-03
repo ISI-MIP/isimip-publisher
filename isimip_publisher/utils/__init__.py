@@ -38,5 +38,8 @@ def add_version_to_path(path, version):
     if match:
         assert version == match.group(1), \
             'version mismatch in %s' % path
+
+        # version string was already added
+        return path
     else:
         return '%s_%s%s' % (root, version, ext)

@@ -24,4 +24,7 @@ def main(args):
         file_name, identifiers = match_file(config, file_path)
         metadata = get_netcdf_metadata(config, identifiers)
         update_netcdf_global_attributes(config, metadata, file_path)
-        rename_file(file_path, add_version_to_path(file_path, version))
+
+        version_file_path = add_version_to_path(file_path, version)
+        if version_file_path != file_path:
+            rename_file(file_path, version_file_path)
