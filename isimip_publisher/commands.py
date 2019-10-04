@@ -2,7 +2,8 @@ from tqdm import tqdm
 
 from .utils import add_version_to_path
 from .utils.checksum import write_checksum
-from .utils.database import init_database_session, insert_dataset, insert_file
+from .utils.database import (init_database_session, insert_dataset,
+                             insert_file, update_words_view)
 from .utils.files import (chmod_file, delete_file, list_local_files,
                           list_remote_files, rename_file,
                           rsync_files_from_remote, rsync_files_to_public)
@@ -129,6 +130,12 @@ def update_files(version, config, filelist=None):
             rename_file(file['abspath'], version_file_path)
 
 
+def update_index(version, config, filelist=None):
+    session = init_database_session()
+    update_words_view(session)
+    session.commit()
+
+
 def write_checksums(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
@@ -164,6 +171,7 @@ def run(version, config, filelist=None):
     write_file_jsons(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
+    update_index(version, config, filelist)
     publish_files(version, config, filelist)
 
 
@@ -181,4 +189,5 @@ def run_all(version, config, filelist=None):
     write_file_jsons(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
+    update_index(version, config, filelist)
     publish_files(version, config, filelist)

@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, String, Text, Index, create_engine, f
 from sqlalchemy.dialects.postgresql import JSONB, UUID, TSVECTOR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.exc import ProgrammingError
 
 from . import order_dict
 from .checksum import get_checksum, get_checksum_type
@@ -154,3 +155,18 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
             search_vector=search_vector
         )
         session.add(file)
+
+
+def update_words_view(session):
+    try:
+        session.connection().execute('''
+            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT search_vector FROM datasets')
+        ''')
+        session.connection().execute('''
+            CREATE INDEX ON words USING gin(word gin_trgm_ops)
+        ''')
+    except ProgrammingError:
+        session.rollback()
+        session.connection().execute('''
+            REFRESH MATERIALIZED VIEW words
+        ''')

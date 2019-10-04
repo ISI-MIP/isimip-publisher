@@ -3,7 +3,7 @@ import argparse
 from .commands import (ingest_datasets, ingest_files, fetch_files,
                        list_local, list_remote, match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files, publish_files,
-                       update_files, write_checksums,
+                       update_files, update_index, write_checksums,
                        write_dataset_jsons, write_file_jsons,
                        run, run_all)
 from .utils import setup_env, setup_logging
@@ -38,6 +38,7 @@ def main():
     subparsers.add_parser('match_remote_files').set_defaults(func=match_remote_files)
     subparsers.add_parser('publish_files').set_defaults(func=publish_files)
     subparsers.add_parser('update_files').set_defaults(func=update_files)
+    subparsers.add_parser('update_index').set_defaults(func=update_index)
     subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
     subparsers.add_parser('write_dataset_jsons').set_defaults(func=write_dataset_jsons)
     subparsers.add_parser('write_file_jsons').set_defaults(func=write_file_jsons)
