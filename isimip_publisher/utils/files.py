@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -7,60 +8,44 @@ logger = logging.getLogger(__name__)
 
 def list_remote_files(config, filelist=None):
     remote_dest = os.environ['REMOTE_DEST']
-    remote_dir = os.environ['REMOTE_DIR'] % config
-
-    output = subprocess.check_output([
-        'ssh', remote_dest, 'find', remote_dir, '-type', 'f', '-name', '*.nc4'])
-
-    files = []
-    for line in output.splitlines():
-        file = line.decode()
-        if filelist:
-            if file.replace(remote_dir, '') in filelist:
-                files.append(file)
-        else:
-            files.append(file)
-
-    logger.debug(files)
-    return files
+    remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
+    return find_files(['ssh', remote_dest, 'find', remote_dir, '-type', 'f', '-name', '*.nc4'], filelist)
 
 
 def list_local_files(config, filelist=None):
-    local_dir = os.environ['WORK_DIR'] % config
+    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
+    return find_files(['find', local_dir, '-type', 'f', '-name', '*.nc4'], filelist)
 
-    output = subprocess.check_output([
-        'find', local_dir, '-type', 'f', '-name', '*.nc4'])
+
+def find_files(args, filelist=None):
+    output = subprocess.check_output(args)
 
     files = []
     for line in output.splitlines():
-        file = line.decode()
+        file_abspath = line.decode()
         if filelist:
-            if file.replace(local_dir, '') in filelist:
-                files.append(file)
+            if file_abspath in filelist:
+                files.append(file_abspath)
         else:
-            files.append(file)
+            files.append(file_abspath)
 
     logger.debug(files)
     return files
 
 
-def copy_files(config, files):
+def rsync_files_from_remote(config, files):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
-    local_dir = os.path.join(os.environ['WORK_DIR'] % config, '')
+    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
 
-    return rsync_files(remote_dest + ':' + remote_dir, local_dir, [file.replace(remote_dir, '') for file in files])
+    yield from rsync_files(remote_dest + ':' + remote_dir, local_dir, [file.replace(remote_dir, '') for file in files])
 
 
-def publish_files(config, files):
-    WORK_DIR = os.path.join(os.environ['WORK_DIR'] % config, '')
-    PUBLIC_DIR = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
+def rsync_files_to_public(config, files):
+    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
+    public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
 
-    netcdf_files = [file.replace(WORK_DIR, '') for file in files]
-    json_files = [file.replace('.nc4', '.json') for file in netcdf_files]
-    sha256_files = [file.replace('.nc4', '.sha256') for file in netcdf_files]
-
-    return rsync_files(WORK_DIR, PUBLIC_DIR, netcdf_files + json_files + sha256_files)
+    yield from rsync_files(local_dir, public_dir, [file.replace(local_dir, '') for file in files])
 
 
 def rsync_files(source, destination, files):
@@ -72,16 +57,30 @@ def rsync_files(source, destination, files):
         for file in files:
             f.write(file.replace(source, '') + os.linesep)
 
-    p = subprocess.Popen([
-        'rsync', '-av', '--include=*/', '--include-from=%s' % include_file, '--exclude=*', source, destination
+    # make a dry-run to get the number of files to transfer
+    output = subprocess.check_output([
+        'rsync', '-avz', '--stats', '--dry-run', '--include=*/', '--include-from=%s' % include_file, '--exclude=*', source, destination
+    ])
+
+    # get the total number of files from the output of rsync
+    match = re.findall(r'Number of regular files transferred: (\d{1,3}(,\d{3})*)', output.decode())
+    total_files = int(match[0][0].replace(',', ''))
+
+    # get the number of files which were already transfered
+    diff_files = len(files) - total_files
+
+    process = subprocess.Popen([
+        'rsync', '-azvi', '--include=*/', '--include-from=%s' % include_file, '--exclude=*', source, destination
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    for line in p.stdout:
-        logger.debug('copy %s', line.decode().strip())
+    yield diff_files
+    for line in process.stdout:
+        output = line.decode().strip()
+        if output.startswith('>f'):
+            logger.debug('rsync %s', output)
+            yield 1
 
     os.remove(include_file)
-
-    return [destination + file for file in files]
 
 
 def chmod_file(file_path):

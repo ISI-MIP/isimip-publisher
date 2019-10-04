@@ -5,81 +5,109 @@ import re
 logger = logging.getLogger(__name__)
 
 
+def match_datasets(config, files):
+    dataset_dict = {}
+
+    for file_path in files:
+        dataset_path, dataset_name, identifiers = match_dataset(config, file_path)
+
+        if dataset_path not in dataset_dict:
+            dataset_dict[dataset_path] = {
+                'name': dataset_name,
+                'abspath': os.path.join(os.path.dirname(file_path), dataset_name),
+                'identifiers': identifiers,
+                'files': [file_path]
+            }
+        else:
+            dataset_dict[dataset_path]['files'].append(file_path)
+
+    return dataset_dict
+
+
+def match_files(config, files):
+    file_dict = {}
+
+    for file_abspath in files:
+        file_path, file_name, identifiers = match_file(config, file_abspath)
+        dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
+
+        file_dict[file_path] = {
+            'name': file_name,
+            'abspath': file_abspath,
+            'identifiers': identifiers,
+            'dataset_path': dataset_path
+        }
+
+    return file_dict
+
+
 def match_dataset(config, file_path):
-    dataset_pattern = config['dataset_pattern'].replace(os.linesep, '')
-
-    filename = os.path.basename(file_path)
-
-    logger.debug(filename)
-    logger.debug(dataset_pattern)
-    match = re.search(dataset_pattern, filename)
-    assert match is not None, 'No dataset match for %s' % file_path
-
-    # get the identifiers from the match
-    dataset = match.group(0)
-    datasetgroups = match.groupdict()
-    logger.debug(datasetgroups)
-
-    return dataset, datasetgroups
+    return match(config, file_path, 'dirname_pattern', 'dataset_pattern')
 
 
 def match_file(config, file_path):
-    dirname_pattern = config['dirname_pattern'].replace(os.linesep, '')
-    filename_pattern = config['filename_pattern'].replace(os.linesep, '')
+    return match(config, file_path, 'dirname_pattern', 'filename_pattern')
+
+
+def match(config, file_path, dirname_pattern_key, filename_pattern_key):
+    dirname_pattern = config[dirname_pattern_key].replace(os.linesep, '')
+    filename_pattern = config[filename_pattern_key].replace(os.linesep, '')
 
     # split file path
     dirname, filename = os.path.split(file_path)
 
-    # try to match the dirname
-    logger.debug(dirname)
-    logger.debug(dirname_pattern)
-    dirmatch = re.search(dirname_pattern, dirname)
-    assert dirmatch is not None, 'No directory match for %s' % dirname
+    # match the dirname and the filename
+    dirname_match, dirname_dict = match_string(dirname_pattern, dirname)
+    filename_match, filename_dict = match_string(filename_pattern, filename)
 
-    # get the identifiers from the match
-    dirgroups = dirmatch.groupdict()
-    logger.debug(dirgroups)
+    path = os.path.join(dirname_match, filename_match)
+    name = filename_match
+    identifiers = {**dirname_dict, **filename_dict}
+    validate_identifiers(config, file_path, identifiers)
 
-    for key, value in dirgroups.items():
+    return path, name, identifiers
+
+
+def match_string(pattern, string):
+    logger.debug(pattern)
+    logger.debug(string)
+
+    # try to match the string
+    match = re.search(pattern, string)
+    assert match is not None, 'No match for %s' % string
+    return match.group(0), match.groupdict()
+
+
+def validate_identifiers(config, file_path, identifiers):
+    for key, value in identifiers.items():
         validation_key = '%s_validation' % key
 
-        if key == 'sector':
-
-            assert value == config['sector'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['sector'], file_path)
-
-        elif key == 'model':
-
-            assert value == config['model'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['model'], file_path)
-
-        elif validation_key in config:
+        if validation_key in config:
             values = config[validation_key]
 
             assert value in values, \
                 '%s mismatch: %s not in %s for %s' % \
                 (key, value, values, file_path)
 
-    # try to match the filename
-    logger.debug(filename)
-    logger.debug(filename_pattern)
-    filematch = re.match(filename_pattern, filename)
-    assert filematch is not None, 'No filename match for %s' % filename
+        elif key == 'simulation_round':
+            assert value == config['simulation_round'], \
+                '%s mismatch: %s != %s for %s' % \
+                (key, value, config['simulation_round'], file_path)
 
-    # get the identifiers from the match
-    filegroups = filematch.groupdict()
-    logger.debug(filegroups)
+        elif key == 'product':
+            assert value == config['product'], \
+                '%s mismatch: %s != %s for %s' % \
+                (key, value, config['product'], file_path)
 
-    for key, value in filegroups.items():
-        validation_key = '%s_validation' % key
-
-        if key == 'sector':
-
+        elif key == 'sector':
             assert value == config['sector'], \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, config['sector'], file_path)
+
+        elif key == 'model':
+            assert value == config['model'], \
+                '%s mismatch: %s != %s for %s' % \
+                (key, value, config['model'], file_path)
 
         elif key == 'modelname':
             # compare with a modelname from the config or model.lower()
@@ -89,13 +117,3 @@ def match_file(config, file_path):
             assert value == modelname, \
                 '%s mismatch: %s != %s for %s' % \
                 (key, value, modelname, file_path)
-
-        elif validation_key in config:
-            values = config[validation_key]
-
-            assert value in values, \
-                '%s mismatch: %s not in %s for %s' % \
-                (key, value, values, file_path)
-
-    filegroups.update(dirgroups)
-    return filename, filegroups
