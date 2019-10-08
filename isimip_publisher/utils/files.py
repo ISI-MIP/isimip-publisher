@@ -8,13 +8,13 @@ logger = logging.getLogger(__name__)
 
 def list_remote_files(config, filelist=None):
     remote_dest = os.environ['REMOTE_DEST']
-    remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
-    return find_files(['ssh', remote_dest, 'find', remote_dir, '-type', 'f', '-name', '*.nc4'], filelist)
+    remote_dir = os.environ['REMOTE_DIR'] % config
+    return find_files(['ssh', remote_dest, 'find', remote_dir.rstrip('/'), '-type', 'f', '-name', '*.nc4'], filelist)
 
 
 def list_local_files(config, filelist=None):
-    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
-    return find_files(['find', local_dir, '-type', 'f', '-name', '*.nc4'], filelist)
+    local_dir = os.environ['LOCAL_DIR'] % config
+    return find_files(['find', local_dir.rstrip('/'), '-type', 'f', '-name', '*.nc4'], filelist)
 
 
 def find_files(args, filelist=None):
