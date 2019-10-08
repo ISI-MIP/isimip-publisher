@@ -15,7 +15,7 @@ from .utils.patterns import match_datasets, match_files
 
 
 def chmod_files(version, config, filelist=None):
-    local_files = copy_files(config, remote_files)
+    local_files = list_local_files(config, filelist)
 
     for file_path in tqdm(local_files, desc='chmod_files'):
         chmod_file(file_path)

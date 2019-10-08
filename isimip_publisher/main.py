@@ -1,6 +1,6 @@
 import argparse
 
-from .commands import (ingest_datasets, ingest_files, fetch_files,
+from .commands import (chmod_files, ingest_datasets, ingest_files, fetch_files,
                        list_local, list_remote, match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files, publish_files,
                        update_files, update_index, write_checksums,
@@ -27,6 +27,7 @@ def main():
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
     # add a subparser for each subcommand
+    subparsers.add_parser('chmod_files').set_defaults(func=chmod_files)
     subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
     subparsers.add_parser('ingest_files').set_defaults(func=ingest_files)
     subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
