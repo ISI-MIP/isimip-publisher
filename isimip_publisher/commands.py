@@ -161,33 +161,3 @@ def write_file_jsons(version, config, filelist=None):
     for file_path, file in tqdm(files.items(), desc='write_file_jsons'):
         metadata = get_file_metadata(config, file['identifiers'])
         write_file_json(config, metadata, file['abspath'])
-
-
-def run(version, config, filelist=None):
-    fetch_files(version, config, filelist)
-    update_files(version, config, filelist)
-    write_checksums(version, config, filelist)
-    write_dataset_jsons(version, config, filelist)
-    write_file_jsons(version, config, filelist)
-    ingest_datasets(version, config, filelist)
-    ingest_files(version, config, filelist)
-    update_index(version, config, filelist)
-    publish_files(version, config, filelist)
-
-
-def run_all(version, config, filelist=None):
-    list_remote(version, config, filelist)
-    match_remote_datasets(version, config, filelist)
-    match_remote_files(version, config, filelist)
-    fetch_files(version, config, filelist)
-    list_local(version, config, filelist)
-    match_local_datasets(version, config, filelist)
-    match_local_files(version, config, filelist)
-    update_files(version, config, filelist)
-    write_checksums(version, config, filelist)
-    write_dataset_jsons(version, config, filelist)
-    write_file_jsons(version, config, filelist)
-    ingest_datasets(version, config, filelist)
-    ingest_files(version, config, filelist)
-    update_index(version, config, filelist)
-    publish_files(version, config, filelist)

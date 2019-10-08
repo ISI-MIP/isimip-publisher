@@ -4,8 +4,7 @@ from .commands import (chmod_files, ingest_datasets, ingest_files, fetch_files,
                        list_local, list_remote, match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files, publish_files,
                        update_files, update_index, write_checksums,
-                       write_dataset_jsons, write_file_jsons,
-                       run, run_all)
+                       write_dataset_jsons, write_file_jsons)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -57,3 +56,33 @@ def main():
         args.func(version, config, filelist)
     else:
         parser.print_help()
+
+
+def run(version, config, filelist=None):
+    fetch_files(version, config, filelist)
+    update_files(version, config, filelist)
+    write_checksums(version, config, filelist)
+    write_dataset_jsons(version, config, filelist)
+    write_file_jsons(version, config, filelist)
+    ingest_datasets(version, config, filelist)
+    ingest_files(version, config, filelist)
+    update_index(version, config, filelist)
+    publish_files(version, config, filelist)
+
+
+def run_all(version, config, filelist=None):
+    list_remote(version, config, filelist)
+    match_remote_datasets(version, config, filelist)
+    match_remote_files(version, config, filelist)
+    fetch_files(version, config, filelist)
+    list_local(version, config, filelist)
+    match_local_datasets(version, config, filelist)
+    match_local_files(version, config, filelist)
+    update_files(version, config, filelist)
+    write_checksums(version, config, filelist)
+    write_dataset_jsons(version, config, filelist)
+    write_file_jsons(version, config, filelist)
+    ingest_datasets(version, config, filelist)
+    ingest_files(version, config, filelist)
+    update_index(version, config, filelist)
+    publish_files(version, config, filelist)
