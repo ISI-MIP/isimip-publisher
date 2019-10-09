@@ -70,34 +70,22 @@ def list_remote(version, config, filelist=None):
 
 def match_local_datasets(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
-    datasets = match_datasets(config, local_files)
-
-    for datasets_path in datasets:
-        print(datasets_path)
+    match_datasets(config, local_files)
 
 
 def match_local_files(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
-
-    for file_path in files:
-        print(file_path)
+    match_files(config, local_files)
 
 
 def match_remote_datasets(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
-    datasets = match_datasets(config, remote_files)
-
-    for datasets_path in datasets:
-        print(datasets_path)
+    match_datasets(config, remote_files)
 
 
 def match_remote_files(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
-    files = match_files(config, remote_files)
-
-    for file_path in files:
-        print(file_path)
+    match_files(config, remote_files)
 
 
 def publish_files(version, config, filelist=None):
@@ -110,7 +98,7 @@ def publish_files(version, config, filelist=None):
     public_files += [file['abspath'].replace('.nc4', '.json') for file in files.values()]
     public_files += [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
 
-    t = tqdm(total=len(public_files), desc='fetch_files')
+    t = tqdm(total=len(public_files), desc='publish_files')
     for n in copy_files_to_public(version, config, public_files):
         t.update(n)
 

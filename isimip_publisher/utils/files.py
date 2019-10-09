@@ -43,10 +43,11 @@ def copy_files_from_remote(config, files):
     remote_dir = os.path.join(os.environ['REMOTE_DIR'] % config, '')
     local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
 
-    try:
-        os.makedirs(local_dir)
-    except FileExistsError:
+    if os.path.exists(local_dir):
         raise RuntimeError('LOCAL_DIR already exists, run "clean" first!')
+
+    # create the local_dir
+    os.makedirs(local_dir, exist_ok=True)
 
     # write file list in temporary file
     include_file = 'rsync-include.txt'
@@ -118,7 +119,10 @@ def copy_files_to_public(version, config, files):
 def delete_files(config):
     local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
     logger.info('rm -r %s', local_dir)
-    shutil.rmtree(local_dir)
+    try:
+        shutil.rmtree(local_dir)
+    except FileNotFoundError:
+        pass
 
 
 def chmod_file(file_path):

@@ -57,12 +57,12 @@ def match(config, file_path, dirname_pattern_key, filename_pattern_key):
     dirname, filename = os.path.split(file_path)
 
     # match the dirname and the filename
-    dirname_match, dirname_dict = match_string(dirname_pattern, dirname)
-    filename_match, filename_dict = match_string(filename_pattern, filename)
+    dirname_match, dirname_identifiers = match_string(dirname_pattern, dirname)
+    filename_match, filename_identifiers = match_string(filename_pattern, filename)
 
     path = os.path.join(dirname_match, filename_match)
     name = filename_match
-    identifiers = {**dirname_dict, **filename_dict}
+    identifiers = {**dirname_identifiers, **filename_identifiers}
     validate_identifiers(config, file_path, identifiers)
 
     return path, name, identifiers
@@ -75,7 +75,7 @@ def match_string(pattern, string):
     # try to match the string
     match = re.search(pattern, string)
     assert match is not None, 'No match for %s' % string
-    return match.group(0), match.groupdict()
+    return match.group(0), {key: value for key, value in match.groupdict().items() if value is not None}
 
 
 def validate_identifiers(config, file_path, identifiers):

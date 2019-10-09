@@ -14,7 +14,7 @@ def setup_env():
 
 def setup_logging():
     filename = os.getenv('LOG_FILE')
-    level = os.getenv('LOG_LEVEL', 'INFO')
+    level = os.getenv('LOG_LEVEL', 'ERROR')
     if filename:
         logging.basicConfig(level=level, filename=filename)
     else:

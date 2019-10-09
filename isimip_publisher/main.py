@@ -61,6 +61,8 @@ def main():
 
 
 def run(version, config, filelist=None):
+    match_remote_datasets(version, config, filelist)
+    match_remote_files(version, config, filelist)
     fetch_files(version, config, filelist)
     update_files(version, config, filelist)
     write_checksums(version, config, filelist)
@@ -69,8 +71,8 @@ def run(version, config, filelist=None):
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)
-    # publish_files(version, config, filelist)
-    # clean(version, config, filelist)
+    publish_files(version, config, filelist)
+    clean(version, config, filelist)
 
 
 def run_all(version, config, filelist=None):
