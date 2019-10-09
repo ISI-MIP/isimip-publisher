@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 
 from collections import OrderedDict
 
@@ -32,14 +31,4 @@ def get_subparser_title(module):
 
 def add_version_to_path(path, version):
     root, ext = os.path.splitext(path)
-
-    # check if there is already a version
-    match = re.search('(\\d{8})$', root)
-    if match:
-        assert version == match.group(1), \
-            'version mismatch in %s' % path
-
-        # version string was already added
-        return path
-    else:
-        return '%s_%s%s' % (root, version, ext)
+    return '%s_v%s%s' % (root, version, ext)
