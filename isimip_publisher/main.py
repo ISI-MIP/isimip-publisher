@@ -1,10 +1,11 @@
 import argparse
 
-from .commands import (chmod_files, ingest_datasets, ingest_files, fetch_files,
-                       list_local, list_remote, match_local_datasets, match_local_files,
-                       match_remote_datasets, match_remote_files, publish_files,
-                       update_files, update_index, write_checksums,
-                       write_dataset_jsons, write_file_jsons)
+from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
+                       ingest_files, list_local, list_remote,
+                       match_local_datasets, match_local_files,
+                       match_remote_datasets, match_remote_files,
+                       publish_files, update_files, update_index,
+                       write_checksums, write_dataset_jsons, write_file_jsons)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -27,6 +28,7 @@ def main():
 
     # add a subparser for each subcommand
     subparsers.add_parser('chmod_files').set_defaults(func=chmod_files)
+    subparsers.add_parser('clean').set_defaults(func=clean)
     subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
     subparsers.add_parser('ingest_files').set_defaults(func=ingest_files)
     subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
@@ -67,7 +69,8 @@ def run(version, config, filelist=None):
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)
-    publish_files(version, config, filelist)
+    # publish_files(version, config, filelist)
+    # clean(version, config, filelist)
 
 
 def run_all(version, config, filelist=None):
@@ -86,3 +89,4 @@ def run_all(version, config, filelist=None):
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)
     publish_files(version, config, filelist)
+    clean(version, config, filelist)

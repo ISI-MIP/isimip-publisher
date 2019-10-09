@@ -88,15 +88,16 @@ def insert_dataset(session, version, config, dataset_path, dataset_name, metadat
     ).one_or_none()
 
     if dataset:
+        # if the dataset already exists, update its attributes
         if dataset.attributes != attributes:
             dataset.attributes = attributes
             dataset.search_vector = search_vector
-            logger.debug('update dataset %s', dataset_path)
+            logger.info('update dataset %s', dataset_path)
         else:
-            logger.debug('skip dataset %s', dataset_path)
+            logger.info('skip dataset %s', dataset_path)
     else:
         # insert a new row for this dataset
-        logger.debug('insert dataset %s', dataset_path)
+        logger.info('insert dataset %s', dataset_path)
         dataset = Dataset(
             name=dataset_name,
             path=dataset_path,
@@ -130,20 +131,20 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
 
     if file:
         if file.checksum == checksum:
-            # the file has not changed
+            # the file itself has not changed, update the attributes
             if file.attributes != attributes:
                 file.attributes = attributes
                 file.search_vector = search_vector
-                logger.debug('update file %s', file_path)
+                logger.info('update file %s', file_path)
             else:
-                logger.debug('skip file %s', file_path)
+                logger.info('skip file %s', file_path)
 
         else:
             # the file has been changed, but the version is the same, this is not ok
             raise RuntimeError('%s has been changed but the version is the same' % file_path)
     else:
         # insert a new row for this file
-        logger.debug('insert file %s', file_path)
+        logger.info('insert file %s', file_path)
         file = File(
             name=file_name,
             version=version,
@@ -168,8 +169,10 @@ def update_words_view(session):
         session.connection().execute('''
             CREATE INDEX ON words USING gin(word gin_trgm_ops)
         ''')
+        logger.info('create words view')
     except ProgrammingError:
         session.rollback()
         session.connection().execute('''
             REFRESH MATERIALIZED VIEW words
         ''')
+        logger.info('update words view')

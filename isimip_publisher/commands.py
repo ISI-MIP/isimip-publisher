@@ -3,8 +3,9 @@ from tqdm import tqdm
 from .utils.checksum import write_checksum
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, update_words_view)
-from .utils.files import (chmod_file, list_local_files,
-                          list_remote_files, publish_file, rsync_files)
+from .utils.files import (chmod_file, copy_files_from_remote,
+                          copy_files_to_public, delete_files, list_local_files,
+                          list_remote_files)
 from .utils.json import write_dataset_json, write_file_json
 from .utils.metadata import (get_dataset_metadata, get_file_metadata,
                              get_netcdf_metadata)
@@ -17,6 +18,10 @@ def chmod_files(version, config, filelist=None):
 
     for file_path in tqdm(local_files, desc='chmod_files'):
         chmod_file(file_path)
+
+
+def clean(version, config, filelist=None):
+    delete_files(config)
 
 
 def ingest_datasets(version, config, filelist=None):
@@ -49,7 +54,7 @@ def fetch_files(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
 
     t = tqdm(total=len(remote_files), desc='fetch_files')
-    for n in rsync_files(config, remote_files):
+    for n in copy_files_from_remote(config, remote_files):
         t.update(n)
 
 
@@ -100,13 +105,14 @@ def publish_files(version, config, filelist=None):
     datasets = match_datasets(config, local_files)
     files = match_files(config, local_files)
 
-    a = ['%s.json' % dataset['abspath'] for dataset in datasets.values()]
-    b = [file['abspath'] for file in files.values()]
-    c = [file['abspath'].replace('.nc4', '.json') for file in files.values()]
-    d = [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
+    public_files = ['%s.json' % dataset['abspath'] for dataset in datasets.values()]
+    public_files += [file['abspath'] for file in files.values()]
+    public_files += [file['abspath'].replace('.nc4', '.json') for file in files.values()]
+    public_files += [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
 
-    for file_path in tqdm(a + b + c + d, desc='publish_files'):
-        publish_file(version, config, file_path)
+    t = tqdm(total=len(public_files), desc='fetch_files')
+    for n in copy_files_to_public(version, config, public_files):
+        t.update(n)
 
 
 def update_files(version, config, filelist=None):
