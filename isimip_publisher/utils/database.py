@@ -176,3 +176,20 @@ def update_words_view(session):
             REFRESH MATERIALIZED VIEW words
         ''')
         logger.info('update words view')
+
+
+def update_attributes_view(session):
+    try:
+        session.connection().execute('''
+            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(attributes) AS key FROM datasets
+        ''')
+        session.connection().execute('''
+            CREATE INDEX ON attributes(key)
+        ''')
+        logger.info('create attributes view')
+    except ProgrammingError:
+        session.rollback()
+        session.connection().execute('''
+            REFRESH MATERIALIZED VIEW attributes
+        ''')
+        logger.info('update attributes view')

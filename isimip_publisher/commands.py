@@ -2,7 +2,7 @@ from tqdm import tqdm
 
 from .utils.checksum import write_checksum
 from .utils.database import (init_database_session, insert_dataset,
-                             insert_file, update_words_view)
+                             insert_file, update_words_view, update_attributes_view)
 from .utils.files import (chmod_file, copy_files_from_remote,
                           copy_files_to_public, delete_files, list_local_files,
                           list_remote_files)
@@ -115,6 +115,7 @@ def update_files(version, config, filelist=None):
 def update_index(version, config, filelist=None):
     session = init_database_session()
     update_words_view(session)
+    update_attributes_view(session)
     session.commit()
 
 
