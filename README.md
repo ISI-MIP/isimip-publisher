@@ -34,9 +34,18 @@ PUBLIC_DIR=/path/to/public/%(simulation_round)s/%(sector)s/%(model)s
 REMOTE_DEST=localhost
 REMOTE_DIR=/path/to/remote/%(simulation_round)s/output/%(sector)s/%(model)s
 
-DATABASE=postgresql+psycopg2://user:password@host:port/dbname
+DATABASE=postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
 ```
 
+A database user and a database has to be created and the `pg_trgm` extension has to be created:
+
+```pgsql
+CREATE USER "USER" WITH PASSWORD 'PASSWORD';
+CREATE DATABASE "DBNAME" WITH OWNER "USER";
+
+\c DBNAME
+CREATE EXTENSION pg_trgm;
+```
 
 Usage
 -----

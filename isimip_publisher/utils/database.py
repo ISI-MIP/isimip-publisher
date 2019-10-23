@@ -161,9 +161,6 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
 def update_words_view(session):
     try:
         session.connection().execute('''
-            CREATE EXTENSION pg_trgm;
-        ''')
-        session.connection().execute('''
             CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT search_vector FROM datasets')
         ''')
         session.connection().execute('''
