@@ -116,12 +116,18 @@ Copy `.env.pytest` to `.env`. This sets the environment variables to the directo
 
 Run:
 
-```
+```bash
 pytest
 ```
 
 Run a specific test, e.g.:
 
-```
+```bash
 pytest isimip_publisher/tests/test_commands.py::test_empty
+```
+
+Run tests with `coverage`:
+
+```bash
+pytest --cov=isimip_publisher
 ```
