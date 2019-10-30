@@ -34,11 +34,10 @@ LOG_FILE=/path/to/logfile
 
 CONFIG_DIR=/path/to/isimip-publisher-config
 
-WORK_DIR=/path/to/work/%(simulation_round)s/%(sector)s/%(model)s
-PUBLIC_DIR=/path/to/public/%(simulation_round)s/%(sector)s/%(model)s
-
 REMOTE_DEST=localhost
-REMOTE_DIR=/path/to/remote/%(simulation_round)s/output/%(sector)s/%(model)s
+REMOTE_DIR=/path/to/remote/%(simulation_round)s/%(product)s/%(sector)s/%(model)s
+LOCAL_DIR=/path/to/work/%(simulation_round)s/%(product)s/%(sector)s/%(model)s
+PUBLIC_DIR=/path/to/public/%(simulation_round)s/%(product)s/%(sector)s/%(model)s
 
 DATABASE=postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
 ```
