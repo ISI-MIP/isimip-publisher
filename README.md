@@ -1,6 +1,11 @@
 ISIMIP publisher
 ================
 
+[![Python version](https://img.shields.io/badge/python-3.6|3.7|3.8-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](https://img.shields.io/github/license/ISI-MIP/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/ISI-MIP/isimip-publisher.svg?branch=master)](https://travis-ci.org/ISI-MIP/isimip-publisher)
+[![Coverage Status](https://coveralls.io/repos/github/ISI-MIP/isimip-publisher/badge.svg?branch=tests)](https://coveralls.io/github/ISI-MIP/isimip-publisher?branch=tests)
+
 A command line tool to publish climate impact data from the ISIMIP project.
 
 **This is still work in progress.**
