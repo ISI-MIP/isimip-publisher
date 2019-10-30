@@ -61,7 +61,7 @@ isimip-publisher <simulation_round> <product> <sector> <model> match_remote_data
 isimip-publisher <simulation_round> <product> <sector> <model> match_remote_files
 
 # copy remote files to TMP_DIR
-isimip-publisher <simulation_round> <product> <sector> <model> copy_files
+isimip-publisher <simulation_round> <product> <sector> <model> fetch_files
 
 # list local files
 isimip-publisher <simulation_round> <product> <sector> <model> list_local
@@ -75,11 +75,14 @@ isimip-publisher <simulation_round> <product> <sector> <model> match_local_files
 # update the global attributes accoding to the config
 isimip-publisher <simulation_round> <product> <sector> <model> update_files
 
-# create a JSON file with metadata
-isimip-publisher <simulation_round> <product> <sector> <model> create_jsons
+# create a JSON file with metadata for each dataset
+isimip-publisher <simulation_round> <product> <sector> <model> write_dataset_jsons
+
+# create a JSON file with metadata for each dataset
+isimip-publisher <simulation_round> <product> <sector> <model> write_file_jsons
 
 # create a checksum file with the sha256 checksum of the file
-isimip-publisher <simulation_round> <product> <sector> <model> create_checksums
+isimip-publisher <simulation_round> <product> <sector> <model> write_checksums
 
 # finds datasets and ingest their metadata into the database
 isimip-publisher <simulation_round> <product> <sector> <model> ingest_datasets
