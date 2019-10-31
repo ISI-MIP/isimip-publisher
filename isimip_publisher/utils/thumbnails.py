@@ -6,6 +6,7 @@ from netCDF4 import Dataset
 WIDTH = 800
 HEIGHT = 380
 DPI = 96
+LEVELS = 10
 
 
 def write_dataset_thumbnail(dataset_abspath, files):
@@ -17,20 +18,24 @@ def write_file_thumbnail(file_abspath, output_abspath=None):
         output_abspath = file_abspath.replace('.nc4', '.png')
 
     with Dataset(file_abspath, mode='r') as dataset:
-        var_name = list(dataset.variables)[0]
 
-        lat = dataset.variables['lat'][:]
-        lon = dataset.variables['lon'][:]
-        var = dataset.variables[var_name][-1, :, :]
+        for var_name, variable in dataset.variables.items():
+            if len(variable.dimensions) > 1:
+                break
 
-        ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.coastlines()
-
-        plt.contourf(lon, lat, var, 10, transform=ccrs.PlateCarree())
+        plt.axes(projection=ccrs.PlateCarree()).coastlines()
         plt.title(var_name)
 
+        try:
+            lat = dataset.variables['lat'][:]
+            lon = dataset.variables['lon'][:]
+            var = dataset.variables[var_name][-1, :, :]
+
+            plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
+        except (IndexError, ValueError):
+            pass
+
         fig = plt.gcf()
-        fig.tight_layout()
         fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
         fig.savefig(output_abspath, dpi=DPI)
 

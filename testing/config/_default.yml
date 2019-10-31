@@ -11,35 +11,27 @@ netcdf_metadata_keep:
 netcdf_metadata:
 - version
 
-json_metadata:
-- simulation_round
-- product
-- sector
-- model
-- a
-- b
-- c
-- d
-
 dataset_metadata:
 - simulation_round
 - product
 - sector
 - model
-- a
-- b
-- c
-- d
+- alpha
+- beta
+- gamma
+- delta
+- epsilon
 
 file_metadata:
 - simulation_round
 - product
 - sector
 - model
-- a
-- b
-- c
-- d
+- alpha
+- beta
+- gamma
+- delta
+- epsilon
 
 database_metadata_search:
 - simulation_round
