@@ -4,18 +4,19 @@ import cartopy.crs as ccrs
 from netCDF4 import Dataset
 
 WIDTH = 800
-HEIGHT = 800
+HEIGHT = 380
 DPI = 96
 
 
-def write_dataset_thumbnail(file_path):
-    print(file_path)
+def write_dataset_thumbnail(dataset_abspath, files):
+    write_file_thumbnail(files[-1], output_abspath='%s.png' % dataset_abspath)
 
 
-def write_file_thumbnail(file_path):
-    output_file_path = file_path.replace('.nc4', '.png')
+def write_file_thumbnail(file_abspath, output_abspath=None):
+    if not output_abspath:
+        output_abspath = file_abspath.replace('.nc4', '.png')
 
-    with Dataset(file_path, mode='r') as dataset:
+    with Dataset(file_abspath, mode='r') as dataset:
         var_name = list(dataset.variables)[0]
 
         lat = dataset.variables['lat'][:]
@@ -31,7 +32,7 @@ def write_file_thumbnail(file_path):
         fig = plt.gcf()
         fig.tight_layout()
         fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
-        fig.savefig(output_file_path, dpi=DPI)
+        fig.savefig(output_abspath, dpi=DPI)
 
         # reset plt
         plt.clf()

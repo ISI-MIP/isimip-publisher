@@ -148,10 +148,10 @@ def write_file_jsons(version, config, filelist=None):
 
 def write_dataset_thumbnails(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
+    datasets = match_datasets(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='write_dataset_thumbnails'):
-        write_dataset_thumbnail(file['abspath'])
+    for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_thumbnails'):
+        write_dataset_thumbnail(dataset['abspath'], dataset['files'])
 
 
 def write_file_thumbnails(version, config, filelist=None):

@@ -70,13 +70,13 @@ def run(version, config, filelist=None):
     write_checksums(version, config, filelist)
     write_dataset_jsons(version, config, filelist)
     write_file_jsons(version, config, filelist)
-    # write_dataset_thumbnails(version, config, filelist)
-    # write_file_thumbnails(version, config, filelist)
-    # ingest_datasets(version, config, filelist)
-    # ingest_files(version, config, filelist)
-    # update_index(version, config, filelist)
-    # publish_files(version, config, filelist)
-    # clean(version, config, filelist)
+    write_dataset_thumbnails(version, config, filelist)
+    write_file_thumbnails(version, config, filelist)
+    ingest_datasets(version, config, filelist)
+    ingest_files(version, config, filelist)
+    update_index(version, config, filelist)
+    publish_files(version, config, filelist)
+    clean(version, config, filelist)
 
 
 def run_all(version, config, filelist=None):
