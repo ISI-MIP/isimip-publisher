@@ -95,9 +95,11 @@ def publish_files(version, config, filelist=None):
     files = match_files(config, local_files)
 
     public_files = ['%s.json' % dataset['abspath'] for dataset in datasets.values()]
+    public_files += ['%s.png' % dataset['abspath'] for dataset in datasets.values()]
     public_files += [file['abspath'] for file in files.values()]
     public_files += [file['abspath'].replace('.nc4', '.json') for file in files.values()]
     public_files += [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
+    public_files += [file['abspath'].replace('.nc4', '.png') for file in files.values()]
 
     t = tqdm(total=len(public_files), desc='publish_files')
     for n in copy_files_to_public(version, config, public_files):

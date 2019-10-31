@@ -80,14 +80,20 @@ isimip-publisher <simulation_round> <product> <sector> <model> match_local_files
 # update the global attributes accoding to the config
 isimip-publisher <simulation_round> <product> <sector> <model> update_files
 
+# create a checksum file with the sha256 checksum of the file
+isimip-publisher <simulation_round> <product> <sector> <model> write_checksums
+
 # create a JSON file with metadata for each dataset
 isimip-publisher <simulation_round> <product> <sector> <model> write_dataset_jsons
 
-# create a JSON file with metadata for each dataset
+# create a JSON file with metadata for each file
 isimip-publisher <simulation_round> <product> <sector> <model> write_file_jsons
 
-# create a checksum file with the sha256 checksum of the file
-isimip-publisher <simulation_round> <product> <sector> <model> write_checksums
+# create a thumbnail file for each dataset
+isimip-publisher <simulation_round> <product> <sector> <model> write_dataset_thumbnails
+
+# create a thumbnail file for each file
+isimip-publisher <simulation_round> <product> <sector> <model> write_file_thumbnails
 
 # finds datasets and ingest their metadata into the database
 isimip-publisher <simulation_round> <product> <sector> <model> ingest_datasets
