@@ -5,7 +5,8 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files,
                        publish_files, update_files, update_index,
-                       write_checksums, write_dataset_jsons, write_file_jsons)
+                       write_checksums, write_dataset_jsons, write_file_jsons,
+                       write_dataset_thumbnails, write_file_thumbnails)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -44,6 +45,8 @@ def main():
     subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
     subparsers.add_parser('write_dataset_jsons').set_defaults(func=write_dataset_jsons)
     subparsers.add_parser('write_file_jsons').set_defaults(func=write_file_jsons)
+    subparsers.add_parser('write_dataset_thumbnails').set_defaults(func=write_dataset_thumbnails)
+    subparsers.add_parser('write_file_thumbnails').set_defaults(func=write_file_thumbnails)
 
     subparsers.add_parser('run').set_defaults(func=run)
     subparsers.add_parser('run_all').set_defaults(func=run_all)
@@ -54,7 +57,6 @@ def main():
         version = parse_version(args.version)
         config = parse_config(args.simulation_round, args.product, args.sector, args.model, version)
         filelist = parse_filelist(args.filelist_file)
-
         args.func(version, config, filelist)
     else:
         parser.print_help()
@@ -68,11 +70,13 @@ def run(version, config, filelist=None):
     write_checksums(version, config, filelist)
     write_dataset_jsons(version, config, filelist)
     write_file_jsons(version, config, filelist)
-    ingest_datasets(version, config, filelist)
-    ingest_files(version, config, filelist)
-    update_index(version, config, filelist)
-    publish_files(version, config, filelist)
-    clean(version, config, filelist)
+    # write_dataset_thumbnails(version, config, filelist)
+    # write_file_thumbnails(version, config, filelist)
+    # ingest_datasets(version, config, filelist)
+    # ingest_files(version, config, filelist)
+    # update_index(version, config, filelist)
+    # publish_files(version, config, filelist)
+    # clean(version, config, filelist)
 
 
 def run_all(version, config, filelist=None):
@@ -87,6 +91,8 @@ def run_all(version, config, filelist=None):
     write_checksums(version, config, filelist)
     write_dataset_jsons(version, config, filelist)
     write_file_jsons(version, config, filelist)
+    write_dataset_thumbnails(version, config, filelist)
+    write_file_thumbnails(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)

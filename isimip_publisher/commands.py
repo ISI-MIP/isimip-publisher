@@ -11,6 +11,7 @@ from .utils.metadata import (get_dataset_metadata, get_file_metadata,
                              get_netcdf_metadata)
 from .utils.netcdf import update_netcdf_global_attributes
 from .utils.patterns import match_datasets, match_files
+from .utils.thumbnails import write_dataset_thumbnail, write_file_thumbnail
 
 
 def chmod_files(version, config, filelist=None):
@@ -59,12 +60,12 @@ def fetch_files(version, config, filelist=None):
 
 
 def list_local(version, config, filelist=None):
-    for file_path in list_local_files(config):
+    for file_path in list_local_files(config, filelist):
         print(file_path)
 
 
 def list_remote(version, config, filelist=None):
-    for file_path in list_remote_files(config):
+    for file_path in list_remote_files(config, filelist):
         print(file_path)
 
 
@@ -143,3 +144,19 @@ def write_file_jsons(version, config, filelist=None):
     for file_path, file in tqdm(files.items(), desc='write_file_jsons'):
         metadata = get_file_metadata(config, file['identifiers'])
         write_file_json(config, metadata, file['abspath'])
+
+
+def write_dataset_thumbnails(version, config, filelist=None):
+    local_files = list_local_files(config, filelist)
+    files = match_files(config, local_files)
+
+    for file_path, file in tqdm(files.items(), desc='write_dataset_thumbnails'):
+        write_dataset_thumbnail(file['abspath'])
+
+
+def write_file_thumbnails(version, config, filelist=None):
+    local_files = list_local_files(config, filelist)
+    files = match_files(config, local_files)
+
+    for file_path, file in tqdm(files.items(), desc='write_file_thumbnails'):
+        write_file_thumbnail(file['abspath'])

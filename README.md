@@ -102,10 +102,10 @@ isimip-publisher <simulation_round> <product> <sector> <model> publish_files
 isimip-publisher <simulation_round> <product> <sector> <model> clean
 ```
 
-For all commands but `list_remote` and `list_local` a list of files *relative* to `REMOTE_DIR` or `WORK_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
+For all commands a list of files *relative* to `REMOTE_DIR` or `WORK_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
-isimip-publisher <simulation_round> <sector> <model> copy_files -f /path/to/files.txt
+isimip-publisher  -f /path/to/files.txt <simulation_round> <sector> <model> copy_files
 ```
 
 Test
