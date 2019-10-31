@@ -180,30 +180,30 @@ def test_write_file_jsons(setup, script_runner):
     assert response.stderr.strip().startswith('write_file_jsons')
 
 
-def test_write_dataset_thumbnails(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'test-round',
-        'test-product',
-        'test-sector',
-        'test-model',
-        'write_dataset_thumbnails')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('write_dataset_thumbnails')
+# def test_write_dataset_thumbnails(setup, script_runner):
+#     response = script_runner.run(
+#         'isimip-publisher',
+#         'test-round',
+#         'test-product',
+#         'test-sector',
+#         'test-model',
+#         'write_dataset_thumbnails')
+#     assert response.success, response.stderr
+#     assert not response.stdout
+#     assert response.stderr.strip().startswith('write_dataset_thumbnails')
 
 
-def test_write_file_thumbnails(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'test-round',
-        'test-product',
-        'test-sector',
-        'test-model',
-        'write_file_thumbnails')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('write_file_thumbnails')
+# def test_write_file_thumbnails(setup, script_runner):
+#     response = script_runner.run(
+#         'isimip-publisher',
+#         'test-round',
+#         'test-product',
+#         'test-sector',
+#         'test-model',
+#         'write_file_thumbnails')
+#     assert response.success, response.stderr
+#     assert not response.stdout
+#     assert response.stderr.strip().startswith('write_file_thumbnails')
 
 
 def test_write_checksums(setup, script_runner):

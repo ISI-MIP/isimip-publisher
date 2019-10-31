@@ -1,6 +1,8 @@
+cartopy
+matplotlib
 netCDF4
 psycopg2-binary
-PyYAML
 python-dotenv
+PyYAML
 SQLAlchemy
 tqdm
