@@ -1,5 +1,5 @@
 -r common.txt
 
-pytest
+pytest==5.2.2
 pytest-console-scripts
 pytest-cov
