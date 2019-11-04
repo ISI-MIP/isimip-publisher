@@ -1,4 +1,4 @@
-cartopy
+cartopy==0.17.0
 matplotlib
 netCDF4
 psycopg2-binary
