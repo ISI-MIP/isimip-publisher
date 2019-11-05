@@ -1,5 +1,5 @@
 -r common.txt
 
-pytest
-pytest-console-scripts
-pytest-cov
+pytest==5.2.2
+pytest-console-scripts==0.1.10
+pytest-cov==2.8.1
