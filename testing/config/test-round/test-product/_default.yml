@@ -1,5 +1,7 @@
 dirname_pattern: |
-  (?P<sector>[a-z0-9-._]+)/
+  (?P<simulation_round>[A-Za-z0-9-.]+)/
+  (?P<product>[A-Za-z0-9-.]+)/
+  (?P<sector>[a-z0-9-.]+)/
   (?P<model>[A-Za-z0-9-.]+)$
 
 filename_pattern: |
