@@ -14,6 +14,19 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
+Install prerequisites:
+
+```bash
+# Debian/Ubuntu
+apt install 
+
+# CentOS
+yum install
+
+# openSUSE
+zypper install libproj-devel geos-devel
+```
+
 Install using pip (preferably in a virtual environment):
 
 ```bash
