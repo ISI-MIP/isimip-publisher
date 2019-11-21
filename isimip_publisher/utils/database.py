@@ -158,6 +158,27 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
         session.add(file)
 
 
+def update_latest_view(session):
+    try:
+        session.connection().execute('''
+            CREATE MATERIALIZED VIEW latest AS
+                SELECT d.id AS dataset_id, d.version FROM datasets AS d
+                JOIN (
+                    SELECT "path", MAX("version") AS version FROM datasets GROUP BY "path"
+                ) AS l ON l.path = d.path AND l.version = d.version;
+        ''')
+        session.connection().execute('''
+            CREATE INDEX ON latest(dataset_id)
+        ''')
+        logger.info('create latest view')
+    except ProgrammingError:
+        session.rollback()
+        session.connection().execute('''
+            REFRESH MATERIALIZED VIEW latest
+        ''')
+        logger.info('update latest view')
+
+
 def update_words_view(session):
     try:
         session.connection().execute('''
