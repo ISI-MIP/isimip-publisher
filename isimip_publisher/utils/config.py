@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 import yaml
 
+from .patterns import match_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,23 +27,23 @@ def merge_config(destination, source):
     return destination
 
 
-def parse_config(simulation_round, product, sector, model, version=None):
+def parse_config(path, version=None):
     config_dir = os.environ['CONFIG_DIR']
 
     config = {
-        'simulation_round': simulation_round,
-        'product': product,
-        'sector': sector,
-        'model': model,
+        'path': path,
         'version': version
     }
+
+    _, groups = match_path(path)
+    config.update(groups)
 
     # parse yaml config files
     config_files = [
         os.path.join(config_dir, '_default.yml'),
-        os.path.join(config_dir, simulation_round, '_default.yml'),
-        os.path.join(config_dir, simulation_round, product, '_default.yml'),
-        os.path.join(config_dir, simulation_round, product, sector + '.yml')
+        os.path.join(config_dir, config['simulation_round'], '_default.yml'),
+        os.path.join(config_dir, config['simulation_round'], config['product'], '_default.yml'),
+        os.path.join(config_dir, config['simulation_round'], config['product'], config['sector'] + '.yml')
     ]
 
     for config_file in config_files:
@@ -55,7 +57,7 @@ def parse_config(simulation_round, product, sector, model, version=None):
             sys.exit()
 
     # check model
-    assert model in config['models'], \
+    assert config['model'] in config['models'], \
         'Model %(model)s is not configured for %(simulation_round)s %(sector)s' % config
 
     logger.debug(config)

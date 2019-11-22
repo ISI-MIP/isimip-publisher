@@ -5,6 +5,10 @@ import re
 logger = logging.getLogger(__name__)
 
 
+def match_path(path):
+    return match_string(os.getenv('PATH_PATTERN'), path)
+
+
 def match_datasets(config, files):
     dataset_dict = {}
 
