@@ -5,8 +5,9 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files,
                        publish_files, update_files, update_index,
-                       write_checksums, write_dataset_jsons, write_file_jsons,
-                       write_dataset_thumbnails, write_file_thumbnails)
+                       write_checksums, write_dataset_jsons,
+                       write_dataset_thumbnails, write_file_jsons,
+                       write_file_thumbnails)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -76,7 +77,6 @@ def run(version, config, filelist=None):
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)
     publish_files(version, config, filelist)
-    clean(version, config, filelist)
 
 
 def run_all(version, config, filelist=None):
@@ -97,4 +97,3 @@ def run_all(version, config, filelist=None):
     ingest_files(version, config, filelist)
     update_index(version, config, filelist)
     publish_files(version, config, filelist)
-    clean(version, config, filelist)

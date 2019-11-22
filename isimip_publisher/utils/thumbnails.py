@@ -1,6 +1,8 @@
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
+import os
+import shutil
 
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 
 WIDTH = 800
@@ -23,21 +25,25 @@ def write_file_thumbnail(file_abspath, output_abspath=None):
             if len(variable.dimensions) > 1:
                 break
 
-        try:
-            lat = dataset.variables['lat'][:]
-            lon = dataset.variables['lon'][:]
-            var = dataset.variables[var_name][-1, :, :]
+        if dataset.variables[var_name].shape[0] > 0:
+            try:
+                lat = dataset.variables['lat'][:]
+                lon = dataset.variables['lon'][:]
+                var = dataset.variables[var_name][-1, :, :]
 
-            plt.clf()
-            plt.axes(projection=ccrs.PlateCarree()).coastlines()
-            plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
-            plt.title(var_name)
-        except (IndexError, ValueError):
-            # reset plot
-            plt.clf()
-            plt.axes(projection=ccrs.PlateCarree()).coastlines()
-            plt.title(var_name)
+                plt.clf()
+                plt.axes(projection=ccrs.PlateCarree()).coastlines()
+                plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
+                plt.title(var_name)
+            except (IndexError, ValueError):
+                # reset plot
+                plt.clf()
+                plt.axes(projection=ccrs.PlateCarree()).coastlines()
+                plt.title(var_name)
 
-        fig = plt.gcf()
-        fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
-        fig.savefig(output_abspath, dpi=DPI)
+            fig = plt.gcf()
+            fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
+            fig.savefig(output_abspath, dpi=DPI)
+        else:
+            empty_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'extras', 'empty.png')
+            shutil.copyfile(empty_file, output_abspath)
