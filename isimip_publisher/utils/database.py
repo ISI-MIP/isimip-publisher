@@ -2,11 +2,12 @@ import logging
 import os
 import uuid
 
-from sqlalchemy import Column, ForeignKey, String, Text, Index, create_engine, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID, TSVECTOR
+from sqlalchemy import (Column, ForeignKey, Index, String, Text, create_engine,
+                        func)
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.exc import ProgrammingError
 
 from . import order_dict
 from .checksum import get_checksum, get_checksum_type
@@ -74,7 +75,15 @@ def init_database_session():
     Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
-    return Session()
+
+    session = Session()
+
+    try:
+        session.connection().execute('CREATE EXTENSION pg_trgm;')
+    except ProgrammingError:
+        session.rollback()
+
+    return session
 
 
 def insert_dataset(session, version, config, dataset_path, dataset_name, metadata):

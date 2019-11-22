@@ -1,9 +1,10 @@
 import os
-import pytest
 import shutil
 
+import pytest
 from isimip_publisher.utils import setup_env
-from isimip_publisher.utils.database import Dataset, File, init_database_session
+from isimip_publisher.utils.database import (Dataset, File,
+                                             init_database_session)
 
 
 @pytest.fixture(scope='session')
@@ -243,6 +244,19 @@ def test_ingest_files(setup, script_runner):
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('ingest_files')
+
+
+def test_update_index(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'test-round',
+        'test-product',
+        'test-sector',
+        'test-model',
+        'update_index')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
 
 
 def test_publish_files(setup, script_runner):
