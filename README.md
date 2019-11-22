@@ -14,11 +14,18 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
-Install prerequisites:
+For a `conda` setup, an environment and install `cartopy`:
+
+```bash
+conda create isimip
+conda install cartopy
+```
+
+For a regular setup install some prerequisites using the systems package manager:
 
 ```bash
 # Debian/Ubuntu
-apt install 
+apt install
 
 # CentOS
 yum install
@@ -27,7 +34,7 @@ yum install
 zypper install libproj-devel geos-devel
 ```
 
-Install using pip (preferably in a virtual environment):
+Install, using pip:
 
 ```bash
 pip install git+https://ISIMIP/isimip-publisher
