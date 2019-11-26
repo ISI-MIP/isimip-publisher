@@ -57,8 +57,14 @@ def main():
 
     if hasattr(args, 'func'):
         version = parse_version(args.version)
-        config = parse_config(args.path, version)
+
+        try:
+            config = parse_config(args.path, version)
+        except ValueError:
+            parser.error('path needs to contain at least <simulation_round>/<product>/<sector>')
+
         filelist = parse_filelist(args.filelist_file)
+
         args.func(version, config, filelist)
     else:
         parser.print_help()

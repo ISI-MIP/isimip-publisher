@@ -5,8 +5,6 @@ from datetime import date, datetime
 
 import yaml
 
-from .patterns import match_path
-
 logger = logging.getLogger(__name__)
 
 
@@ -30,20 +28,22 @@ def merge_config(destination, source):
 def parse_config(path, version=None):
     config_dir = os.environ['CONFIG_DIR']
 
+    simulation_round, product, sector = path.strip(os.sep).split(os.sep)[:3]
+
     config = {
         'path': path,
-        'version': version
+        'version': version,
+        'simulation_round': simulation_round,
+        'product': product,
+        'sector': sector
     }
-
-    _, groups = match_path(path)
-    config.update(groups)
 
     # parse yaml config files
     config_files = [
         os.path.join(config_dir, '_default.yml'),
-        os.path.join(config_dir, config['simulation_round'], '_default.yml'),
-        os.path.join(config_dir, config['simulation_round'], config['product'], '_default.yml'),
-        os.path.join(config_dir, config['simulation_round'], config['product'], config['sector'] + '.yml')
+        os.path.join(config_dir, simulation_round, '_default.yml'),
+        os.path.join(config_dir, simulation_round, product, '_default.yml'),
+        os.path.join(config_dir, simulation_round, product, sector + '.yml')
     ]
 
     for config_file in config_files:
@@ -56,10 +56,6 @@ def parse_config(path, version=None):
             logger.error('%s does not exist', config_file)
             sys.exit()
 
-    # check model
-    assert config['model'] in config['models'], \
-        'Model %(model)s is not configured for %(simulation_round)s %(sector)s' % config
-
     logger.debug(config)
     return config
 
@@ -71,7 +67,7 @@ def parse_filelist(filelist_file):
     else:
         filelist = None
 
-    logger.debug(filelist)
+    logger.debug('filelist = %s', filelist)
     return filelist
 
 

@@ -5,10 +5,6 @@ import re
 logger = logging.getLogger(__name__)
 
 
-def match_path(path):
-    return match_string(os.getenv('PATH_PATTERN'), path)
-
-
 def match_datasets(config, files):
     dataset_dict = {}
 
@@ -109,15 +105,12 @@ def validate_identifiers(config, file_path, identifiers):
                 (key, value, config['sector'], file_path)
 
         elif key == 'model':
-            assert value == config['model'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['model'], file_path)
+            assert value in config['models'], \
+                'Model %s is not configured for %s %s' % \
+                (value, config['simulation_round'], config['sector'])
 
         elif key == 'modelname':
-            # compare with a modelname from the config or model.lower()
-            model = config['model']
-            modelname = config['models'][model].get('modelname', model.lower())
-
-            assert value == modelname, \
+            assert value in [model.lower() for model in config['models']], \
+                'Modelname %s is not configured for %s %s' % \
                 '%s mismatch: %s != %s for %s' % \
-                (key, value, modelname, file_path)
+                (value, config['simulation_round'], config['sector'])

@@ -1,5 +1,6 @@
 from . import order_dict
 
+
 def get_netcdf_metadata(config, identifiers):
     return get_metadata(config, identifiers, config['netcdf_metadata'])
 
@@ -20,7 +21,7 @@ def get_metadata(config, identifiers, metadata_keys):
     values.update(identifiers)
 
     # add everything from model config which is a str
-    model_config = config['models'].get(config['model'], {}) or {}
+    model_config = config['models'].get(identifiers['model'], {}) or {}
     model_values = {key: value for key, value in model_config.items() if isinstance(value, str)}
     values.update(model_values)
 
