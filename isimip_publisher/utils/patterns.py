@@ -89,28 +89,11 @@ def validate_identifiers(config, file_path, identifiers):
                 '%s mismatch: %s not in %s for %s' % \
                 (key, value, values, file_path)
 
-        elif key == 'simulation_round':
-            assert value == config['simulation_round'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['simulation_round'], file_path)
-
-        elif key == 'product':
-            assert value == config['product'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['product'], file_path)
-
-        elif key == 'sector':
-            assert value == config['sector'], \
-                '%s mismatch: %s != %s for %s' % \
-                (key, value, config['sector'], file_path)
-
         elif key == 'model':
             assert value in config['models'], \
-                'Model %s is not configured for %s %s' % \
-                (value, config['simulation_round'], config['sector'])
+                'Model %s is not configured.' % value
 
         elif key == 'modelname':
-            assert value in [model.lower() for model in config['models']], \
-                'Modelname %s is not configured for %s %s' % \
-                '%s mismatch: %s != %s for %s' % \
-                (value, config['simulation_round'], config['sector'])
+            assert (value == identifiers['model'].lower()
+                    or value == config['models'].get(identifiers['model']).get('modelname')), \
+                'Modelname %s is not configured.' % value

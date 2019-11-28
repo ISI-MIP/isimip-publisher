@@ -9,7 +9,7 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        write_dataset_thumbnails, write_file_jsons,
                        write_file_thumbnails)
 from .utils import setup_env, setup_logging
-from .utils.config import parse_config, parse_filelist, parse_version
+from .utils.config import parse_config, parse_filelist, parse_version, parse_path
 
 
 def main():
@@ -18,10 +18,6 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', help='path of the files to publish')
-    # parser.add_argument('simulation_round', help='name of the simulation_round')
-    # parser.add_argument('product', help='type of data product')
-    # parser.add_argument('sector', help='name of the sector')
-    # parser.add_argument('model', help='models to process')
     parser.add_argument('-f', dest='filelist_file', default=None,
                         help='path to a file containing the list of files')
     parser.add_argument('-v', dest='version', default=False,
@@ -57,12 +53,11 @@ def main():
 
     if hasattr(args, 'func'):
         version = parse_version(args.version)
+        path_components = parse_path(args.path)
+        if len(path_components) < 3:
+            parser.error('path needs to contain at least 3 tokens')
 
-        try:
-            config = parse_config(args.path, version)
-        except ValueError:
-            parser.error('path needs to contain at least <simulation_round>/<product>/<sector>')
-
+        config = parse_config(args.path, path_components, version)
         filelist = parse_filelist(args.filelist_file)
 
         args.func(version, config, filelist)
