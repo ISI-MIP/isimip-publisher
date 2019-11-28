@@ -22,7 +22,7 @@ def get_metadata(config, identifiers, metadata_keys):
 
     # add everything from model config which is a str
     model_config = config['models'].get(identifiers['model'], {}) or {}
-    model_values = {key: value for key, value in model_config.items() if isinstance(value, str)}
+    model_values = {key: value or '' for key, value in model_config.items() if isinstance(value, str) or value is None}
     values.update(model_values)
 
     # return values for keys or templates

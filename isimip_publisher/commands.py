@@ -13,6 +13,7 @@ from .utils.metadata import (get_dataset_metadata, get_file_metadata,
 from .utils.netcdf import update_netcdf_global_attributes
 from .utils.patterns import match_datasets, match_files
 from .utils.thumbnails import write_dataset_thumbnail, write_file_thumbnail
+from .utils.validation import validate_dataset, validate_file
 
 
 def chmod_files(version, config, filelist=None):
@@ -33,6 +34,7 @@ def ingest_datasets(version, config, filelist=None):
     session = init_database_session()
 
     for dataset_path, dataset in tqdm(datasets.items(), desc='ingest_datasets'):
+        validate_dataset(config, dataset_path, dataset)
         metadata = get_dataset_metadata(config, dataset['identifiers'])
         insert_dataset(session, version, config, dataset_path, dataset['name'], metadata)
 
@@ -46,6 +48,7 @@ def ingest_files(version, config, filelist=None):
     session = init_database_session()
 
     for file_path, file in tqdm(files.items(), desc='ingest_files'):
+        validate_file(config, file_path, file)
         metadata = get_file_metadata(config, file['identifiers'])
         insert_file(session, version, config, file_path, file['abspath'], file['name'], file['dataset_path'], metadata)
 
@@ -82,12 +85,18 @@ def match_local_files(version, config, filelist=None):
 
 def match_remote_datasets(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
-    match_datasets(config, remote_files)
+    datasets = match_datasets(config, remote_files)
+
+    for dataset_path, dataset in datasets.items():
+        validate_dataset(config, dataset_path, dataset)
 
 
 def match_remote_files(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
-    match_files(config, remote_files)
+    files = match_files(config, remote_files)
+
+    for file_path, file in files.items():
+        validate_file(config, file_path, file)
 
 
 def publish_files(version, config, filelist=None):
@@ -112,6 +121,7 @@ def update_files(version, config, filelist=None):
     files = match_files(config, local_files)
 
     for file_path, file in tqdm(files.items(), desc='update_files'):
+        validate_file(config, file_path, file)
         metadata = get_netcdf_metadata(config, file['identifiers'])
         update_netcdf_global_attributes(config, metadata, file['abspath'])
 
@@ -137,6 +147,7 @@ def write_dataset_jsons(version, config, filelist=None):
     datasets = match_datasets(config, local_files)
 
     for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_jsons'):
+        validate_dataset(config, dataset_path, dataset)
         metadata = get_dataset_metadata(config, dataset['identifiers'])
         write_dataset_json(config, metadata, dataset['abspath'])
 
@@ -146,6 +157,7 @@ def write_file_jsons(version, config, filelist=None):
     files = match_files(config, local_files)
 
     for file_path, file in tqdm(files.items(), desc='write_file_jsons'):
+        validate_file(config, file_path, file)
         metadata = get_file_metadata(config, file['identifiers'])
         write_file_json(config, metadata, file['abspath'])
 
@@ -155,6 +167,7 @@ def write_dataset_thumbnails(version, config, filelist=None):
     datasets = match_datasets(config, local_files)
 
     for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_thumbnails'):
+        validate_dataset(config, dataset_path, dataset)
         write_dataset_thumbnail(dataset['abspath'], dataset['files'])
 
 
@@ -163,4 +176,5 @@ def write_file_thumbnails(version, config, filelist=None):
     files = match_files(config, local_files)
 
     for file_path, file in tqdm(files.items(), desc='write_file_thumbnails'):
+        validate_file(config, file_path, file)
         write_file_thumbnail(file['abspath'])

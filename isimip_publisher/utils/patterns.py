@@ -63,7 +63,6 @@ def match(config, file_path, dirname_pattern_key, filename_pattern_key):
     path = os.path.join(dirname_match, filename_match)
     name = filename_match
     identifiers = {**dirname_identifiers, **filename_identifiers}
-    validate_identifiers(config, file_path, identifiers)
 
     return path, name, identifiers
 
@@ -76,24 +75,3 @@ def match_string(pattern, string):
     match = re.search(pattern, string)
     assert match is not None, 'No match for %s' % string
     return match.group(0), {key: value for key, value in match.groupdict().items() if value is not None}
-
-
-def validate_identifiers(config, file_path, identifiers):
-    for key, value in identifiers.items():
-        validation_key = '%s_validation' % key
-
-        if validation_key in config:
-            values = config[validation_key]
-
-            assert value in values, \
-                '%s mismatch: %s not in %s for %s' % \
-                (key, value, values, file_path)
-
-        elif key == 'model':
-            assert value in config['models'], \
-                'Model %s is not configured.' % value
-
-        elif key == 'modelname':
-            assert (value == identifiers['model'].lower()
-                    or value == config['models'].get(identifiers['model']).get('modelname')), \
-                'Modelname %s is not configured.' % value

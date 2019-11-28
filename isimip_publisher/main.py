@@ -9,7 +9,8 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        write_dataset_thumbnails, write_file_jsons,
                        write_file_thumbnails)
 from .utils import setup_env, setup_logging
-from .utils.config import parse_config, parse_filelist, parse_version, parse_path
+from .utils.config import (parse_config, parse_filelist, parse_path,
+                           parse_version)
 
 
 def main():
@@ -66,6 +67,7 @@ def main():
 
 
 def run(version, config, filelist=None):
+    clean(version, config, filelist)
     match_remote_datasets(version, config, filelist)
     match_remote_files(version, config, filelist)
     fetch_files(version, config, filelist)
@@ -82,6 +84,7 @@ def run(version, config, filelist=None):
 
 
 def run_all(version, config, filelist=None):
+    clean(version, config, filelist)
     list_remote(version, config, filelist)
     match_remote_datasets(version, config, filelist)
     match_remote_files(version, config, filelist)

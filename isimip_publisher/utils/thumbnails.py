@@ -35,7 +35,7 @@ def write_file_thumbnail(file_abspath, output_abspath=None):
                 plt.axes(projection=ccrs.PlateCarree()).coastlines()
                 plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
                 plt.title(var_name)
-            except (IndexError, ValueError):
+            except (IndexError, ValueError, TypeError):
                 # reset plot
                 plt.clf()
                 plt.axes(projection=ccrs.PlateCarree()).coastlines()
