@@ -128,8 +128,13 @@ def update_files(version, config, filelist=None):
 
 def update_index(version, config, filelist=None):
     session = init_database_session()
+
     update_words_view(session)
+    session.commit()
+
     update_latest_view(session)
+    session.commit()
+
     update_attributes_view(session)
     session.commit()
 
