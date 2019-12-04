@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def list_remote_files(config, filelist=None):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'])
-    return find_files(['ssh', remote_dest, 'find', remote_dir.rstrip('/'), '-type', 'f', '-name', '*.nc4'], filelist)
+    return find_files(['ssh', remote_dest, 'find', remote_dir.rstrip('/'), '-type', 'f', '-name', '\'*.nc4\''], filelist)
 
 
 def list_local_files(config, filelist=None):
@@ -62,7 +62,7 @@ def copy_files_from_remote(config, files):
     ])
 
     # get the total number of files from the output of rsync
-    match = re.findall(r'Number of regular files transferred: (\d{1,3}(,\d{3})*)', output.decode())
+    match = re.findall(r'transferred: (\d{1,3}(,\d{3})*)', output.decode())
     total_files = int(match[0][0].replace(',', ''))
 
     # get the number of files which were already transfered
