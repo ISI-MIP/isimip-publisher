@@ -37,7 +37,7 @@ zypper install libproj-devel geos-devel
 Install, using pip:
 
 ```bash
-pip install git+https://ISIMIP/isimip-publisher
+pip install git+https://github.com/ISI-MIP/isimip-publisher
 ```
 
 Clone the repository with the config.
