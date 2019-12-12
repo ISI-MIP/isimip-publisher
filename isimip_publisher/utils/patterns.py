@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +41,16 @@ def match_files(config, files):
 
 
 def match_dataset(config, file_path):
-    return match(config, file_path, 'dirname_pattern', 'dataset_pattern')
+    return match(config, file_path, 'path', 'dataset')
 
 
 def match_file(config, file_path):
-    return match(config, file_path, 'dirname_pattern', 'filename_pattern')
+    return match(config, file_path, 'path', 'file')
 
 
 def match(config, file_path, dirname_pattern_key, filename_pattern_key):
-    dirname_pattern = config[dirname_pattern_key].replace(os.linesep, '')
-    filename_pattern = config[filename_pattern_key].replace(os.linesep, '')
+    dirname_pattern = config['pattern'][dirname_pattern_key]
+    filename_pattern = config['pattern'][filename_pattern_key]
 
     # split file path
     dirname, filename = os.path.split(file_path)
@@ -72,6 +71,15 @@ def match_string(pattern, string):
     logger.debug(string)
 
     # try to match the string
-    match = re.search(pattern, string)
+    match = pattern.search(string)
     assert match is not None, 'No match for %s' % string
-    return match.group(0), {key: value for key, value in match.groupdict().items() if value is not None}
+
+    identifiers = {}
+    for key, value in match.groupdict().items():
+        if value is not None:
+            if value.isdigit():
+                identifiers[key] = int(value)
+            else:
+                identifiers[key] = value
+
+    return match.group(0), identifiers

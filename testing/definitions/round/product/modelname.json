@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/definitions/round/product/modelname.json",
+  "type": "string",
+  "oneOf": [
+    {
+      "const": "model",
+      "title": "Model",
+      "description": ""
+    }
+  ]
+}

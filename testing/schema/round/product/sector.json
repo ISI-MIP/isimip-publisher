@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "",
+  "type": "object",
+  "required": [
+    "dimensions",
+    "variables",
+    "attributes",
+    "identifiers"
+  ],
+  "properties": {
+    "identifiers": {
+      "properties": {
+        "modelname": {
+          "$ref": "../../../definitions/round/product/modelname.json"
+        },
+        "alpha": {
+          "$ref": "../../../definitions/round/product/alpha.json"
+        },
+        "beta": {
+          "$ref": "../../../definitions/round/product/beta.json"
+        },
+        "gamma": {
+          "$ref": "../../../definitions/round/product/gamma.json"
+        },
+        "delta": {
+          "$ref": "../../../definitions/round/product/delta.json"
+        },
+        "variable": {
+          "$ref": "../../../definitions/round/product/variable.json"
+        },
+        "region": {
+          "$ref": "../../../definitions/round/product/region.json"
+        },
+        "timestep": {
+          "$ref": "../../../definitions/round/product/timestep.json"
+        },
+        "start_year": {
+          "$ref": "../../../definitions/round/product/start_year.json"
+        },
+        "end_year": {
+          "$ref": "../../../definitions/round/product/end_year.json"
+        }
+      }
+    }
+  }
+}

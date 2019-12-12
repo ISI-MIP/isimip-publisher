@@ -9,8 +9,7 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        write_dataset_thumbnails, write_file_jsons,
                        write_file_thumbnails)
 from .utils import setup_env, setup_logging
-from .utils.config import (parse_config, parse_filelist, parse_path,
-                           parse_version)
+from .utils.config import parse_config, parse_filelist, parse_version
 
 
 def main():
@@ -54,12 +53,11 @@ def main():
 
     if hasattr(args, 'func'):
         version = parse_version(args.version)
-        path_components = parse_path(args.path)
-        if len(path_components) < 3:
-            parser.error('path needs to contain at least 3 tokens')
-
-        config = parse_config(args.path, path_components, version)
+        config = parse_config(args.path, version)
         filelist = parse_filelist(args.filelist_file)
+
+        if config is False:
+            parser.error('path needs to contain at least 3 tokens')
 
         args.func(version, config, filelist)
     else:

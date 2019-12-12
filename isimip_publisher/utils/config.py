@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import date, datetime
 
-import yaml
+from .schema import fetch_pattern, fetch_schema, get_resolver
 
 logger = logging.getLogger(__name__)
 
@@ -37,35 +37,26 @@ def parse_version(version):
         return None
 
 
-def parse_path(path):
-    return path.strip(os.sep).split(os.sep)
+def parse_config(path, version=None):
+    path_components = path.strip(os.sep).split(os.sep)
 
+    try:
+        schema_path = os.sep.join(path_components[:3]) + '.json'
+    except IndexError:
+        return False
 
-def parse_config(path, path_components, version=None):
-    config_dir = os.environ['CONFIG_DIR']
+    pattern = fetch_pattern(schema_path)
+    schema = fetch_schema(schema_path)
+    resolver = get_resolver(schema_path, schema)
 
     config = {
         'path': path,
-        'version': version
+        'version': version,
+        'schema_path': schema_path,
+        'pattern': pattern,
+        'schema': schema,
+        'resolver': resolver
     }
-
-    # parse yaml config files
-    config_files = [
-        os.path.join(config_dir, '_default.yml'),
-        os.path.join(config_dir, path_components[0], '_default.yml'),
-        os.path.join(config_dir, path_components[0], path_components[1], '_default.yml'),
-        os.path.join(config_dir, path_components[0], path_components[1], path_components[2] + '.yml')
-    ]
-
-    for config_file in config_files:
-        try:
-            with open(config_file) as f:
-                file_config = yaml.safe_load(f.read())
-                merge_config(config, file_config)
-
-        except OSError as e:
-            logger.error(e)
-            raise e
 
     logger.debug(config)
     return config

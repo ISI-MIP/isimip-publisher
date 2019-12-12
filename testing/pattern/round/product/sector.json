@@ -1,0 +1,30 @@
+{
+  "path": [
+    "(?P<round>\\w+)",
+    "(?P<product>\\w+)",
+    "(?P<sector>\\w+)",
+    "(?P<model>\\w+)"
+  ],
+  "dataset": [
+    "(?P<modelname>[a-z]+)",
+    "(?P<alpha>[a-z]+)",
+    "(?P<beta>[a-z]+)",
+    "(?P<gamma>[a-z]+)",
+    "(?P<delta>[a-z]+)",
+    "(?P<variable>[a-z]+)",
+    "(?P<region>[a-z]+)",
+    "(?P<timestep>[a-z]+)"
+  ],
+  "file": [
+    "(?P<modelname>[a-z]+)",
+    "(?P<alpha>[a-z]+)",
+    "(?P<beta>[a-z]+)",
+    "(?P<gamma>[a-z]+)",
+    "(?P<delta>[a-z]+)",
+    "(?P<variable>[a-z]+)",
+    "(?P<region>[a-z]+)",
+    "(?P<timestep>[a-z]+)",
+    "(?P<start_year>\\d{4})",
+    "(?P<end_year>\\d{4})"
+  ]
+}

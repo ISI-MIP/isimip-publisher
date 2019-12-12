@@ -7,6 +7,8 @@ from . import order_dict
 
 logger = logging.getLogger(__name__)
 
+DELETE_ATTRIBUTES = ['history', 'CDO', 'CDI']
+
 
 def get_netcdf_dimensions(file_path):
     with Dataset(file_path, 'r', format='NETCDF4') as rootgrp:
@@ -23,13 +25,13 @@ def get_netcdf_global_attributes(file_path):
         return rootgrp.__dict__
 
 
-def update_netcdf_global_attributes(config, metadata, file_path):
+def update_netcdf_global_attributes(config, file_path, metadata):
     logger.info('update %s', file_path)
 
     with Dataset(file_path, 'a', format='NETCDF4') as rootgrp:
-        # remove all attributes, but keep some
+        # remove some global attributes
         for attr in rootgrp.__dict__:
-            if attr not in config['netcdf_metadata_keep']:
+            if attr in DELETE_ATTRIBUTES:
                 logger.debug('delete %s in %s', attr, file_path)
                 rootgrp.delncattr(attr)
 
