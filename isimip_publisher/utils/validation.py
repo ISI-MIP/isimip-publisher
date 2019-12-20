@@ -21,7 +21,13 @@ def validate_identifiers(config, path, identifiers):
         'identifiers': identifiers
     }
 
-    if config.get('resolver') is not None:
-        jsonschema.validate(schema=config['schema'], resolver=config['resolver'], instance=instance)
-    else:
-        jsonschema.validate(schema=config['schema'], instance=instance)
+    logger.debug('instance = %s', instance)
+
+    try:
+        if config.get('resolver') is not None:
+            jsonschema.validate(schema=config['schema'], resolver=config['resolver'], instance=instance)
+        else:
+            jsonschema.validate(schema=config['schema'], instance=instance)
+    except jsonschema.exceptions.ValidationError as e:
+        logger.error('instance = %s', instance)
+        raise e

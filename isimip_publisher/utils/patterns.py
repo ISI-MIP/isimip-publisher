@@ -67,7 +67,7 @@ def match(config, file_path, dirname_pattern_key, filename_pattern_key):
 
 
 def match_string(pattern, string):
-    logger.debug(pattern)
+    logger.debug(pattern.pattern)
     logger.debug(string)
 
     # try to match the string
