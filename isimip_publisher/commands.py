@@ -8,6 +8,7 @@ from .utils.files import (chmod_file, copy_files_from_remote,
                           copy_files_to_public, delete_files, list_local_files,
                           list_remote_files)
 from .utils.json import write_dataset_json, write_file_json
+from .utils.metadata import get_attributes
 from .utils.netcdf import update_netcdf_global_attributes
 from .utils.patterns import match_datasets, match_files
 from .utils.thumbnails import write_dataset_thumbnail, write_file_thumbnail
@@ -17,7 +18,7 @@ from .utils.validation import validate_dataset, validate_file
 def chmod_files(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
 
-    for file_path in tqdm(local_files, desc='chmod_files'):
+    for file_path in tqdm(local_files, desc='chmod_files'.ljust(24)):
         chmod_file(file_path)
 
 
@@ -31,9 +32,10 @@ def ingest_datasets(version, config, filelist=None):
 
     session = init_database_session()
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='ingest_datasets'):
+    for dataset_path, dataset in tqdm(datasets.items(), desc='ingest_datasets'.ljust(24)):
         validate_dataset(config, dataset_path, dataset)
-        insert_dataset(session, version, config, dataset_path, dataset['name'], dataset['identifiers'])
+        attributes = get_attributes(config, dataset['identifiers'])
+        insert_dataset(session, version, config, dataset_path, dataset['name'], attributes)
 
     session.commit()
 
@@ -44,9 +46,10 @@ def ingest_files(version, config, filelist=None):
 
     session = init_database_session()
 
-    for file_path, file in tqdm(files.items(), desc='ingest_files'):
+    for file_path, file in tqdm(files.items(), desc='ingest_files'.ljust(24)):
         validate_file(config, file_path, file)
-        insert_file(session, version, config, file_path, file['abspath'], file['name'], file['dataset_path'], file['identifiers'])
+        attributes = get_attributes(config, file['identifiers'])
+        insert_file(session, version, config, file_path, file['abspath'], file['name'], file['dataset_path'], attributes)
 
     session.commit()
 
@@ -54,7 +57,7 @@ def ingest_files(version, config, filelist=None):
 def fetch_files(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
 
-    t = tqdm(total=len(remote_files), desc='fetch_files')
+    t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(24))
     for n in copy_files_from_remote(config, remote_files):
         t.update(n)
 
@@ -113,7 +116,7 @@ def publish_files(version, config, filelist=None):
     public_files += [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
     public_files += [file['abspath'].replace('.nc4', '.png') for file in files.values()]
 
-    t = tqdm(total=len(public_files), desc='publish_files')
+    t = tqdm(total=len(public_files), desc='publish_files'.ljust(24))
     for n in copy_files_to_public(version, config, public_files):
         t.update(n)
 
@@ -122,9 +125,10 @@ def update_files(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='update_files'):
+    for file_path, file in tqdm(files.items(), desc='update_files'.ljust(24)):
         validate_file(config, file_path, file)
-        update_netcdf_global_attributes(config, file['abspath'], file['identifiers'])
+        attributes = get_attributes(config, file['identifiers'])
+        update_netcdf_global_attributes(config, file['abspath'], attributes)
 
 
 def update_index(version, config, filelist=None):
@@ -144,7 +148,7 @@ def write_checksums(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='write_checksums'):
+    for file_path, file in tqdm(files.items(), desc='write_checksums'.ljust(24)):
         write_checksum(file['abspath'])
 
 
@@ -152,25 +156,27 @@ def write_dataset_jsons(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     datasets = match_datasets(config, local_files)
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_jsons'):
+    for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_jsons'.ljust(24)):
         validate_dataset(config, dataset_path, dataset)
-        write_dataset_json(config, dataset['abspath'], dataset['identifiers'])
+        attributes = get_attributes(config, dataset['identifiers'])
+        write_dataset_json(config, dataset['abspath'], attributes)
 
 
 def write_file_jsons(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='write_file_jsons'):
+    for file_path, file in tqdm(files.items(), desc='write_file_jsons'.ljust(24)):
         validate_file(config, file_path, file)
-        write_file_json(config, file['abspath'], file['identifiers'])
+        attributes = get_attributes(config, file['identifiers'])
+        write_file_json(config, file['abspath'], attributes)
 
 
 def write_dataset_thumbnails(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     datasets = match_datasets(config, local_files)
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_thumbnails'):
+    for dataset_path, dataset in tqdm(datasets.items(), desc='write_dataset_thumbnails'.ljust(24)):
         validate_dataset(config, dataset_path, dataset)
         write_dataset_thumbnail(dataset['abspath'], dataset['files'])
 
@@ -179,6 +185,6 @@ def write_file_thumbnails(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='write_file_thumbnails'):
+    for file_path, file in tqdm(files.items(), desc='write_file_thumbnails'.ljust(24)):
         validate_file(config, file_path, file)
         write_file_thumbnail(file['abspath'])

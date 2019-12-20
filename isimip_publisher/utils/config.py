@@ -49,13 +49,21 @@ def parse_config(path, version=None):
     schema = fetch_schema(schema_path)
     resolver = get_resolver(schema_path, schema)
 
+    # collect environment variables starting with ISIMIP_ as attributes
+    attributes = {}
+    for key in os.environ:
+        if key.startswith('ISIMIP_'):
+            attribute = key.replace('ISIMIP_', '').lower()
+            attributes[attribute] = os.environ[key]
+
     config = {
         'path': path,
         'version': version,
         'schema_path': schema_path,
         'pattern': pattern,
         'schema': schema,
-        'resolver': resolver
+        'resolver': resolver,
+        'attributes': attributes
     }
 
     logger.debug(config)

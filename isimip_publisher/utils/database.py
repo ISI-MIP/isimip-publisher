@@ -9,7 +9,6 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
-from . import order_dict
 from .checksum import get_checksum, get_checksum_type
 
 logger = logging.getLogger(__name__)
@@ -91,8 +90,7 @@ def init_database_session():
     return session
 
 
-def insert_dataset(session, version, config, dataset_path, dataset_name, metadata):
-    attributes = order_dict(metadata)
+def insert_dataset(session, version, config, dataset_path, dataset_name, attributes):
     search_vector = get_search_vector(config, attributes)
 
     # check if the dataset with this version is already in the database
@@ -122,10 +120,9 @@ def insert_dataset(session, version, config, dataset_path, dataset_name, metadat
         session.add(dataset)
 
 
-def insert_file(session, version, config, file_path, file_abspath, file_name, dataset_path, metadata):
+def insert_file(session, version, config, file_path, file_abspath, file_name, dataset_path, attributes):
     checksum = get_checksum(file_abspath)
     checksum_type = get_checksum_type()
-    attributes = order_dict(metadata)
     search_vector = get_search_vector(config, attributes)
 
     # get the dataset from the database

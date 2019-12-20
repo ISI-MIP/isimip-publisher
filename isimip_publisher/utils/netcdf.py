@@ -3,8 +3,6 @@ from datetime import datetime
 
 from netCDF4 import Dataset
 
-from . import order_dict
-
 logger = logging.getLogger(__name__)
 
 DELETE_ATTRIBUTES = ['history', 'CDO', 'CDI']
@@ -25,7 +23,7 @@ def get_netcdf_global_attributes(file_path):
         return rootgrp.__dict__
 
 
-def update_netcdf_global_attributes(config, file_path, metadata):
+def update_netcdf_global_attributes(config, file_path, attributes):
     logger.info('update %s', file_path)
 
     with Dataset(file_path, 'a', format='NETCDF4') as rootgrp:
@@ -35,7 +33,7 @@ def update_netcdf_global_attributes(config, file_path, metadata):
                 logger.debug('delete %s in %s', attr, file_path)
                 rootgrp.delncattr(attr)
 
-        for attr, value in order_dict(metadata).items():
+        for attr, value in attributes.items():
             logger.debug('set %s to %s in %s', attr, value, file_path)
             rootgrp.setncattr(attr, value2string(value))
 
