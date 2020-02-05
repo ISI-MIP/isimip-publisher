@@ -40,6 +40,7 @@ def copy_files_from_remote(config, files):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'], '')
     local_dir = os.path.join(os.environ['LOCAL_DIR'], config['path'], '')
+    mock = os.environ['MOCK'].lower() in ['t', 'true', 1]
 
     if os.path.exists(local_dir):
         raise RuntimeError('LOCAL_DIR already exists, run "clean" first!')
@@ -47,40 +48,52 @@ def copy_files_from_remote(config, files):
     # create the local_dir
     os.makedirs(local_dir, exist_ok=True)
 
-    # write file list in temporary file
-    include_file = 'rsync-include.txt'
-    with open(include_file, 'w') as f:
+    if mock:
+        empty_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'extras', 'empty.nc4')
+
         for file in files:
-            f.write(file.replace(remote_dir, '') + os.linesep)
+            mock_path = file.replace(remote_dir, local_dir)
+            mock_dir = os.path.dirname(mock_path)
 
-    # make a dry-run to get the number of files to transfer
-    output = subprocess.check_output([
-        'rsync', '-avz', '--stats', '--dry-run',
-        '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-        remote_dest + ':' + remote_dir, local_dir
-    ])
-
-    # get the total number of files from the output of rsync
-    match = re.findall(r'transferred: (\d{1,3}(,\d{3})*)', output.decode())
-    total_files = int(match[0][0].replace(',', ''))
-
-    # get the number of files which were already transfered
-    diff_files = len(files) - total_files
-
-    process = subprocess.Popen([
-        'rsync', '-azvi',
-        '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-        remote_dest + ':' + remote_dir, local_dir
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-    yield diff_files
-    for line in process.stdout:
-        output = line.decode().strip()
-        if output.startswith('>f'):
-            logger.info('rsync %s', output)
+            os.makedirs(mock_dir, exist_ok=True)
+            shutil.copyfile(empty_file, mock_path)
             yield 1  # yield increment for the progress bar
 
-    os.remove(include_file)
+    else:
+        # write file list in temporary file
+        include_file = 'rsync-include.txt'
+        with open(include_file, 'w') as f:
+            for file in files:
+                f.write(file.replace(remote_dir, '') + os.linesep)
+
+        # make a dry-run to get the number of files to transfer
+        output = subprocess.check_output([
+            'rsync', '-avz', '--stats', '--dry-run',
+            '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
+            remote_dest + ':' + remote_dir, local_dir
+        ])
+
+        # get the total number of files from the output of rsync
+        match = re.findall(r'transferred: (\d{1,3}(,\d{3})*)', output.decode())
+        total_files = int(match[0][0].replace(',', ''))
+
+        # get the number of files which were already transfered
+        diff_files = len(files) - total_files
+
+        process = subprocess.Popen([
+            'rsync', '-azvi',
+            '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
+            remote_dest + ':' + remote_dir, local_dir
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        yield diff_files
+        for line in process.stdout:
+            output = line.decode().strip()
+            if output.startswith('>f'):
+                logger.info('rsync %s', output)
+                yield 1  # yield increment for the progress bar
+
+        os.remove(include_file)
 
 
 def copy_files_to_public(version, config, files):
