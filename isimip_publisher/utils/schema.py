@@ -25,10 +25,14 @@ def fetch_pattern(schema_path):
 
     logger.debug('pattern_json = %s', pattern_json)
 
+    path_pattern = os.sep.join(pattern_json['path']) + '$'
+    file_pattern = '^' + '_'.join(pattern_json['file']) + '.nc4'
+    dataset_pattern = '^' + '_'.join(pattern_json['dataset'])
+
     pattern = {
-        'path': re.compile(os.sep.join(pattern_json['path']) + '$'),
-        'file': re.compile('^' + '_'.join(pattern_json['file'])),
-        'dataset': re.compile('^' + '_'.join(pattern_json['dataset']))
+        'path': re.compile(path_pattern),
+        'file': re.compile(file_pattern),
+        'dataset': re.compile(dataset_pattern)
     }
 
     logger.debug('pattern = %s', pattern['path'])

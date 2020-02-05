@@ -1,6 +1,5 @@
 import logging
 import os
-
 from collections import OrderedDict
 
 from dotenv import load_dotenv
@@ -27,8 +26,3 @@ def order_dict(unsorted):
 
 def get_subparser_title(module):
     return module.split('.')[-1]
-
-
-def add_version_to_path(path, version):
-    root, ext = os.path.splitext(path)
-    return '%s_v%s%s' % (root, version, ext)

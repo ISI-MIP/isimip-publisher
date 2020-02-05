@@ -4,7 +4,6 @@ import re
 import shutil
 import subprocess
 
-from . import add_version_to_path
 from .checksum import get_checksum
 
 logger = logging.getLogger(__name__)
@@ -90,8 +89,7 @@ def copy_files_to_public(version, config, files):
 
     copy_files = []
     for file_path in files:
-        version_path = add_version_to_path(file_path, version)
-        target_path = version_path.replace(local_dir, public_dir)
+        target_path = file_path.replace(local_dir, public_dir)
 
         # check if the file is already public
         if os.path.exists(target_path):
