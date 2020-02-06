@@ -12,34 +12,58 @@
     "identifiers": {
       "properties": {
         "modelname": {
-          "$ref": "../../../definitions/round/product/modelname.json"
+          "type": "string"
         },
         "alpha": {
-          "$ref": "../../../definitions/round/product/alpha.json"
+          "type": "string",
+          "enum": [
+            "lorem",
+            "ipsum"
+          ]
         },
         "beta": {
-          "$ref": "../../../definitions/round/product/beta.json"
+          "type": "string",
+          "enum": [
+            "dolor"
+          ]
         },
         "gamma": {
-          "$ref": "../../../definitions/round/product/gamma.json"
+          "type": "string",
+          "enum": [
+            "sit"
+          ]
         },
         "delta": {
-          "$ref": "../../../definitions/round/product/delta.json"
+          "type": "string",
+          "enum": [
+            "amet"
+          ]
         },
         "variable": {
-          "$ref": "../../../definitions/round/product/variable.json"
+          "type": "string",
+          "enum": [
+            "var"
+          ]
         },
         "region": {
-          "$ref": "../../../definitions/round/product/region.json"
+          "type": "string",
+          "const": "global"
         },
         "timestep": {
-          "$ref": "../../../definitions/round/product/timestep.json"
+          "type": "string",
+          "enum": [
+            "monthly"
+          ]
         },
         "start_year": {
-          "$ref": "../../../definitions/round/product/start_year.json"
+          "type": "number",
+          "minimum": 2000,
+          "maximum": 2005
         },
         "end_year": {
-          "$ref": "../../../definitions/round/product/end_year.json"
+          "type": "number",
+          "minimum": 2000,
+          "maximum": 2005
         }
       }
     }

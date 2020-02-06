@@ -1,7 +1,0 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/definitions/round/product/end_year.json",
-  "type": "number",
-  "minimum": 1900,
-  "maximum": 2100
-}
