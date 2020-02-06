@@ -5,24 +5,13 @@ import re
 from urllib.parse import urlparse
 
 import requests
-from jsonschema import RefResolver
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_pattern(schema_path):
-    pattern_base = os.getenv('PATTERN_LOCATION', 'http://schema.isimip.org/pattern/')
-    pattern_location = pattern_base + schema_path
-
-    if urlparse(pattern_location).scheme:
-        logger.debug('pattern_url = %s', pattern_location)
-        response = requests.get(pattern_location)
-        response.raise_for_status()
-        pattern_json = response.json()
-    else:
-        logger.debug('pattern_path = %s', pattern_location)
-        pattern_json = json.loads(open(pattern_location).read())
-
+def fetch_pattern(pattern_path):
+    pattern_bases = os.environ['PATTERN_LOCATIONS'].split()
+    pattern_json = fetch_json(pattern_bases, pattern_path)
     logger.debug('pattern_json = %s', pattern_json)
 
     path_pattern = os.sep.join(pattern_json['path']) + '$'
@@ -41,31 +30,28 @@ def fetch_pattern(schema_path):
 
 
 def fetch_schema(schema_path):
-    schema_base = os.getenv('SCHEMA_LOCATION', 'http://schema.isimip.org/pattern/')
-    schema_location = schema_base + schema_path
+    schema_bases = os.environ['SCHEMA_LOCATIONS'].split()
+    schema_json = fetch_json(schema_bases, schema_path)
+    logger.debug('schema_json = %s', schema_json)
 
-    if urlparse(schema_location).scheme:
-        logger.debug('schema_url = %s', schema_location)
-        schema_response = requests.get(schema_location)
-        schema_response.raise_for_status()
-        return schema_response.json()
-    else:
-        logger.debug('schema_path = %s', schema_location)
-        schema = json.loads(open(schema_location).read())
-
-        # remove $id to make it work locally
-        schema.pop('$id')
-        return schema
+    return schema_json
 
 
-def get_resolver(schema_path, schema):
-    schema_base = os.getenv('SCHEMA_LOCATION', 'http://schema.isimip.org/pattern/')
-    schema_location = schema_base + schema_path
+def fetch_json(bases, path):
+    for base in bases:
+        location = base + path
 
-    if urlparse(schema_location).scheme:
-        return None
-    else:
-        dirname = os.path.abspath(schema_location)
-        base_uri = 'file://{}'.format(dirname)
-        logger.debug('base_uri = %s', base_uri)
-        return RefResolver(base_uri, None)
+        if urlparse(location).scheme:
+            logger.debug('json_url = %s', location)
+            response = requests.get(location)
+
+            if response.status_code == 200:
+                return response.json()
+
+        else:
+            logger.debug('json_path = %s', location)
+
+            if os.path.exists(location):
+                return json.loads(open(location).read())
+
+    raise RuntimeError('{} not found in {}'.format(path, bases))

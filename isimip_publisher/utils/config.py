@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import date, datetime
 
-from .schema import fetch_pattern, fetch_schema, get_resolver
+from .schema import fetch_pattern, fetch_schema
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,6 @@ def parse_config(path, version=None):
 
     pattern = fetch_pattern(schema_path)
     schema = fetch_schema(schema_path)
-    resolver = get_resolver(schema_path, schema)
 
     # collect environment variables starting with ISIMIP_ as attributes
     attributes = {}
@@ -62,7 +61,6 @@ def parse_config(path, version=None):
         'schema_path': schema_path,
         'pattern': pattern,
         'schema': schema,
-        'resolver': resolver,
         'attributes': attributes
     }
 
