@@ -39,7 +39,7 @@ def fetch_schema(schema_path):
 
 def fetch_json(bases, path):
     for base in bases:
-        location = base + path
+        location = os.path.join(base, path)
 
         if urlparse(location).scheme:
             logger.debug('json_url = %s', location)
