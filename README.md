@@ -40,12 +40,6 @@ Install, using pip:
 pip install git+https://github.com/ISI-MIP/isimip-publisher
 ```
 
-Clone the repository with the config.
-
-```bash
-git clone git@github.com:ISIMIP/isimip-publisher-config /path/to/isimip-publisher-config
-```
-
 Create a `.env` file with the following (enviroment) variables:
 
 ```

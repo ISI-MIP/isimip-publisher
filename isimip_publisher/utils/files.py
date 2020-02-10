@@ -40,7 +40,7 @@ def copy_files_from_remote(config, files):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'], '')
     local_dir = os.path.join(os.environ['LOCAL_DIR'], config['path'], '')
-    mock = os.environ['MOCK'].lower() in ['t', 'true', 1]
+    mock = os.environ.get('MOCK', '').lower() in ['t', 'true', 1]
 
     if os.path.exists(local_dir):
         raise RuntimeError('LOCAL_DIR already exists, run "clean" first!')
