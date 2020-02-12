@@ -208,6 +208,17 @@ def test_publish_files(setup, script_runner):
     assert response.stderr.strip().startswith('publish_files')
 
 
+def test_list_public(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'list_public')
+    assert response.success, response.stderr
+    assert response.stdout
+    assert not response.stderr
+    assert len(response.stdout.splitlines()) == 6
+
+
 def test_clean(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
