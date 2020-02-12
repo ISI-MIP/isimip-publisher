@@ -16,18 +16,9 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-def get_search_vector(config, attributes):
-    search_vector = None
-
-    for value in attributes.values():
-        vector = func.setweight(func.to_tsvector(str(value)), 'A')
-
-        if search_vector is None:
-            search_vector = vector
-        else:
-            search_vector = search_vector.concat(vector)
-
-    return search_vector
+def get_search_vector(config, path):
+    search_string = path.replace('_', ' ').replace('-', ' ').replace('/', ' ')
+    return func.setweight(func.to_tsvector(search_string), 'A')
 
 
 class Dataset(Base):
@@ -91,7 +82,7 @@ def init_database_session():
 
 
 def insert_dataset(session, version, config, dataset_path, dataset_name, attributes):
-    search_vector = get_search_vector(config, attributes)
+    search_vector = get_search_vector(config, dataset_path)
 
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
@@ -123,7 +114,7 @@ def insert_dataset(session, version, config, dataset_path, dataset_name, attribu
 def insert_file(session, version, config, file_path, file_abspath, file_name, dataset_path, attributes):
     checksum = get_checksum(file_abspath)
     checksum_type = get_checksum_type()
-    search_vector = get_search_vector(config, attributes)
+    search_vector = get_search_vector(config, file_path)
 
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
