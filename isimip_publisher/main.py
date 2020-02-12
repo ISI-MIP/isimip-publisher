@@ -1,7 +1,7 @@
 import argparse
 
 from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
-                       ingest_files, list_local, list_remote,
+                       ingest_files, list_local, list_public, list_remote,
                        match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files,
                        publish_files, update_files, update_index,
@@ -33,6 +33,7 @@ def main():
     subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
     subparsers.add_parser('list_local').set_defaults(func=list_local)
     subparsers.add_parser('list_remote').set_defaults(func=list_remote)
+    subparsers.add_parser('list_public').set_defaults(func=list_public)
     subparsers.add_parser('match_local_datasets').set_defaults(func=match_local_datasets)
     subparsers.add_parser('match_local_files').set_defaults(func=match_local_files)
     subparsers.add_parser('match_remote_datasets').set_defaults(func=match_remote_datasets)

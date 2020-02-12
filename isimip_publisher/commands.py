@@ -6,7 +6,7 @@ from .utils.database import (init_database_session, insert_dataset,
                              update_latest_view, update_words_view)
 from .utils.files import (chmod_file, copy_files_from_remote,
                           copy_files_to_public, delete_files, list_local_files,
-                          list_remote_files)
+                          list_public_files, list_remote_files)
 from .utils.json import write_dataset_json, write_file_json
 from .utils.metadata import get_attributes
 from .utils.netcdf import update_netcdf_global_attributes
@@ -64,6 +64,11 @@ def fetch_files(version, config, filelist=None):
 
 def list_local(version, config, filelist=None):
     for file_path in list_local_files(config, filelist):
+        print(file_path)
+
+
+def list_public(version, config, filelist=None):
+    for file_path in list_public_files(config, filelist):
         print(file_path)
 
 

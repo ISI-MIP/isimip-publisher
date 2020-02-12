@@ -20,6 +20,11 @@ def list_local_files(config, filelist=None):
     return find_files(['find', local_dir.rstrip('/'), '-name', '*.nc4'], filelist)
 
 
+def list_public_files(config, filelist=None):
+    public_dir = os.path.join(os.environ['PUBLIC_DIR'], config['path'])
+    return find_files(['find', public_dir.rstrip('/'), '-name', '*.nc4'], filelist)
+
+
 def find_files(args, filelist=None):
     output = subprocess.check_output(args)
 
