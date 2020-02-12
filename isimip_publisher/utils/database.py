@@ -160,6 +160,16 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
         session.add(file)
 
 
+def commit_ingest(session):
+    session.commit()
+    update_words_view(session)
+    session.commit()
+    update_attributes_view(session)
+    session.commit()
+    update_latest_view(session)
+    session.commit()
+
+
 def update_latest_view(session):
     try:
         session.connection().execute('''

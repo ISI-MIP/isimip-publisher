@@ -1,9 +1,8 @@
 from tqdm import tqdm
 
 from .utils.checksum import write_checksum
-from .utils.database import (init_database_session, insert_dataset,
-                             insert_file, update_attributes_view,
-                             update_latest_view, update_words_view)
+from .utils.database import (commit_ingest, init_database_session,
+                             insert_dataset, insert_file)
 from .utils.files import (chmod_file, copy_files_from_remote,
                           copy_files_to_public, delete_files, list_local_files,
                           list_public_files, list_remote_files)
@@ -37,10 +36,7 @@ def ingest_datasets(version, config, filelist=None):
         attributes = get_attributes(config, dataset['identifiers'])
         insert_dataset(session, version, config, dataset_path, dataset['name'], attributes)
 
-    session.commit()
-    update_words_view(session)
-    update_attributes_view(session)
-    session.commit()
+    commit_ingest(session)
 
 
 def ingest_files(version, config, filelist=None):
@@ -54,10 +50,7 @@ def ingest_files(version, config, filelist=None):
         attributes = get_attributes(config, file['identifiers'])
         insert_file(session, version, config, file_path, file['abspath'], file['name'], file['dataset_path'], attributes)
 
-    session.commit()
-    update_words_view(session)
-    update_attributes_view(session)
-    session.commit()
+    commit_ingest(session)
 
 
 def fetch_files(version, config, filelist=None):
