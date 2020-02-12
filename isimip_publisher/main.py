@@ -98,3 +98,4 @@ def run_all(version, config, filelist=None):
     publish_files(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
+    archive_files(version, config, filelist)
