@@ -38,6 +38,9 @@ def ingest_datasets(version, config, filelist=None):
         insert_dataset(session, version, config, dataset_path, dataset['name'], attributes)
 
     session.commit()
+    update_words_view(session)
+    update_attributes_view(session)
+    session.commit()
 
 
 def ingest_files(version, config, filelist=None):
@@ -51,6 +54,9 @@ def ingest_files(version, config, filelist=None):
         attributes = get_attributes(config, file['identifiers'])
         insert_file(session, version, config, file_path, file['abspath'], file['name'], file['dataset_path'], attributes)
 
+    session.commit()
+    update_words_view(session)
+    update_attributes_view(session)
     session.commit()
 
 
@@ -134,19 +140,6 @@ def update_files(version, config, filelist=None):
         validate_file(config, file_path, file)
         attributes = get_attributes(config, file['identifiers'])
         update_netcdf_global_attributes(config, file['abspath'], attributes)
-
-
-def update_index(version, config, filelist=None):
-    session = init_database_session()
-
-    update_words_view(session)
-    session.commit()
-
-    update_latest_view(session)
-    session.commit()
-
-    update_attributes_view(session)
-    session.commit()
 
 
 def write_checksums(version, config, filelist=None):

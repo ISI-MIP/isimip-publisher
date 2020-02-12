@@ -4,10 +4,9 @@ from .commands import (chmod_files, clean, fetch_files, ingest_datasets,
                        ingest_files, list_local, list_public, list_remote,
                        match_local_datasets, match_local_files,
                        match_remote_datasets, match_remote_files,
-                       publish_files, update_files, update_index,
-                       write_checksums, write_dataset_jsons,
-                       write_dataset_thumbnails, write_file_jsons,
-                       write_file_thumbnails)
+                       publish_files, update_files, write_checksums,
+                       write_dataset_jsons, write_dataset_thumbnails,
+                       write_file_jsons, write_file_thumbnails)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -40,7 +39,6 @@ def main():
     subparsers.add_parser('match_remote_files').set_defaults(func=match_remote_files)
     subparsers.add_parser('publish_files').set_defaults(func=publish_files)
     subparsers.add_parser('update_files').set_defaults(func=update_files)
-    subparsers.add_parser('update_index').set_defaults(func=update_index)
     subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
     subparsers.add_parser('write_dataset_jsons').set_defaults(func=write_dataset_jsons)
     subparsers.add_parser('write_file_jsons').set_defaults(func=write_file_jsons)
@@ -78,7 +76,6 @@ def run(version, config, filelist=None):
     write_file_thumbnails(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
-    update_index(version, config, filelist)
     publish_files(version, config, filelist)
 
 
@@ -99,5 +96,4 @@ def run_all(version, config, filelist=None):
     write_file_thumbnails(version, config, filelist)
     ingest_datasets(version, config, filelist)
     ingest_files(version, config, filelist)
-    update_index(version, config, filelist)
     publish_files(version, config, filelist)

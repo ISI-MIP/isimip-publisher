@@ -198,16 +198,6 @@ def test_ingest_files(setup, script_runner):
     assert response.stderr.strip().startswith('ingest_files')
 
 
-def test_update_index(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'update_index')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
 def test_publish_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
