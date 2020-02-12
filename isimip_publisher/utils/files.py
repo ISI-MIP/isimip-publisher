@@ -111,9 +111,7 @@ def copy_files_to_public(version, config, files):
 
         # check if the file is already public
         if os.path.exists(target_path):
-            # raise an error it it is a different file!
-            if get_checksum(file_path) != get_checksum(target_path):
-                raise RuntimeError('The file %s already exists and has a different checksum than %s' % (file_path, target_path))
+            check_file(file_path, target_path)
         else:
             copy_files.append((file_path, target_path))
 
@@ -131,6 +129,34 @@ def copy_files_to_public(version, config, files):
         yield 1  # yield increment for the progress bar
 
 
+def move_files_to_archive(version, config, files):
+    public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
+    archive_dir = os.path.join(os.environ['ARCHIVE_DIR'] % config, '')
+
+    copy_files = []
+    for file_path in files:
+        target_path = file_path.replace(public_dir, archive_dir)
+
+        # check if the file is already public
+        if os.path.exists(target_path):
+            check_file(file_path, target_path)
+        else:
+            copy_files.append((file_path, target_path))
+
+    yield len(files) - len(copy_files)
+    for file_path, target_path in copy_files:
+        # create the directories for the file
+        target_dir = os.path.dirname(target_path)
+        logger.info('mkdir -p %s', target_dir)
+        os.makedirs(target_dir, exist_ok=True)
+
+        # copy the file
+        logger.info('cp %s %s', file_path, target_path)
+        shutil.move(file_path, target_path)
+
+        yield 1  # yield increment for the progress bar
+
+
 def delete_files(config):
     local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
     logger.info('rm -r %s', local_dir)
@@ -143,3 +169,9 @@ def delete_files(config):
 def chmod_file(file_path):
     logger.info('chmod 644 %s', file_path)
     os.chmod(file_path, 0o644)
+
+
+def check_file(source_path, target_path):
+    # raise an error if it is a different file!
+    if get_checksum(source_path) != get_checksum(target_path):
+        raise RuntimeError('The file %s already exists and has a different checksum than %s' % (source_path, target_path))

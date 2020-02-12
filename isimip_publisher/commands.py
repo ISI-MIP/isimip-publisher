@@ -5,13 +5,31 @@ from .utils.database import (commit_ingest, init_database_session,
                              insert_dataset, insert_file)
 from .utils.files import (chmod_file, copy_files_from_remote,
                           copy_files_to_public, delete_files, list_local_files,
-                          list_public_files, list_remote_files)
+                          list_public_files, list_remote_files,
+                          move_files_to_archive)
 from .utils.json import write_dataset_json, write_file_json
 from .utils.metadata import get_attributes
 from .utils.netcdf import update_netcdf_global_attributes
 from .utils.patterns import match_datasets, match_files
 from .utils.thumbnails import write_dataset_thumbnail, write_file_thumbnail
 from .utils.validation import validate_dataset, validate_file
+
+
+def archive_files(version, config, filelist=None):
+    public_files = list_public_files(config, filelist)
+    datasets = match_datasets(config, public_files)
+    files = match_files(config, public_files)
+
+    archive_files = ['%s.json' % dataset['abspath'] for dataset in datasets.values()]
+    archive_files += ['%s.png' % dataset['abspath'] for dataset in datasets.values()]
+    archive_files += [file['abspath'] for file in files.values()]
+    archive_files += [file['abspath'].replace('.nc4', '.json') for file in files.values()]
+    archive_files += [file['abspath'].replace('.nc4', '.sha256') for file in files.values()]
+    archive_files += [file['abspath'].replace('.nc4', '.png') for file in files.values()]
+
+    t = tqdm(total=len(archive_files), desc='archive_files'.ljust(24))
+    for n in move_files_to_archive(version, config, archive_files):
+        t.update(n)
 
 
 def chmod_files(version, config, filelist=None):
