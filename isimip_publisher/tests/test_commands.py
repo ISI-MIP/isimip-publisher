@@ -59,21 +59,21 @@ def test_match_remote(setup, script_runner):
     assert not response.stderr
 
 
-def test_fetch(setup, script_runner):
+def test_fetch_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'fetch')
+        'fetch_files')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('fetch')
+    assert response.stderr.strip().startswith('fetch_files')
 
 
-def test_fetch_error(setup, script_runner):
+def test_fetch_files_error(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'fetch')
+        'fetch_files')
     assert not response.success
     assert not response.stdout
 
@@ -99,14 +99,14 @@ def test_match_local(setup, script_runner):
     assert not response.stderr
 
 
-def test_update_netcdf(setup, script_runner):
+def test_update_files(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'update_netcdf')
+        'update_files')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('update_netcdf')
+    assert response.stderr.strip().startswith('update_files')
 
 
 def test_write_jsons(setup, script_runner):
@@ -139,24 +139,24 @@ def test_write_checksums(setup, script_runner):
     assert response.stderr.strip().startswith('write_checksums')
 
 
-def test_ingest(setup, script_runner):
+def test_ingest_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'ingest')
+        'ingest_datasets')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('ingest')
+    assert response.stderr.strip().startswith('ingest_datasets')
 
 
-def test_publish(setup, script_runner):
+def test_publish_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'publish')
+        'publish_datasets')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('publish')
+    assert response.stderr.strip().startswith('publish_datasets')
 
 
 def test_list_public(setup, script_runner):
@@ -170,14 +170,14 @@ def test_list_public(setup, script_runner):
     assert len(response.stdout.splitlines()) == 6
 
 
-def test_archive(setup, script_runner):
+def test_archive_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
-        'archive')
+        'archive_datasets')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('archive')
+    assert response.stderr.strip().startswith('archive_datasets')
 
 
 def test_clean(setup, script_runner):
