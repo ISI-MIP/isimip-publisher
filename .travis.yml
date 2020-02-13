@@ -10,10 +10,26 @@ python:
 addons:
   postgresql: '10'
 
+env:
+  global:
+  - LOG_LEVEL=DEBUG
+  - LOG_FILE=isimip-publisher.log
+  - REMOTE_DEST=localhost
+  - REMOTE_DIR=${PWD}/testing/files/
+  - LOCAL_DIR=${PWD}/testing/work/
+  - PUBLIC_DIR=${PWD}/testing/public/
+  - ARCHIVE_DIR=${PWD}/testing/archive/
+  - DATABASE=postgresql+psycopg2://@/test_isimip_metadata
+  - PATTERN_LOCATIONS=${PWD}/testing/pattern/
+  - SCHEMA_LOCATIONS=${PWD}/testing/schema/
+  jobs:
+  - MOCK=True
+  - MOCK=False
+
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libproj-dev libgeos++-dev
-  - ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -q
+  - ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -C "" -q
   - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
   - ssh-keyscan -t rsa localhost >> ~/.ssh/known_hosts
 
@@ -26,7 +42,6 @@ install:
 - pip install coveralls
 
 before_script:
-- cp .env.travis .env
 - createdb test_isimip_metadata
 
 script:
