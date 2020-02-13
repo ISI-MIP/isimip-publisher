@@ -2,8 +2,8 @@ import logging
 import os
 import uuid
 
-from sqlalchemy import (Column, ForeignKey, Index, String, Text, create_engine,
-                        func)
+from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Text,
+                        create_engine, func)
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
@@ -34,6 +34,7 @@ class Dataset(Base):
     version = Column(String(8), nullable=False, index=True)
     attributes = Column(JSONB, nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
+    public = Column(Boolean, nullable=False)
 
     files = relationship('File', back_populates='dataset')
 
@@ -106,9 +107,46 @@ def insert_dataset(session, version, config, dataset_path, dataset_name, attribu
             path=dataset_path,
             version=version,
             attributes=attributes,
-            search_vector=search_vector
+            search_vector=search_vector,
+            public=False
         )
         session.add(dataset)
+
+
+def publish_dataset(session, version, dataset_path):
+    # check that there is no public version of this dataset
+    public_dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.public == True
+    ).one_or_none()
+
+    if public_dataset and public_dataset.version != version:
+        raise RuntimeError('A public dataset with the path %s and the version %s was found' %
+                           (dataset_path, public_dataset.version))
+
+    # mark this dataset public
+    dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.version == version
+    ).one_or_none()
+
+    if dataset is None:
+        raise RuntimeError('No dataset with the name %s and the version %s found' %
+                           (dataset_path, public_dataset.version))
+
+    dataset.public = True
+
+
+def unpublish_dataset(session, dataset_path):
+    # find the public version of this dataset
+    public_dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.public == True
+    ).one_or_none()
+
+    if public_dataset:
+        public_dataset.public = False
+        return public_dataset.version
 
 
 def insert_file(session, version, config, file_path, file_abspath, file_name, dataset_path, attributes):
@@ -158,37 +196,6 @@ def insert_file(session, version, config, file_path, file_abspath, file_name, da
             search_vector=search_vector
         )
         session.add(file)
-
-
-def commit_ingest(session):
-    session.commit()
-    update_words_view(session)
-    session.commit()
-    update_attributes_view(session)
-    session.commit()
-    update_latest_view(session)
-    session.commit()
-
-
-def update_latest_view(session):
-    try:
-        session.connection().execute('''
-            CREATE MATERIALIZED VIEW latest AS
-                SELECT d.id AS dataset_id, d.version FROM datasets AS d
-                JOIN (
-                    SELECT "path", MAX("version") AS version FROM datasets GROUP BY "path"
-                ) AS l ON l.path = d.path AND l.version = d.version;
-        ''')
-        session.connection().execute('''
-            CREATE INDEX ON latest(dataset_id)
-        ''')
-        logger.info('create latest view')
-    except ProgrammingError:
-        session.rollback()
-        session.connection().execute('''
-            REFRESH MATERIALIZED VIEW latest
-        ''')
-        logger.info('update latest view')
 
 
 def update_words_view(session):

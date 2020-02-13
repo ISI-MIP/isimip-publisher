@@ -41,7 +41,7 @@ def find_files(args, filelist=None):
     return files
 
 
-def copy_files_from_remote(config, files):
+def rsync_files_from_remote(config, files):
     remote_dest = os.environ['REMOTE_DEST']
     remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'], '')
     local_dir = os.path.join(os.environ['LOCAL_DIR'], config['path'], '')
@@ -101,60 +101,41 @@ def copy_files_from_remote(config, files):
         os.remove(include_file)
 
 
-def copy_files_to_public(version, config, files):
+def move_files_to_public(config, files):
     local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
     public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
-
-    copy_files = []
-    for file_path in files:
-        target_path = file_path.replace(local_dir, public_dir)
-
-        # check if the file is already public
-        if os.path.exists(target_path):
-            check_file(file_path, target_path)
-        else:
-            copy_files.append((file_path, target_path))
-
-    yield len(files) - len(copy_files)
-    for file_path, target_path in copy_files:
-        # create the directories for the file
-        target_dir = os.path.dirname(target_path)
-        logger.info('mkdir -p %s', target_dir)
-        os.makedirs(target_dir, exist_ok=True)
-
-        # copy the file
-        logger.info('cp %s %s', file_path, target_path)
-        shutil.copyfile(file_path, target_path)
-
-        yield 1  # yield increment for the progress bar
+    move_files(local_dir, public_dir, files)
 
 
-def move_files_to_archive(version, config, files):
+def move_files_to_archive(config, version, files):
     public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
-    archive_dir = os.path.join(os.environ['ARCHIVE_DIR'] % config, '')
+    archive_dir = os.path.join(os.environ['ARCHIVE_DIR'] % config, version, '')
+    move_files(public_dir, archive_dir, files)
 
-    copy_files = []
-    for file_path in files:
-        target_path = file_path.replace(public_dir, archive_dir)
+
+def move_files(source_dir, target_dir, files):
+    moves = []
+    for source_path in files:
+        target_path = source_path.replace(source_dir, target_dir)
 
         # check if the file is already public
         if os.path.exists(target_path):
-            check_file(file_path, target_path)
+            # raise an error if it is a different file!
+            if get_checksum(source_path) != get_checksum(target_path):
+                raise RuntimeError('The file %s already exists and has a different checksum than %s' %
+                                   (source_path, target_path))
         else:
-            copy_files.append((file_path, target_path))
+            moves.append((source_path, target_path))
 
-    yield len(files) - len(copy_files)
-    for file_path, target_path in copy_files:
+    for source_path, target_path in moves:
         # create the directories for the file
         target_dir = os.path.dirname(target_path)
         logger.info('mkdir -p %s', target_dir)
         os.makedirs(target_dir, exist_ok=True)
 
         # copy the file
-        logger.info('cp %s %s', file_path, target_path)
-        shutil.move(file_path, target_path)
-
-        yield 1  # yield increment for the progress bar
+        logger.info('mv %s %s', source_path, target_path)
+        shutil.move(source_path, target_path)
 
 
 def delete_files(config):
@@ -169,9 +150,3 @@ def delete_files(config):
 def chmod_file(file_path):
     logger.info('chmod 644 %s', file_path)
     os.chmod(file_path, 0o644)
-
-
-def check_file(source_path, target_path):
-    # raise an error if it is a different file!
-    if get_checksum(source_path) != get_checksum(target_path):
-        raise RuntimeError('The file %s already exists and has a different checksum than %s' % (source_path, target_path))
