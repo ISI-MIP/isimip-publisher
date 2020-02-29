@@ -50,8 +50,9 @@ CONFIG_DIR=.
 
 REMOTE_DEST=localhost
 REMOTE_DIR=/path/to/remote/
-LOCAL_DIR=/path/to/work/
+LOCAL_DIR=/path/to/local/
 PUBLIC_DIR=/path/to/public/
+ARCHIVE_DIR=/path/to/public/
 
 PATH_PATTERN=^(?P<simulation_round>\w+)/(?P<product>\w+)/(?P<sector>\w+)/(?P<model>[\w-+]+)/
 
@@ -61,8 +62,10 @@ DATABASE=postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
 A database user and a database has to be created:
 
 ```pgsql
-CREATE USER "USER" WITH PASSWORD 'PASSWORD';
-CREATE DATABASE "DBNAME" WITH OWNER "USER";
+CREATE USER "isimip_metadata" WITH PASSWORD 'supersecretpassword';
+CREATE DATABASE "isimip_metadata" WITH OWNER "isimip_metadata";
+\c isimip_metadata
+CREATE EXTENSION pg_trgm;
 ```
 
 Usage
@@ -70,61 +73,57 @@ Usage
 
 ```bash
 # list remote files
-isimip-publisher <simulation_round>/<product>/<sector>/<model> list_remote
+isimip-publisher <path> list_remote
 
 # match remote datasets
-isimip-publisher <simulation_round>/<product>/<sector>/<model> match_remote_datasets
+isimip-publisher <path> match_remote
 
-# match remote files
-isimip-publisher <simulation_round>/<product>/<sector>/<model> match_remote_files
-
-# copy remote files to TMP_DIR
-isimip-publisher <simulation_round>/<product>/<sector>/<model> fetch_files
+# copy remote files to LOCAL_DIR
+isimip-publisher <path> fetch_files
 
 # list local files
-isimip-publisher <simulation_round>/<product>/<sector>/<model> list_local
+isimip-publisher <path> list_local
 
 # match local datasets
-isimip-publisher <simulation_round>/<product>/<sector>/<model> match_local_datasets
-
-# match local files
-isimip-publisher <simulation_round>/<product>/<sector>/<model> match_local_files
+isimip-publisher <path> match_local
 
 # update the global attributes accoding to the config
-isimip-publisher <simulation_round>/<product>/<sector>/<model> update_files
+isimip-publisher <path> update_files
 
 # create a checksum file with the sha256 checksum of the file
-isimip-publisher <simulation_round>/<product>/<sector>/<model> write_checksums
+isimip-publisher <path> write_checksums
 
-# create a JSON file with metadata for each dataset
-isimip-publisher <simulation_round>/<product>/<sector>/<model> write_dataset_jsons
+# create a JSON file with metadata for each dataset and file
+isimip-publisher <path> write_jsons
 
-# create a JSON file with metadata for each file
-isimip-publisher <simulation_round>/<product>/<sector>/<model> write_file_jsons
+# create a thumbnail file for each dataset and file
+isimip-publisher <path> write_thumbnails
 
-# create a thumbnail file for each dataset
-isimip-publisher <simulation_round>/<product>/<sector>/<model> write_dataset_thumbnails
+# finds dataset and file and ingest their metadata into the database
+isimip-publisher <path> ingest_datasets
 
-# create a thumbnail file for each file
-isimip-publisher <simulation_round>/<product>/<sector>/<model> write_file_thumbnails
+# copy files from LOCAL_DIR to PUPLIC_DIR
+isimip-publisher <path> publish_datasets
 
-# finds datasets and ingest their metadata into the database
-isimip-publisher <simulation_round>/<product>/<sector>/<model> ingest_datasets
+# copy files from PUBLIC_DIR to ARCHIVE_DIR
+isimip-publisher <path> archive_datasets
 
-# ingest the metadata from the files into the database
-isimip-publisher <simulation_round>/<product>/<sector>/<model> ingest_files
-
-# copy files from WORK_DIR to PUPLIC_DIR
-isimip-publisher <simulation_round>/<product>/<sector>/<model> publish_files
-
-# cleanup the WORK_DIR
-isimip-publisher <simulation_round>/<product>/<sector>/<model> clean
+# cleanup the LOCAL_DIR
+isimip-publisher <path> clean
 ```
 
-For all commands a list of files *relative* to `REMOTE_DIR` or `WORK_DIR` (as line separated txt file) can be provided to restrict the files processed, e.g.:
+`<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
+
+`fetch_files`, `update_files`, `write_checksums`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
-isimip-publisher  -f /path/to/files.txt <simulation_round>/<product>/<sector>/<model> fetch_files
+isimip-publisher <path> run
+```
+
+For all commands a list of files with absolute pathes (as line separated txt file) can be provided to restrict the files processed, e.g.:
+
+```bash
+isimip-publisher  -f /path/to/files.txt <path> run
 ```
 
 Test
