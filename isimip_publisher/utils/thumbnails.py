@@ -15,11 +15,6 @@ DPI = 96
 LEVELS = 10
 
 
-def write_dataset_thumbnail(dataset):
-    # get the first file
-    write_file_thumbnail(dataset['files'][0], output_abspath=dataset['abspath'].with_suffix('.png'))
-
-
 def write_file_thumbnail(file, output_abspath=None):
     mock = os.environ.get('MOCK', '').lower() in ['t', 'true', 1]
 

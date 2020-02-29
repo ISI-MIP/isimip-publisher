@@ -1,6 +1,5 @@
 import hashlib
 import os
-from pathlib import Path
 
 
 def get_checksum(file_abspath):
