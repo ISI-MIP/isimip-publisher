@@ -68,13 +68,13 @@ def rsync_files_from_remote(config, files):
         include_file = 'rsync-include.txt'
         with open(include_file, 'w') as f:
             for file in files:
-                f.write(file.replace(str(remote_path), '') + os.linesep)
+                f.write(file.replace(str(remote_path) + os.sep, '') + os.linesep)
 
         # make a dry-run to get the number of files to transfer
         output = subprocess.check_output([
             'rsync', '-avz', '--stats', '--dry-run',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-            remote_dest + ':' + str(remote_path), local_path
+            remote_dest + ':' + str(remote_path), str(local_path)
         ])
 
         # get the total number of files from the output of rsync
@@ -87,7 +87,7 @@ def rsync_files_from_remote(config, files):
         process = subprocess.Popen([
             'rsync', '-azvi',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-            remote_dest + ':' + str(remote_path), local_path
+            remote_dest + ':' + str(remote_path), str(local_path)
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         yield diff_files
