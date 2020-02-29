@@ -1,5 +1,5 @@
-import os
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -12,13 +12,12 @@ from isimip_publisher.utils.database import (Dataset, File,
 def setup():
     setup_env()
 
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    test_dir = os.path.join(base_dir, 'testing')
-    work_dir = os.path.join(test_dir, 'work')
-    public_dir = os.path.join(test_dir, 'public')
+    base_dir = Path(__file__).parent.parent.parent
+    test_dir = base_dir / 'testing'
 
-    shutil.rmtree(work_dir, ignore_errors=True)
-    shutil.rmtree(public_dir, ignore_errors=True)
+    shutil.rmtree(test_dir / 'work', ignore_errors=True)
+    shutil.rmtree(test_dir / 'public', ignore_errors=True)
+    shutil.rmtree(test_dir / 'archive', ignore_errors=True)
 
     session = init_database_session()
     session.query(File).delete()

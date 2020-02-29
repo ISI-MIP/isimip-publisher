@@ -23,7 +23,9 @@ def get_netcdf_global_attributes(file_path):
         return rootgrp.__dict__
 
 
-def update_netcdf_global_attributes(config, file_path, attributes):
+def update_netcdf_global_attributes(config, file, attributes):
+    file_path = file['abspath']
+
     logger.info('update %s', file_path)
 
     with Dataset(file_path, 'a', format='NETCDF4') as rootgrp:

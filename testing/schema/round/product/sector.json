@@ -3,69 +3,69 @@
   "$id": "",
   "type": "object",
   "required": [
-    "dimensions",
-    "variables",
-    "attributes",
-    "identifiers"
+    "modelname",
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "variable",
+    "region",
+    "timestep"
   ],
   "properties": {
-    "identifiers": {
-      "properties": {
-        "modelname": {
-          "type": "string"
-        },
-        "alpha": {
-          "type": "string",
-          "enum": [
-            "lorem",
-            "ipsum"
-          ]
-        },
-        "beta": {
-          "type": "string",
-          "enum": [
-            "dolor"
-          ]
-        },
-        "gamma": {
-          "type": "string",
-          "enum": [
-            "sit"
-          ]
-        },
-        "delta": {
-          "type": "string",
-          "enum": [
-            "amet"
-          ]
-        },
-        "variable": {
-          "type": "string",
-          "enum": [
-            "var"
-          ]
-        },
-        "region": {
-          "type": "string",
-          "const": "global"
-        },
-        "timestep": {
-          "type": "string",
-          "enum": [
-            "monthly"
-          ]
-        },
-        "start_year": {
-          "type": "number",
-          "minimum": 2000,
-          "maximum": 2005
-        },
-        "end_year": {
-          "type": "number",
-          "minimum": 2000,
-          "maximum": 2005
-        }
-      }
+    "modelname": {
+      "type": "string"
+    },
+    "alpha": {
+      "type": "string",
+      "enum": [
+        "lorem",
+        "ipsum"
+      ]
+    },
+    "beta": {
+      "type": "string",
+      "enum": [
+        "dolor"
+      ]
+    },
+    "gamma": {
+      "type": "string",
+      "enum": [
+        "sit"
+      ]
+    },
+    "delta": {
+      "type": "string",
+      "enum": [
+        "amet"
+      ]
+    },
+    "variable": {
+      "type": "string",
+      "enum": [
+        "var"
+      ]
+    },
+    "region": {
+      "type": "string",
+      "const": "global"
+    },
+    "timestep": {
+      "type": "string",
+      "enum": [
+        "monthly"
+      ]
+    },
+    "start_year": {
+      "type": "number",
+      "minimum": 2000,
+      "maximum": 2005
+    },
+    "end_year": {
+      "type": "number",
+      "minimum": 2000,
+      "maximum": 2005
     }
   }
 }

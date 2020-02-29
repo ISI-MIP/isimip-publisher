@@ -1,6 +1,7 @@
 import logging
 import os
 from collections import OrderedDict
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_env():
-    load_dotenv(os.path.join(os.getcwd(), '.env'))
+    load_dotenv(Path().cwd() / '.env')
 
 
 def setup_logging():

@@ -1,10 +1,10 @@
 from . import order_dict
 
 
-def get_attributes(config, identifiers):
+def get_attributes(config, obj):
     attributes = {
         'version': config['version']
     }
     attributes.update(config['attributes'])
-    attributes.update(identifiers)
+    attributes.update(obj['identifiers'])
     return order_dict(attributes)

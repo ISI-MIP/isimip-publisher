@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 from .checksum import get_checksum
 
@@ -11,18 +12,18 @@ logger = logging.getLogger(__name__)
 
 def list_remote_files(config, filelist=None):
     remote_dest = os.environ['REMOTE_DEST']
-    remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'])
-    return find_files(['ssh', remote_dest, 'find', remote_dir.rstrip('/'), '-name', '\'*.nc4\''], filelist)
+    remote_path = Path(os.environ['REMOTE_DIR']) / config['path']
+    return find_files(['ssh', remote_dest, 'find', remote_path, '-name', '\'*.nc*\''], filelist)
 
 
 def list_local_files(config, filelist=None):
-    local_dir = os.path.join(os.environ['LOCAL_DIR'], config['path'])
-    return find_files(['find', local_dir.rstrip('/'), '-name', '*.nc4'], filelist)
+    local_path = Path(os.environ['LOCAL_DIR']) / config['path']
+    return find_files(['find', local_path, '-name', '*.nc*'], filelist)
 
 
 def list_public_files(config, filelist=None):
-    public_dir = os.path.join(os.environ['PUBLIC_DIR'], config['path'])
-    return find_files(['find', public_dir.rstrip('/'), '-name', '*.nc4'], filelist)
+    public_path = Path(os.environ['PUBLIC_DIR']) / config['path']
+    return find_files(['find', public_path, '-name', '*.nc*'], filelist)
 
 
 def find_files(args, filelist=None):
@@ -43,24 +44,22 @@ def find_files(args, filelist=None):
 
 def rsync_files_from_remote(config, files):
     remote_dest = os.environ['REMOTE_DEST']
-    remote_dir = os.path.join(os.environ['REMOTE_DIR'], config['path'], '')
-    local_dir = os.path.join(os.environ['LOCAL_DIR'], config['path'], '')
+    remote_path = Path(os.environ['REMOTE_DIR']) / config['path']
+    local_path = Path(os.environ['LOCAL_DIR']) / config['path']
     mock = os.environ.get('MOCK', '').lower() in ['t', 'true', 1]
 
-    if os.path.exists(local_dir):
+    if local_path.exists():
         raise RuntimeError('LOCAL_DIR already exists, run "clean" first!')
 
     # create the local_dir
-    os.makedirs(local_dir, exist_ok=True)
+    local_path.mkdir(parents=True, exist_ok=True)
 
     if mock:
-        empty_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'extras', 'empty.nc4')
+        empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
 
         for file in files:
-            mock_path = file.replace(remote_dir, local_dir)
-            mock_dir = os.path.dirname(mock_path)
-
-            os.makedirs(mock_dir, exist_ok=True)
+            mock_path = Path(file.replace(str(remote_path), str(local_path)))
+            mock_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(empty_file, mock_path)
             yield 1  # yield increment for the progress bar
 
@@ -69,13 +68,13 @@ def rsync_files_from_remote(config, files):
         include_file = 'rsync-include.txt'
         with open(include_file, 'w') as f:
             for file in files:
-                f.write(file.replace(remote_dir, '') + os.linesep)
+                f.write(file.replace(str(remote_path), '') + os.linesep)
 
         # make a dry-run to get the number of files to transfer
         output = subprocess.check_output([
             'rsync', '-avz', '--stats', '--dry-run',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-            remote_dest + ':' + remote_dir, local_dir
+            remote_dest + ':' + str(remote_path), local_path
         ])
 
         # get the total number of files from the output of rsync
@@ -88,7 +87,7 @@ def rsync_files_from_remote(config, files):
         process = subprocess.Popen([
             'rsync', '-azvi',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
-            remote_dest + ':' + remote_dir, local_dir
+            remote_dest + ':' + str(remote_path), local_path
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         yield diff_files
@@ -102,24 +101,24 @@ def rsync_files_from_remote(config, files):
 
 
 def move_files_to_public(config, files):
-    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
-    public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
-    move_files(local_dir, public_dir, files)
+    local_path = Path(os.environ['LOCAL_DIR'] % config)
+    public_path = Path(os.environ['PUBLIC_DIR'] % config)
+    move_files(local_path, public_path, files)
 
 
 def move_files_to_archive(config, version, files):
-    public_dir = os.path.join(os.environ['PUBLIC_DIR'] % config, '')
-    archive_dir = os.path.join(os.environ['ARCHIVE_DIR'] % config, version, '')
-    move_files(public_dir, archive_dir, files)
+    public_path = Path(os.environ['PUBLIC_DIR'] % config)
+    archive_path = Path(os.environ['ARCHIVE_DIR'] % config) / version
+    move_files(public_path, archive_path, files)
 
 
 def move_files(source_dir, target_dir, files):
     moves = []
     for source_path in files:
-        target_path = source_path.replace(source_dir, target_dir)
+        target_path = Path(str(source_path).replace(str(source_dir), str(target_dir)))
 
         # check if the file is already public
-        if os.path.exists(target_path):
+        if target_path.exists():
             # raise an error if it is a different file!
             if get_checksum(source_path) != get_checksum(target_path):
                 raise RuntimeError('The file %s already exists and has a different checksum than %s' %
@@ -129,9 +128,7 @@ def move_files(source_dir, target_dir, files):
 
     for source_path, target_path in moves:
         # create the directories for the file
-        target_dir = os.path.dirname(target_path)
-        logger.info('mkdir -p %s', target_dir)
-        os.makedirs(target_dir, exist_ok=True)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
 
         # copy the file
         logger.info('mv %s %s', source_path, target_path)
@@ -139,10 +136,10 @@ def move_files(source_dir, target_dir, files):
 
 
 def delete_files(config):
-    local_dir = os.path.join(os.environ['LOCAL_DIR'] % config, '')
-    logger.info('rm -r %s', local_dir)
+    local_path = Path(os.environ['LOCAL_DIR'] % config)
+    logger.info('rm -r %s', local_path)
     try:
-        shutil.rmtree(local_dir)
+        shutil.rmtree(local_path)
     except FileNotFoundError:
         pass
 

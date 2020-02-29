@@ -5,29 +5,19 @@ import jsonschema
 logger = logging.getLogger(__name__)
 
 
-def validate_dataset(config, dataset_path, dataset):
-    return validate_identifiers(config, dataset_path, dataset['identifiers'])
+def validate_dataset(config, dataset):
+    return validate_identifiers(config, dataset['identifiers'])
 
 
-def validate_file(config, file_path, file):
-    return validate_identifiers(config, file_path, file['identifiers'])
+def validate_file(config, file):
+    return validate_identifiers(config, file['identifiers'])
 
 
-def validate_identifiers(config, path, identifiers):
-    instance = {
-        'dimensions': [],
-        'variables': [],
-        'attributes': [],
-        'identifiers': identifiers
-    }
-
-    logger.debug('instance = %s', instance)
+def validate_identifiers(config, identifiers):
+    logger.debug('identifiers = %s', identifiers)
 
     try:
-        if config.get('resolver') is not None:
-            jsonschema.validate(schema=config['schema'], resolver=config['resolver'], instance=instance)
-        else:
-            jsonschema.validate(schema=config['schema'], instance=instance)
+        jsonschema.validate(schema=config['schema'], instance=identifiers)
     except jsonschema.exceptions.ValidationError as e:
-        logger.error('instance = %s', instance)
+        logger.error('identifiers = %s', identifiers)
         raise e

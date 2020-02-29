@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
@@ -14,17 +15,13 @@ def fetch_pattern(pattern_path):
     pattern_json = fetch_json(pattern_bases, pattern_path)
     logger.debug('pattern_json = %s', pattern_json)
 
-    path_pattern = os.sep.join(pattern_json['path']) + '$'
-    file_pattern = '^' + '_'.join(pattern_json['file']) + '.nc4'
-    dataset_pattern = '^' + '_'.join(pattern_json['dataset'])
-
     pattern = {
-        'path': re.compile(path_pattern),
-        'file': re.compile(file_pattern),
-        'dataset': re.compile(dataset_pattern)
+        'path': re.compile(pattern_json['path']),
+        'file': re.compile(pattern_json['file']),
+        'dataset': re.compile(pattern_json['dataset'])
     }
 
-    logger.debug('pattern = %s', pattern['path'])
+    logger.debug('pattern = %s', pattern)
 
     return pattern
 
@@ -39,9 +36,8 @@ def fetch_schema(schema_path):
 
 def fetch_json(bases, path):
     for base in bases:
-        location = os.path.join(base, path)
-
-        if urlparse(location).scheme:
+        if urlparse(base).scheme:
+            location = base + path
             logger.debug('json_url = %s', location)
             response = requests.get(location)
 
@@ -49,9 +45,10 @@ def fetch_json(bases, path):
                 return response.json()
 
         else:
+            location = Path(base) / path
             logger.debug('json_path = %s', location)
 
-            if os.path.exists(location):
+            if location.exists():
                 return json.loads(open(location).read())
 
     raise RuntimeError('{} not found in {}'.format(path, bases))

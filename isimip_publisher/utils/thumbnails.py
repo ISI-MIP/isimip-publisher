@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+from pathlib import Path
 
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -14,17 +15,18 @@ DPI = 96
 LEVELS = 10
 
 
-def write_dataset_thumbnail(dataset_abspath, files):
-    write_file_thumbnail(files[-1], output_abspath='%s.png' % dataset_abspath)
+def write_dataset_thumbnail(dataset):
+    # get the first file
+    write_file_thumbnail(dataset['files'][0], output_abspath=dataset['abspath'].with_suffix('.png'))
 
 
-def write_file_thumbnail(file_abspath, output_abspath=None):
+def write_file_thumbnail(file, output_abspath=None):
     mock = os.environ.get('MOCK', '').lower() in ['t', 'true', 1]
 
     if not output_abspath:
-        output_abspath = file_abspath.replace('.nc4', '.png')
+        output_abspath = file['abspath'].with_suffix('.png')
 
-    with Dataset(file_abspath, mode='r') as dataset:
+    with Dataset(file['abspath'], mode='r') as dataset:
 
         for var_name, variable in dataset.variables.items():
             if len(variable.dimensions) > 1:
@@ -50,5 +52,5 @@ def write_file_thumbnail(file_abspath, output_abspath=None):
                 logger.warn(e)
 
         # if plotting did not work, copy empty.png
-        empty_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'extras', 'empty.png')
+        empty_file = Path(__file__).parent.parent / 'extras' / 'empty.png'
         shutil.copyfile(empty_file, output_abspath)

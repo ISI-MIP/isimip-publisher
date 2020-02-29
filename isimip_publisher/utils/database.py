@@ -82,7 +82,9 @@ def init_database_session():
     return session
 
 
-def insert_dataset(session, version, config, dataset_path, dataset_name, attributes):
+def insert_dataset(session, version, config, dataset, attributes):
+    dataset_name = str(dataset['name'])
+    dataset_path = str(dataset['path'])
     search_vector = get_search_vector(config, dataset_path)
 
     # check if the dataset with this version is already in the database
@@ -113,7 +115,9 @@ def insert_dataset(session, version, config, dataset_path, dataset_name, attribu
         session.add(dataset)
 
 
-def publish_dataset(session, version, dataset_path):
+def publish_dataset(session, version, dataset):
+    dataset_path = str(dataset['path'])
+
     # check that there is no public version of this dataset
     public_dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -137,7 +141,9 @@ def publish_dataset(session, version, dataset_path):
     dataset.public = True
 
 
-def unpublish_dataset(session, dataset_path):
+def unpublish_dataset(session, dataset):
+    dataset_path = str(dataset['path'])
+
     # find the public version of this dataset
     public_dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -149,7 +155,11 @@ def unpublish_dataset(session, dataset_path):
         return public_dataset.version
 
 
-def insert_file(session, version, config, file_path, file_abspath, file_name, dataset_path, attributes):
+def insert_file(session, version, config, file, attributes):
+    file_name = str(file['name'])
+    file_path = str(file['path'])
+    file_abspath = str(file['abspath'])
+    dataset_path = str(file['dataset_path'])
     checksum = get_checksum(file_abspath)
     checksum_type = get_checksum_type()
     search_vector = get_search_vector(config, file_path)

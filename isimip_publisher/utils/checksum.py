@@ -1,5 +1,6 @@
 import hashlib
 import os
+from pathlib import Path
 
 
 def get_checksum(file_abspath):
@@ -17,6 +18,9 @@ def get_checksum_type():
     return 'sha256'
 
 
-def write_checksum(file_abspath):
-    with open(file_abspath.replace('.nc4', '.sha256'), 'w') as f:
-        f.write(get_checksum(file_abspath) + os.linesep)
+def write_checksum(file):
+    checksum_path = file['abspath'].with_suffix('.sha256')
+    checksum = get_checksum(file['abspath'])
+
+    with open(checksum_path, 'w') as f:
+        f.write(checksum + os.linesep)

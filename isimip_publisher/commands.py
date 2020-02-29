@@ -21,24 +21,23 @@ def archive_datasets(version, config, filelist=None):
 
     session = init_database_session()
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='archive_datasets'.ljust(17)):
-        validate_dataset(config, dataset_path, dataset)
-        dataset_version = unpublish_dataset(session, dataset_path)
+    for dataset in tqdm(datasets, desc='archive_datasets'.ljust(17)):
+        validate_dataset(config, dataset)
+        dataset_version = unpublish_dataset(session, dataset)
 
         if dataset_version:
             move_files_to_archive(config, dataset_version, [
-                '%s.json' % dataset['abspath'],
-                '%s.png' % dataset['abspath']
+                dataset['abspath'].with_suffix('.json'),
+                dataset['abspath'].with_suffix('.png')
             ])
 
-            files = match_files(config, dataset['files'])
-            for file_path, file in files.items():
-                validate_file(config, file_path, file)
+            for file in dataset['files']:
+                validate_file(config, file)
                 move_files_to_archive(config, dataset_version, [
                     file['abspath'],
-                    file['abspath'].replace('.nc4', '.json'),
-                    file['abspath'].replace('.nc4', '.sha256'),
-                    file['abspath'].replace('.nc4', '.png')
+                    file['abspath'].with_suffix('.json'),
+                    file['abspath'].with_suffix('.png'),
+                    file['abspath'].with_suffix('.sha256')
                 ])
 
         session.commit()
@@ -54,17 +53,15 @@ def ingest_datasets(version, config, filelist=None):
 
     session = init_database_session()
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='ingest_datasets'.ljust(17)):
-        validate_dataset(config, dataset_path, dataset)
-        attributes = get_attributes(config, dataset['identifiers'])
-        insert_dataset(session, version, config, dataset_path, dataset['name'], attributes)
+    for dataset in tqdm(datasets, desc='ingest_datasets'.ljust(17)):
+        validate_dataset(config, dataset)
+        attributes = get_attributes(config, dataset)
+        insert_dataset(session, version, config, dataset, attributes)
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
-            attributes = get_attributes(config, file['identifiers'])
-            insert_file(session, version, config, file_path, file['abspath'], file['name'],
-                        file['dataset_path'], attributes)
+        for file in dataset['files']:
+            validate_file(config, file)
+            attributes = get_attributes(config, file)
+            insert_file(session, version, config, file, attributes)
 
         session.commit()
 
@@ -100,24 +97,22 @@ def match_local(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     datasets = match_datasets(config, local_files)
 
-    for dataset_path, dataset in datasets.items():
-        validate_dataset(config, dataset_path, dataset)
+    for dataset in datasets:
+        validate_dataset(config, dataset)
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
+        for file in dataset['files']:
+            validate_file(config, file)
 
 
 def match_remote(version, config, filelist=None):
     remote_files = list_remote_files(config, filelist)
     datasets = match_datasets(config, remote_files)
 
-    for dataset_path, dataset in datasets.items():
-        validate_dataset(config, dataset_path, dataset)
+    for dataset in datasets:
+        validate_dataset(config, dataset)
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
+        for file in dataset['files']:
+            validate_file(config, file)
 
 
 def publish_datasets(version, config, filelist=None):
@@ -126,22 +121,21 @@ def publish_datasets(version, config, filelist=None):
 
     session = init_database_session()
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='publish_datasets'.ljust(17)):
-        validate_dataset(config, dataset_path, dataset)
-        publish_dataset(session, version, dataset_path)
+    for dataset in tqdm(datasets, desc='publish_datasets'.ljust(17)):
+        validate_dataset(config, dataset)
+        publish_dataset(session, version, dataset)
         move_files_to_public(config, [
-            '%s.json' % dataset['abspath'],
-            '%s.png' % dataset['abspath']
+            dataset['abspath'].with_suffix('.json'),
+            dataset['abspath'].with_suffix('.png')
         ])
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
+        for file in dataset['files']:
+            validate_file(config, file)
             move_files_to_public(config, [
                 file['abspath'],
-                file['abspath'].replace('.nc4', '.json'),
-                file['abspath'].replace('.nc4', '.sha256'),
-                file['abspath'].replace('.nc4', '.png')
+                file['abspath'].with_suffix('.json'),
+                file['abspath'].with_suffix('.png'),
+                file['abspath'].with_suffix('.sha256')
             ])
 
         session.commit()
@@ -151,45 +145,43 @@ def update_files(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='update_files'.ljust(17)):
-        validate_file(config, file_path, file)
-        attributes = get_attributes(config, file['identifiers'])
-        update_netcdf_global_attributes(config, file['abspath'], attributes)
+    for file in tqdm(files, desc='update_files'.ljust(17)):
+        validate_file(config, file)
+        attributes = get_attributes(config, file)
+        update_netcdf_global_attributes(config, file, attributes)
 
 
 def write_checksums(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     files = match_files(config, local_files)
 
-    for file_path, file in tqdm(files.items(), desc='write_checksums'.ljust(17)):
-        write_checksum(file['abspath'])
+    for file in tqdm(files, desc='write_checksums'.ljust(17)):
+        write_checksum(file)
 
 
 def write_jsons(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     datasets = match_datasets(config, local_files)
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='write_jsons'.ljust(17)):
-        validate_dataset(config, dataset_path, dataset)
-        attributes = get_attributes(config, dataset['identifiers'])
-        write_dataset_json(config, dataset['abspath'], attributes)
+    for dataset in tqdm(datasets, desc='write_jsons'.ljust(17)):
+        validate_dataset(config, dataset)
+        attributes = get_attributes(config, dataset)
+        write_dataset_json(config, dataset, attributes)
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
-            attributes = get_attributes(config, file['identifiers'])
-            write_file_json(config, file['abspath'], attributes)
+        for file in dataset['files']:
+            validate_file(config, file)
+            attributes = get_attributes(config, file)
+            write_file_json(config, file, attributes)
 
 
 def write_thumbnails(version, config, filelist=None):
     local_files = list_local_files(config, filelist)
     datasets = match_datasets(config, local_files)
 
-    for dataset_path, dataset in tqdm(datasets.items(), desc='write_thumbnails'.ljust(17)):
-        validate_dataset(config, dataset_path, dataset)
-        write_dataset_thumbnail(dataset['abspath'], dataset['files'])
+    for dataset in tqdm(datasets, desc='write_thumbnails'.ljust(17)):
+        validate_dataset(config, dataset)
+        write_dataset_thumbnail(dataset)
 
-        files = match_files(config, dataset['files'])
-        for file_path, file in files.items():
-            validate_file(config, file_path, file)
-            write_file_thumbnail(file['abspath'])
+        for file in dataset['files']:
+            validate_file(config, file)
+            write_file_thumbnail(file)

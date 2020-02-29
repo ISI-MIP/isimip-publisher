@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -7,59 +7,70 @@ logger = logging.getLogger(__name__)
 def match_datasets(config, files):
     dataset_dict = {}
 
-    for file_path in files:
-        dataset_path, dataset_name, identifiers = match_dataset(config, file_path)
+    for file in files:
+        file_abspath = Path(file)
+
+        file_path, file_name, identifiers = match_file(config, file_abspath)
+        dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
 
         if dataset_path not in dataset_dict:
             dataset_dict[dataset_path] = {
                 'name': dataset_name,
-                'abspath': os.path.join(os.path.dirname(file_path), dataset_name),
+                'path': dataset_path,
+                'abspath': Path(file.replace(str(file_path), str(dataset_path))),
                 'identifiers': identifiers,
-                'files': [file_path]
+                'files': []
             }
-        else:
-            dataset_dict[dataset_path]['files'].append(file_path)
 
-    return dataset_dict
+        dataset_dict[dataset_path]['files'].append({
+            'name': file_name,
+            'path': file_path,
+            'abspath': file_abspath,
+            'dataset_path': dataset_path,
+            'identifiers': identifiers
+        })
+
+    dataset_list = list(dataset_dict.values())
+    return dataset_list
 
 
 def match_files(config, files):
-    file_dict = {}
+    file_list = []
 
-    for file_abspath in files:
+    for file in files:
+        file_abspath = Path(file)
+
         file_path, file_name, identifiers = match_file(config, file_abspath)
         dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
 
-        file_dict[file_path] = {
+        file_list.append({
             'name': file_name,
+            'path': file_path,
             'abspath': file_abspath,
-            'identifiers': identifiers,
-            'dataset_path': dataset_path
-        }
+            'dataset_path': dataset_path,
+            'identifiers': identifiers
+        })
 
-    return file_dict
-
-
-def match_dataset(config, file_path):
-    return match(config, file_path, 'path', 'dataset')
+    return file_list
 
 
-def match_file(config, file_path):
-    return match(config, file_path, 'path', 'file')
+def match_dataset(config, file_abspath):
+    return match(config, file_abspath, 'path', 'dataset')
 
 
-def match(config, file_path, dirname_pattern_key, filename_pattern_key):
+def match_file(config, file_abspath):
+    return match(config, file_abspath, 'path', 'file')
+
+
+def match(config, file_abspath, dirname_pattern_key, filename_pattern_key):
     dirname_pattern = config['pattern'][dirname_pattern_key]
     filename_pattern = config['pattern'][filename_pattern_key]
 
-    # split file path
-    dirname, filename = os.path.split(file_path)
-
     # match the dirname and the filename
-    dirname_match, dirname_identifiers = match_string(dirname_pattern, dirname)
-    filename_match, filename_identifiers = match_string(filename_pattern, filename)
+    dirname_match, dirname_identifiers = match_string(dirname_pattern, str(file_abspath.parent))
+    filename_match, filename_identifiers = match_string(filename_pattern, str(file_abspath.name))
 
-    path = os.path.join(dirname_match, filename_match)
+    path = Path(dirname_match) / filename_match
     name = filename_match
     identifiers = {**dirname_identifiers, **filename_identifiers}
 
