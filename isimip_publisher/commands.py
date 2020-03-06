@@ -1,12 +1,13 @@
+import os
+from pathlib import Path
+
 from tqdm import tqdm
 
 from .utils.checksum import write_checksum
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, publish_dataset, unpublish_dataset,
                              update_attributes_view, update_words_view)
-from .utils.files import (delete_files, list_local_files, list_public_files,
-                          list_remote_files, move_files_to_archive,
-                          move_files_to_public, rsync_files_from_remote)
+from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.json import write_file_json
 from .utils.metadata import get_attributes
 from .utils.netcdf import update_netcdf_global_attributes
@@ -16,8 +17,10 @@ from .utils.validation import validate_dataset, validate_file
 
 
 def archive_datasets(version, config, filelist=None):
-    public_files = list_public_files(config, filelist)
-    datasets = match_datasets(config, public_files)
+    public_path = Path(os.environ['PUBLIC_DIR'])
+    archive_path = Path(os.environ['ARCHIVE_DIR']) / version
+    public_files = list_files(config, public_path, filelist=filelist)
+    datasets = match_datasets(config, public_path, public_files)
 
     session = init_database_session()
 
@@ -27,7 +30,7 @@ def archive_datasets(version, config, filelist=None):
         if dataset_version:
             for file in dataset['files']:
                 validate_file(config, file)
-                move_files_to_archive(config, dataset_version, [
+                move_files(public_path, archive_path, [
                     file['abspath'],
                     file['abspath'].with_suffix('.json'),
                     file['abspath'].with_suffix('.png'),
@@ -42,8 +45,9 @@ def clean(version, config, filelist=None):
 
 
 def ingest_datasets(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    datasets = match_datasets(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    datasets = match_datasets(config, local_path, local_files)
 
     session = init_database_session()
 
@@ -65,31 +69,45 @@ def ingest_datasets(version, config, filelist=None):
 
 
 def fetch_files(version, config, filelist=None):
-    remote_files = list_remote_files(config, filelist)
+    remote_dest = os.environ['REMOTE_DEST']
+    remote_path = Path(os.environ['REMOTE_DIR'])
+    local_path = Path(os.environ['LOCAL_DIR'])
+    remote_files = list_files(config, remote_path, remote_dest=remote_dest, filelist=filelist)
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(17))
-    for n in rsync_files_from_remote(config, remote_files):
+    for n in copy_files(config, remote_dest, remote_path, local_path, remote_files):
         t.update(n)
 
 
 def list_local(version, config, filelist=None):
-    for file_path in list_local_files(config, filelist):
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+
+    for file_path in local_files:
         print(file_path)
 
 
 def list_public(version, config, filelist=None):
-    for file_path in list_public_files(config, filelist):
+    public_path = Path(os.environ['PUBLIC_DIR'])
+    public_files = list_files(config, public_path, filelist=filelist)
+
+    for file_path in public_files:
         print(file_path)
 
 
 def list_remote(version, config, filelist=None):
-    for file_path in list_remote_files(config, filelist):
+    remote_dest = os.environ['REMOTE_DEST']
+    remote_path = Path(os.environ['REMOTE_DIR'])
+    remote_files = list_files(config, remote_path, remote_dest=remote_dest, filelist=filelist)
+
+    for file_path in remote_files:
         print(file_path)
 
 
 def match_local(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    datasets = match_datasets(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    datasets = match_datasets(config, local_path, local_files)
 
     for dataset in datasets:
         validate_dataset(config, dataset)
@@ -99,8 +117,10 @@ def match_local(version, config, filelist=None):
 
 
 def match_remote(version, config, filelist=None):
-    remote_files = list_remote_files(config, filelist)
-    datasets = match_datasets(config, remote_files)
+    remote_dest = os.environ['REMOTE_DEST']
+    remote_path = Path(os.environ['REMOTE_DIR'])
+    remote_files = list_files(config, remote_path, remote_dest=remote_dest, filelist=filelist)
+    datasets = match_datasets(config, remote_path, remote_files)
 
     for dataset in datasets:
         validate_dataset(config, dataset)
@@ -110,8 +130,10 @@ def match_remote(version, config, filelist=None):
 
 
 def publish_datasets(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    datasets = match_datasets(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    public_path = Path(os.environ['PUBLIC_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    datasets = match_datasets(config, local_path, local_files)
 
     session = init_database_session()
 
@@ -121,7 +143,7 @@ def publish_datasets(version, config, filelist=None):
 
         for file in dataset['files']:
             validate_file(config, file)
-            move_files_to_public(config, [
+            move_files(local_path, public_path, [
                 file['abspath'],
                 file['abspath'].with_suffix('.json'),
                 file['abspath'].with_suffix('.png'),
@@ -132,8 +154,9 @@ def publish_datasets(version, config, filelist=None):
 
 
 def update_files(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    files = match_files(config, local_path, local_files)
 
     for file in tqdm(files, desc='update_files'.ljust(17)):
         validate_file(config, file)
@@ -142,16 +165,18 @@ def update_files(version, config, filelist=None):
 
 
 def write_checksums(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    files = match_files(config, local_path, local_files)
 
     for file in tqdm(files, desc='write_checksums'.ljust(17)):
         write_checksum(file)
 
 
 def write_jsons(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    files = match_files(config, local_path, local_files)
 
     for file in tqdm(files, desc='write_jsons'.ljust(17)):
         validate_file(config, file)
@@ -160,8 +185,9 @@ def write_jsons(version, config, filelist=None):
 
 
 def write_thumbnails(version, config, filelist=None):
-    local_files = list_local_files(config, filelist)
-    files = match_files(config, local_files)
+    local_path = Path(os.environ['LOCAL_DIR'])
+    local_files = list_files(config, local_path, filelist=filelist)
+    files = match_files(config, local_path, local_files)
 
     for file in tqdm(files, desc='write_thumbnails'.ljust(17)):
         validate_file(config, file)

@@ -4,11 +4,11 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def match_datasets(config, files):
+def match_datasets(config, base_path, files):
     dataset_dict = {}
 
     for file in files:
-        file_abspath = Path(file)
+        file_abspath = base_path / file
 
         file_path, file_name, identifiers = match_file(config, file_abspath)
         dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
@@ -34,11 +34,11 @@ def match_datasets(config, files):
     return dataset_list
 
 
-def match_files(config, files):
+def match_files(config, base_path, files):
     file_list = []
 
     for file in files:
-        file_abspath = Path(file)
+        file_abspath = base_path / file
 
         file_path, file_name, identifiers = match_file(config, file_abspath)
         dataset_path, dataset_name, _ = match_dataset(config, file_abspath)

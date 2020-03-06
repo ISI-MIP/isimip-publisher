@@ -2,7 +2,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-
 from isimip_publisher.utils import setup_env
 from isimip_publisher.utils.database import (Dataset, File,
                                              init_database_session)
@@ -66,15 +65,6 @@ def test_fetch_files(setup, script_runner):
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('fetch_files')
-
-
-def test_fetch_files_error(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'fetch_files')
-    assert not response.success
-    assert not response.stdout
 
 
 def test_list_local(setup, script_runner):
