@@ -10,6 +10,8 @@ def match_datasets(config, base_path, files):
     for file in files:
         file_abspath = base_path / file
 
+        logger.info('match_datasets %s', file_abspath)
+
         file_path, file_name, identifiers = match_file(config, file_abspath)
         dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
 
@@ -17,7 +19,6 @@ def match_datasets(config, base_path, files):
             dataset_dict[dataset_path] = {
                 'name': dataset_name,
                 'path': dataset_path,
-                'abspath': Path(file.replace(str(file_path), str(dataset_path))),
                 'identifiers': identifiers,
                 'files': []
             }
@@ -39,6 +40,8 @@ def match_files(config, base_path, files):
 
     for file in files:
         file_abspath = base_path / file
+
+        logger.info('match_files %s', file_abspath)
 
         file_path, file_name, identifiers = match_file(config, file_abspath)
         dataset_path, dataset_name, _ = match_dataset(config, file_abspath)
@@ -72,9 +75,16 @@ def match(config, file_abspath, dirname_pattern_key, filename_pattern_key):
 
     path = Path(dirname_match) / filename_match
     name = filename_match
-    identifiers = {**dirname_identifiers, **filename_identifiers}
 
-    return path, name, identifiers
+    # assert that any value in dirname_identifiers at least starts with
+    # its corresponding value (same key) in filename_identifiers
+    # e.g. 'ewe' and 'ewe_north-sea'
+    for key, value in filename_identifiers.items():
+        if key in dirname_identifiers:
+            f, d = filename_identifiers[key], dirname_identifiers[key]
+            assert d.lower().startswith(f.lower()), (f, d)
+
+    return path, name, {**dirname_identifiers, **filename_identifiers}
 
 
 def match_string(pattern, string):

@@ -1,5 +1,8 @@
 import hashlib
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 def get_checksum(file_abspath):
@@ -20,6 +23,8 @@ def get_checksum_type():
 def write_checksum(file):
     checksum_path = file['abspath'].with_suffix('.sha256')
     checksum = get_checksum(file['abspath'])
+
+    logger.info('write_checksum %s', checksum_path)
 
     with open(checksum_path, 'w') as f:
         f.write(checksum + os.linesep)

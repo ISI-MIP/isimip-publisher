@@ -12,7 +12,7 @@ from .utils.json import write_file_json
 from .utils.metadata import get_attributes
 from .utils.netcdf import update_netcdf_global_attributes
 from .utils.patterns import match_datasets, match_files
-from .utils.thumbnails import write_file_thumbnail
+from .utils.thumbnails import write_thumbnail
 from .utils.validation import validate_dataset, validate_file
 
 
@@ -191,4 +191,4 @@ def write_thumbnails(version, config, filelist=None):
 
     for file in tqdm(files, desc='write_thumbnails'.ljust(17)):
         validate_file(config, file)
-        write_file_thumbnail(file)
+        write_thumbnail(file)

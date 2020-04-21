@@ -48,7 +48,7 @@ def main():
         filelist = parse_filelist(args.filelist_file)
 
         if config is False:
-            parser.error('path needs to contain at least 3 tokens')
+            parser.error('no pattern/schema could be found for path')
 
         args.func(version, config, filelist)
     else:

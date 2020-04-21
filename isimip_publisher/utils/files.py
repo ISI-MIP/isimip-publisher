@@ -13,9 +13,24 @@ def list_files(config, base_path, remote_dest=None, filelist=None):
     path = base_path / config['path']
 
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', path, '-name', '\'*.nc*\'']
+        args = ['ssh', remote_dest, 'find', path]
+
+        for suffix in config['pattern']['suffix']:
+            args += ['-name', '\'*{}*\''.format(suffix)]
+
+            if suffix != config['pattern']['suffix'][-1]:
+                args += ['-or']
+
     else:
-        args = ['find', path, '-name', '*.nc*']
+        args = ['find', path]
+
+        for suffix in config['pattern']['suffix']:
+            args += ['-name', '*{}*'.format(suffix)]
+
+            if suffix != config['pattern']['suffix'][-1]:
+                args += ['-or']
+
+    logger.debug('args = %s', args)
 
     output = subprocess.check_output(args)
 
@@ -26,12 +41,11 @@ def list_files(config, base_path, remote_dest=None, filelist=None):
         if not filelist or file_path in filelist:
             files.append(file_path)
 
-    logger.debug(files)
     return files
 
 
 def copy_files(config, remote_dest, remote_path, local_path, files):
-    mock = os.environ.get('MOCK').lower() in ['t', 'true', 1]
+    mock = os.getenv('MOCK', '').lower() in ['t', 'true', 1]
 
     # create the local_dir
     (local_path / config['path']).mkdir(parents=True, exist_ok=True)
@@ -42,6 +56,7 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
         for file in files:
             mock_path = local_path / file
             mock_path.parent.mkdir(parents=True, exist_ok=True)
+            logger.info('copy_files %s', mock_path)
             shutil.copyfile(empty_file, mock_path)
             yield 1  # yield increment for the progress bar
 
@@ -66,7 +81,7 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
         for line in process.stdout:
             output = line.decode().strip()
             if output.startswith('>f'):
-                logger.info('rsync %s', output)
+                logger.info('copy_files %s', output)
                 yield 1  # yield increment for the progress bar
 
         os.remove(include_file)
@@ -75,6 +90,8 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
 def move_files(source_dir, target_dir, files):
     moves = []
     for source_path in files:
+        logger.info('move_files %s', source_path)
+
         target_path = Path(str(source_path).replace(str(source_dir), str(target_dir)))
 
         # check if the file is already public
@@ -91,13 +108,13 @@ def move_files(source_dir, target_dir, files):
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
         # copy the file
-        logger.info('mv %s %s', source_path, target_path)
+        logger.debug('mv %s %s', source_path, target_path)
         shutil.move(source_path, target_path)
 
 
 def delete_files(config):
     local_path = Path(os.environ['LOCAL_DIR'] % config)
-    logger.info('rm -r %s', local_path)
+    logger.debug('rm -r %s', local_path)
     try:
         shutil.rmtree(local_path)
     except FileNotFoundError:
@@ -105,5 +122,5 @@ def delete_files(config):
 
 
 def chmod_file(file_path):
-    logger.info('chmod 644 %s', file_path)
+    logger.debug('chmod 644 %s', file_path)
     os.chmod(file_path, 0o644)

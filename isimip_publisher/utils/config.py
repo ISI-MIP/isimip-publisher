@@ -1,27 +1,11 @@
 import logging
 import os
 from datetime import date, datetime
+from pathlib import Path
 
 from .schema import fetch_pattern, fetch_schema
 
 logger = logging.getLogger(__name__)
-
-
-def merge_config(destination, source):
-    '''
-    Credit: https://stackoverflow.com/a/20666342
-    '''
-
-    if isinstance(source, dict):
-        for key, value in source.items():
-            if isinstance(value, dict):
-                # get node or create one
-                node = destination.setdefault(key, {})
-                merge_config(node, value)
-            else:
-                destination[key] = value
-
-    return destination
 
 
 def parse_version(version):
@@ -40,32 +24,37 @@ def parse_version(version):
 def parse_config(path, version=None):
     path_components = path.strip(os.sep).split(os.sep)
 
-    try:
-        schema_path = os.sep.join(path_components[:3]) + '.json'
-    except IndexError:
-        return False
+    pattern, schema = None, None
+    for i in range(len(path_components), 0, -1):
+        schema_path = Path(os.sep.join(path_components[:i+1])).with_suffix('.json')
 
-    pattern = fetch_pattern(schema_path)
-    schema = fetch_schema(schema_path)
+        if pattern is None:
+            pattern = fetch_pattern(schema_path)
 
-    # collect environment variables starting with ISIMIP_ as attributes
-    attributes = {}
-    for key in os.environ:
-        if key.startswith('ISIMIP_'):
-            attribute = key.replace('ISIMIP_', '').lower()
-            attributes[attribute] = os.environ[key]
+        if schema is None:
+            schema = fetch_schema(schema_path)
 
-    config = {
-        'path': path,
-        'version': version,
-        'schema_path': schema_path,
-        'pattern': pattern,
-        'schema': schema,
-        'attributes': attributes
-    }
+    if pattern and schema:
+        # collect environment variables starting with ISIMIP_ as attributes
+        attributes = {}
+        for key in os.environ:
+            if key.startswith('ISIMIP_'):
+                attribute = key.replace('ISIMIP_', '').lower()
+                attributes[attribute] = os.environ[key]
 
-    logger.debug(config)
-    return config
+        config = {
+            'path': path,
+            'version': version,
+            'schema_path': schema_path,
+            'pattern': pattern,
+            'schema': schema,
+            'attributes': attributes
+        }
+
+        logger.debug(config)
+        return config
+
+    return False
 
 
 def parse_filelist(filelist_file):

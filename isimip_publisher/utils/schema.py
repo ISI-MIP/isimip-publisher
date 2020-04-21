@@ -13,25 +13,36 @@ logger = logging.getLogger(__name__)
 def fetch_pattern(pattern_path):
     pattern_bases = os.environ['PATTERN_LOCATIONS'].split()
     pattern_json = fetch_json(pattern_bases, pattern_path)
-    logger.debug('pattern_json = %s', pattern_json)
 
-    pattern = {
-        'path': re.compile(pattern_json['path']),
-        'file': re.compile(pattern_json['file']),
-        'dataset': re.compile(pattern_json['dataset'])
-    }
+    if pattern_json:
+        logger.info('pattern_path = %s', pattern_path)
+        logger.debug('pattern_json = %s', pattern_json)
 
-    logger.debug('pattern = %s', pattern)
+        assert isinstance(pattern_json['path'], str)
+        assert isinstance(pattern_json['file'], str)
+        assert isinstance(pattern_json['dataset'], str)
+        assert isinstance(pattern_json['suffix'], list)
 
-    return pattern
+        pattern = {
+            'path': re.compile(pattern_json['path']),
+            'file': re.compile(pattern_json['file']),
+            'dataset': re.compile(pattern_json['dataset']),
+            'suffix': pattern_json['suffix']
+        }
+
+        logger.debug('pattern = %s', pattern)
+
+        return pattern
 
 
 def fetch_schema(schema_path):
     schema_bases = os.environ['SCHEMA_LOCATIONS'].split()
     schema_json = fetch_json(schema_bases, schema_path)
-    logger.debug('schema_json = %s', schema_json)
 
-    return schema_json
+    if schema_json:
+        logger.info('schema_path = %s', schema_path)
+        logger.debug('schema_json = %s', schema_json)
+        return schema_json
 
 
 def fetch_json(bases, path):
@@ -50,5 +61,3 @@ def fetch_json(bases, path):
 
             if location.exists():
                 return json.loads(open(location).read())
-
-    raise RuntimeError('{} not found in {}'.format(path, bases))

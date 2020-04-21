@@ -26,7 +26,7 @@ def get_netcdf_global_attributes(file_path):
 def update_netcdf_global_attributes(config, file, attributes):
     file_path = file['abspath']
 
-    logger.info('update %s', file_path)
+    logger.info('update_netcdf_global_attributes %s', file_path)
 
     with Dataset(file_path, 'a', format='NETCDF4') as rootgrp:
         # remove some global attributes

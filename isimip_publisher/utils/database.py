@@ -87,6 +87,8 @@ def insert_dataset(session, version, config, dataset, attributes):
     dataset_path = str(dataset['path'])
     search_vector = get_search_vector(config, dataset_path)
 
+    logger.info('insert_dataset %s', dataset_path)
+
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -98,12 +100,12 @@ def insert_dataset(session, version, config, dataset, attributes):
         if dataset.attributes != attributes:
             dataset.attributes = attributes
             dataset.search_vector = search_vector
-            logger.info('update dataset %s', dataset_path)
+            logger.debug('update dataset %s', dataset_path)
         else:
-            logger.info('skip dataset %s', dataset_path)
+            logger.debug('skip dataset %s', dataset_path)
     else:
         # insert a new row for this dataset
-        logger.info('insert dataset %s', dataset_path)
+        logger.debug('insert dataset %s', dataset_path)
         dataset = Dataset(
             name=dataset_name,
             path=dataset_path,
@@ -164,6 +166,8 @@ def insert_file(session, version, config, file, attributes):
     checksum_type = get_checksum_type()
     search_vector = get_search_vector(config, file_path)
 
+    logger.info('insert_file %s', file_path)
+
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -185,16 +189,16 @@ def insert_file(session, version, config, file, attributes):
             if file.attributes != attributes:
                 file.attributes = attributes
                 file.search_vector = search_vector
-                logger.info('update file %s', file_path)
+                logger.debug('update file %s', file_path)
             else:
-                logger.info('skip file %s', file_path)
+                logger.debug('skip file %s', file_path)
 
         else:
             # the file has been changed, but the version is the same, this is not ok
             raise RuntimeError('%s has been changed but the version is the same' % file_path)
     else:
         # insert a new row for this file
-        logger.info('insert file %s', file_path)
+        logger.debug('insert file %s', file_path)
         file = File(
             name=file_name,
             version=version,
@@ -216,13 +220,13 @@ def update_words_view(session):
         session.connection().execute('''
             CREATE INDEX ON words USING gin(word gin_trgm_ops)
         ''')
-        logger.info('create words view')
+        logger.debug('create words view')
     except ProgrammingError:
         session.rollback()
         session.connection().execute('''
             REFRESH MATERIALIZED VIEW words
         ''')
-        logger.info('update words view')
+        logger.debug('update words view')
 
 
 def update_attributes_view(session):
@@ -233,10 +237,10 @@ def update_attributes_view(session):
         session.connection().execute('''
             CREATE INDEX ON attributes(key)
         ''')
-        logger.info('create attributes view')
+        logger.debug('create attributes view')
     except ProgrammingError:
         session.rollback()
         session.connection().execute('''
             REFRESH MATERIALIZED VIEW attributes
         ''')
-        logger.info('update attributes view')
+        logger.debug('update attributes view')
