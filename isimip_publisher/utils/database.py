@@ -9,7 +9,8 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
-from .checksum import get_checksum, get_checksum_type
+from .checksum import (get_checksum_type, get_dataset_checksum,
+                       get_file_checksum)
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ class Dataset(Base):
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
+    checksum = Column(Text, nullable=False)
+    checksum_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
@@ -85,6 +88,8 @@ def init_database_session():
 def insert_dataset(session, version, config, dataset, attributes):
     dataset_name = str(dataset['name'])
     dataset_path = str(dataset['path'])
+    checksum = get_dataset_checksum(dataset)
+    checksum_type = get_checksum_type()
     search_vector = get_search_vector(config, dataset_path)
 
     logger.info('insert_dataset %s', dataset_path)
@@ -96,13 +101,18 @@ def insert_dataset(session, version, config, dataset, attributes):
     ).one_or_none()
 
     if dataset:
-        # if the dataset already exists, update its attributes
-        if dataset.attributes != attributes:
-            dataset.attributes = attributes
-            dataset.search_vector = search_vector
-            logger.debug('update dataset %s', dataset_path)
+        if dataset.checksum == checksum:
+            # if the dataset already exists, update its attributes
+            if dataset.attributes != attributes:
+                dataset.attributes = attributes
+                dataset.search_vector = search_vector
+                logger.debug('update dataset %s', dataset_path)
+            else:
+                logger.debug('skip dataset %s', dataset_path)
+
         else:
-            logger.debug('skip dataset %s', dataset_path)
+            # the file has been changed, but the version is the same, this is not ok
+            raise RuntimeError('%s has been changed but the version is the same' % dataset_path)
     else:
         # insert a new row for this dataset
         logger.debug('insert dataset %s', dataset_path)
@@ -110,6 +120,8 @@ def insert_dataset(session, version, config, dataset, attributes):
             name=dataset_name,
             path=dataset_path,
             version=version,
+            checksum=checksum,
+            checksum_type=checksum_type,
             attributes=attributes,
             search_vector=search_vector,
             public=False
@@ -162,7 +174,7 @@ def insert_file(session, version, config, file, attributes):
     file_path = str(file['path'])
     file_abspath = str(file['abspath'])
     dataset_path = str(file['dataset_path'])
-    checksum = get_checksum(file_abspath)
+    checksum = get_file_checksum(file)
     checksum_type = get_checksum_type()
     search_vector = get_search_vector(config, file_path)
 

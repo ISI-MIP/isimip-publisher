@@ -1,12 +1,24 @@
 import hashlib
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
 
+def get_dataset_checksum(dataset):
+    m = hashlib.sha1()
+
+    for file in dataset['files']:
+        m.update(get_checksum(file['abspath']).encode())
+
+    return m.hexdigest()
+
+
+def get_file_checksum(file):
+    return get_checksum(file['abspath'])
+
+
 def get_checksum(file_abspath):
-    m = hashlib.sha256()
+    m = hashlib.sha1()
 
     with open(file_abspath, 'rb') as f:
         # read and update in blocks of 4K
@@ -17,14 +29,4 @@ def get_checksum(file_abspath):
 
 
 def get_checksum_type():
-    return 'sha256'
-
-
-def write_checksum(file):
-    checksum_path = file['abspath'].with_suffix('.sha256')
-    checksum = get_checksum(file['abspath'])
-
-    logger.info('write_checksum %s', checksum_path)
-
-    with open(checksum_path, 'w') as f:
-        f.write(checksum + os.linesep)
+    return 'sha1'

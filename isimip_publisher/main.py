@@ -3,7 +3,7 @@ import argparse
 from .commands import (archive_datasets, clean, fetch_files, ingest_datasets,
                        list_local, list_public, list_remote, match_local,
                        match_remote, publish_datasets, update_files,
-                       write_checksums, write_jsons, write_thumbnails)
+                       write_jsons, write_thumbnails)
 from .utils import setup_env, setup_logging
 from .utils.config import parse_config, parse_filelist, parse_version
 
@@ -33,7 +33,6 @@ def main():
     subparsers.add_parser('match_remote').set_defaults(func=match_remote)
     subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
     subparsers.add_parser('update_files').set_defaults(func=update_files)
-    subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
     subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
     subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
 
@@ -60,7 +59,6 @@ def run(version, config, filelist=None):
     match_remote(version, config, filelist)
     fetch_files(version, config, filelist)
     update_files(version, config, filelist)
-    write_checksums(version, config, filelist)
     write_jsons(version, config, filelist)
     write_thumbnails(version, config, filelist)
     ingest_datasets(version, config, filelist)
@@ -75,7 +73,6 @@ def run_all(version, config, filelist=None):
     list_local(version, config, filelist)
     match_local(version, config, filelist)
     update_files(version, config, filelist)
-    write_checksums(version, config, filelist)
     write_jsons(version, config, filelist)
     write_thumbnails(version, config, filelist)
     ingest_datasets(version, config, filelist)

@@ -3,7 +3,6 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from .utils.checksum import write_checksum
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, publish_dataset, unpublish_dataset,
                              update_attributes_view, update_words_view)
@@ -33,8 +32,7 @@ def archive_datasets(version, config, filelist=None):
                 move_files(public_path, archive_path, [
                     file['abspath'],
                     file['abspath'].with_suffix('.json'),
-                    file['abspath'].with_suffix('.png'),
-                    file['abspath'].with_suffix('.sha256')
+                    file['abspath'].with_suffix('.png')
                 ])
 
         session.commit()
@@ -146,8 +144,7 @@ def publish_datasets(version, config, filelist=None):
             move_files(local_path, public_path, [
                 file['abspath'],
                 file['abspath'].with_suffix('.json'),
-                file['abspath'].with_suffix('.png'),
-                file['abspath'].with_suffix('.sha256')
+                file['abspath'].with_suffix('.png')
             ])
 
         session.commit()
@@ -162,15 +159,6 @@ def update_files(version, config, filelist=None):
         validate_file(config, file)
         attributes = get_attributes(config, file)
         update_netcdf_global_attributes(config, file, attributes)
-
-
-def write_checksums(version, config, filelist=None):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    local_files = list_files(config, local_path, filelist=filelist)
-    files = match_files(config, local_path, local_files)
-
-    for file in tqdm(files, desc='write_checksums'.ljust(17)):
-        write_checksum(file)
 
 
 def write_jsons(version, config, filelist=None):
