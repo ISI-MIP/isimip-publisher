@@ -71,7 +71,9 @@ CREATE EXTENSION pg_trgm;
 Usage
 -----
 
-![overview](overview.svg)
+<p align="center">
+  <img width="600" src="overview.svg">
+</p>
 
 ```bash
 # list remote files
