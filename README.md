@@ -71,6 +71,8 @@ CREATE EXTENSION pg_trgm;
 Usage
 -----
 
+![overview](overview.svg)
+
 ```bash
 # list remote files
 isimip-publisher <path> list_remote
@@ -89,9 +91,6 @@ isimip-publisher <path> match_local
 
 # update the global attributes accoding to the config
 isimip-publisher <path> update_files
-
-# create a checksum file with the sha256 checksum of the file
-isimip-publisher <path> write_checksums
 
 # create a JSON file with metadata for each dataset and file
 isimip-publisher <path> write_jsons
