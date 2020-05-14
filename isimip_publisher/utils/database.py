@@ -3,9 +3,8 @@ import os
 import uuid
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Text,
-                        create_engine, func)
+                        create_engine, func, inspect)
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -74,14 +73,7 @@ def init_database_session():
     Base.metadata.create_all(engine)
 
     Session = sessionmaker(bind=engine)
-
     session = Session()
-
-    try:
-        session.connection().execute('CREATE EXTENSION pg_trgm;')
-    except ProgrammingError:
-        session.rollback()
-
     return session
 
 
@@ -225,34 +217,34 @@ def insert_file(session, version, config, file, attributes):
 
 
 def update_words_view(session):
-    try:
+    engine = session.get_bind()
+    if 'words' in inspect(engine).get_view_names():
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT search_vector FROM datasets')
+            REFRESH MATERIALIZED VIEW words
+        ''')
+        logger.debug('update words view')
+    else:
+        session.connection().execute('''
+            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT search_vector FROM public.datasets')
         ''')
         session.connection().execute('''
             CREATE INDEX ON words USING gin(word gin_trgm_ops)
         ''')
         logger.debug('create words view')
-    except ProgrammingError:
-        session.rollback()
-        session.connection().execute('''
-            REFRESH MATERIALIZED VIEW words
-        ''')
-        logger.debug('update words view')
 
 
 def update_attributes_view(session):
-    try:
+    engine = session.get_bind()
+    if 'attributes' in inspect(engine).get_view_names():
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(attributes) AS key FROM datasets
+            REFRESH MATERIALIZED VIEW attributes
+        ''')
+        logger.debug('update attributes view')
+    else:
+        session.connection().execute('''
+            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(attributes) AS key FROM public.datasets
         ''')
         session.connection().execute('''
             CREATE INDEX ON attributes(key)
         ''')
         logger.debug('create attributes view')
-    except ProgrammingError:
-        session.rollback()
-        session.connection().execute('''
-            REFRESH MATERIALIZED VIEW attributes
-        ''')
-        logger.debug('update attributes view')
