@@ -169,7 +169,7 @@ def insert_file(session, version, config, file, attributes):
     dataset_path = str(file['dataset_path'])
     checksum = get_file_checksum(file)
     checksum_type = get_checksum_type()
-    mime_type, _ = mimetypes.guess_type(file['abspath'])
+    mime_type = str(mimetypes.guess_type(file['abspath'])[0])
     search_vector = get_search_vector(config, file_path)
 
     logger.info('insert_file %s', file_path)
