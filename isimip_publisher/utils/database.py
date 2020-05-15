@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import os
 import uuid
 
@@ -58,6 +59,7 @@ class File(Base):
     version = Column(String(8), nullable=False, index=True)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
+    mime_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
 
@@ -164,10 +166,10 @@ def unpublish_dataset(session, dataset):
 def insert_file(session, version, config, file, attributes):
     file_name = str(file['name'])
     file_path = str(file['path'])
-    file_abspath = str(file['abspath'])
     dataset_path = str(file['dataset_path'])
     checksum = get_file_checksum(file)
     checksum_type = get_checksum_type()
+    mime_type, _ = mimetypes.guess_type(file['abspath'])
     search_vector = get_search_vector(config, file_path)
 
     logger.info('insert_file %s', file_path)
@@ -209,6 +211,7 @@ def insert_file(session, version, config, file, attributes):
             path=file_path,
             checksum=checksum,
             checksum_type=checksum_type,
+            mime_type=mime_type,
             attributes=attributes,
             dataset=dataset,
             search_vector=search_vector
