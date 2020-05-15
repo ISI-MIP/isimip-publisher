@@ -43,6 +43,7 @@ install:
 
 before_script:
 - createdb test_isimip_metadata
+- psql test_isimip_metadata -c 'CREATE EXTENSION pg_trgm;'
 
 script:
 - pytest --cov=isimip_publisher
