@@ -48,7 +48,7 @@ def fetch_schema(schema_path):
 def fetch_json(bases, path):
     for base in bases:
         if urlparse(base).scheme:
-            location = base + path
+            location = base + str(path)
             logger.debug('json_url = %s', location)
             response = requests.get(location)
 
