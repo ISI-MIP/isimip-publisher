@@ -13,7 +13,7 @@ def list_files(config, base_path, remote_dest=None, filelist=None):
     path = base_path / config['path']
 
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', path]
+        args = ['ssh', remote_dest, 'find', str(path)]
 
         for suffix in config['pattern']['suffix']:
             args += ['-name', '\'*{}*\''.format(suffix)]
@@ -22,7 +22,7 @@ def list_files(config, base_path, remote_dest=None, filelist=None):
                 args += ['-or']
 
     else:
-        args = ['find', path]
+        args = ['find', str(path)]
 
         for suffix in config['pattern']['suffix']:
             args += ['-name', '*{}*'.format(suffix)]
