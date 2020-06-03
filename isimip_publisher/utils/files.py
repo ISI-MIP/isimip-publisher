@@ -70,7 +70,7 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
         source = remote_dest + ':' + str(remote_path / config['path']) + os.path.sep
         destination = str(local_path / config['path']) + os.path.sep
         args = [
-            'rsync', '-avi',
+            'rsync', '-aviL',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
             source, destination
         ]
