@@ -16,9 +16,9 @@ def setup_logging():
     filename = os.getenv('LOG_FILE')
     level = os.getenv('LOG_LEVEL', 'ERROR')
     if filename:
-        logging.basicConfig(level=level, filename=filename)
+        logging.basicConfig(level=level, format='[%(asctime)s] %(levelname)s %(name)s: %(message)s', filename=filename)
     else:
-        logging.basicConfig(level=level)
+        logging.basicConfig(level=level, format='[%(asctime)s] %(levelname)s %(name)s: %(message)s')
 
 
 def order_dict(unsorted):

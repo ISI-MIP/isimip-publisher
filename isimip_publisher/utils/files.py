@@ -2,9 +2,11 @@ import logging
 import os
 import shutil
 import subprocess
+import uuid
 from pathlib import Path
 
 from .checksum import get_checksum
+from .netcdf import update_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +53,11 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
     (local_path / config['path']).mkdir(parents=True, exist_ok=True)
 
     if mock:
-        empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
-
         for file in files:
             mock_path = local_path / file
             mock_path.parent.mkdir(parents=True, exist_ok=True)
-            logger.info('copy_files %s', mock_path)
-            shutil.copyfile(empty_file, mock_path)
+            logger.info('mock_file %s', mock_path)
+            mock_file(mock_path)
             yield 1  # yield increment for the progress bar
 
     else:
@@ -81,7 +81,7 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
         for line in process.stdout:
             output = line.decode().strip()
             if output.startswith('>f'):
-                logger.info('copy_files %s', output)
+                logger.info('copy_file %s', output)
                 yield 1  # yield increment for the progress bar
 
         os.remove(include_file)
@@ -124,3 +124,11 @@ def delete_files(config):
 def chmod_file(file_path):
     logger.debug('chmod 644 %s', file_path)
     os.chmod(file_path, 0o644)
+
+
+def mock_file(mock_path):
+    empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
+    shutil.copyfile(empty_file, mock_path)
+    update_netcdf_global_attributes(mock_path, {
+        'random_uuid': uuid.uuid4()
+    })

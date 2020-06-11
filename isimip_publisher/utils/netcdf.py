@@ -5,8 +5,6 @@ from netCDF4 import Dataset
 
 logger = logging.getLogger(__name__)
 
-DELETE_ATTRIBUTES = ['history', 'CDO', 'CDI']
-
 
 def get_netcdf_dimensions(file_path):
     with Dataset(file_path, 'r', format='NETCDF4') as rootgrp:
@@ -23,19 +21,14 @@ def get_netcdf_global_attributes(file_path):
         return rootgrp.__dict__
 
 
-def update_netcdf_global_attributes(config, file, attributes):
-    file_path = file['abspath']
-
-    logger.info('update_netcdf_global_attributes %s', file_path)
-
+def update_netcdf_global_attributes(file_path, set_attributes={}, delete_attributes=[]):
     with Dataset(file_path, 'a', format='NETCDF4') as rootgrp:
-        # remove some global attributes
         for attr in rootgrp.__dict__:
-            if attr in DELETE_ATTRIBUTES:
+            if attr in delete_attributes:
                 logger.debug('delete %s in %s', attr, file_path)
                 rootgrp.delncattr(attr)
 
-        for attr, value in attributes.items():
+        for attr, value in set_attributes.items():
             logger.debug('set %s to %s in %s', attr, value, file_path)
             rootgrp.setncattr(attr, value2string(value))
 

@@ -157,8 +157,9 @@ def update_files(version, config, filelist=None):
 
     for file in tqdm(files, desc='update_files'.ljust(17)):
         validate_file(config, file)
-        attributes = get_attributes(config, file)
-        update_netcdf_global_attributes(config, file, attributes)
+        set_attributes = get_attributes(config, file)
+        delete_attributes = ['history', 'CDO', 'CDI']
+        update_netcdf_global_attributes(file['abspath'], set_attributes, delete_attributes)
 
 
 def write_jsons(version, config, filelist=None):
