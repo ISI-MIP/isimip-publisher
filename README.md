@@ -14,7 +14,7 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
-For a `conda` setup, an environment and install `cartopy`:
+For a `conda` setup, create an environment and install `cartopy`:
 
 ```bash
 conda create isimip
