@@ -11,25 +11,25 @@ from .netcdf import update_netcdf_global_attributes
 logger = logging.getLogger(__name__)
 
 
-def list_files(config, base_path, remote_dest=None, filelist=None):
-    path = base_path / config['path']
+def list_files(base_path, path, pattern, remote_dest=None, filelist=None):
+    abs_path = base_path / path
 
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', str(path)]
+        args = ['ssh', remote_dest, 'find', str(abs_path)]
 
-        for suffix in config['pattern']['suffix']:
+        for suffix in pattern['suffix']:
             args += ['-name', '\'*{}*\''.format(suffix)]
 
-            if suffix != config['pattern']['suffix'][-1]:
+            if suffix != pattern['suffix'][-1]:
                 args += ['-or']
 
     else:
-        args = ['find', str(path)]
+        args = ['find', str(abs_path)]
 
-        for suffix in config['pattern']['suffix']:
+        for suffix in pattern['suffix']:
             args += ['-name', '*{}*'.format(suffix)]
 
-            if suffix != config['pattern']['suffix'][-1]:
+            if suffix != pattern['suffix'][-1]:
                 args += ['-or']
 
     logger.debug('args = %s', args)
@@ -46,11 +46,11 @@ def list_files(config, base_path, remote_dest=None, filelist=None):
     return files
 
 
-def copy_files(config, remote_dest, remote_path, local_path, files):
+def copy_files(remote_dest, remote_path, local_path, path, files):
     mock = os.getenv('MOCK', '').lower() in ['t', 'true', 1]
 
     # create the local_dir
-    (local_path / config['path']).mkdir(parents=True, exist_ok=True)
+    (local_path / path).mkdir(parents=True, exist_ok=True)
 
     if mock:
         for file in files:
@@ -65,10 +65,10 @@ def copy_files(config, remote_dest, remote_path, local_path, files):
         include_file = 'rsync-include.txt'
         with open(include_file, 'w') as f:
             for file in files:
-                f.write(file.replace(config['path'], '') + os.linesep)
+                f.write(file.replace(path, '') + os.linesep)
 
-        source = remote_dest + ':' + str(remote_path / config['path']) + os.path.sep
-        destination = str(local_path / config['path']) + os.path.sep
+        source = remote_dest + ':' + str(remote_path / path) + os.path.sep
+        destination = str(local_path / path) + os.path.sep
         args = [
             'rsync', '-aviL',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
@@ -112,11 +112,12 @@ def move_files(source_dir, target_dir, files):
         shutil.move(source_path, target_path)
 
 
-def delete_files(config):
-    local_path = Path(os.environ['LOCAL_DIR'] % config)
-    logger.debug('rm -r %s', local_path)
+def delete_files(local_path, path):
+    abs_path = local_path / path
+
+    logger.debug('rm -r %s', abs_path)
     try:
-        shutil.rmtree(local_path)
+        shutil.rmtree(abs_path)
     except FileNotFoundError:
         pass
 

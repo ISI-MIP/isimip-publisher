@@ -1,5 +1,4 @@
 import logging
-import mimetypes
 import os
 import uuid
 
@@ -9,16 +8,13 @@ from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
-from .checksum import (get_checksum_type, get_dataset_checksum,
-                       get_file_checksum)
-
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
 
-def get_search_vector(config, path):
-    search_string = path.replace('_', ' ').replace('-', ' ').replace('/', ' ')
+def get_search_vector(path):
+    search_string = str(path).replace('_', ' ').replace('-', ' ').replace('/', ' ')
     return func.setweight(func.to_tsvector(search_string), 'A')
 
 
@@ -79,18 +75,14 @@ def init_database_session():
     return session
 
 
-def insert_dataset(session, version, config, dataset, attributes):
-    dataset_name = str(dataset['name'])
-    dataset_path = str(dataset['path'])
-    checksum = get_dataset_checksum(dataset)
-    checksum_type = get_checksum_type()
-    search_vector = get_search_vector(config, dataset_path)
+def insert_dataset(session, version, name, path, checksum, checksum_type, attributes):
+    search_vector = get_search_vector(path)
 
-    logger.info('insert_dataset %s', dataset_path)
+    logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
+        Dataset.path == str(path),
         Dataset.version == version
     ).one_or_none()
 
@@ -100,19 +92,19 @@ def insert_dataset(session, version, config, dataset, attributes):
             if dataset.attributes != attributes:
                 dataset.attributes = attributes
                 dataset.search_vector = search_vector
-                logger.debug('update dataset %s', dataset_path)
+                logger.debug('update dataset %s', path)
             else:
-                logger.debug('skip dataset %s', dataset_path)
+                logger.debug('skip dataset %s', path)
 
         else:
             # the file has been changed, but the version is the same, this is not ok
-            raise RuntimeError('%s has been changed but the version is the same' % dataset_path)
+            raise RuntimeError('%s has been changed but the version is the same' % path)
     else:
         # insert a new row for this dataset
-        logger.debug('insert dataset %s', dataset_path)
+        logger.debug('insert dataset %s', path)
         dataset = Dataset(
-            name=dataset_name,
-            path=dataset_path,
+            name=name,
+            path=str(path),
             version=version,
             checksum=checksum,
             checksum_type=checksum_type,
@@ -123,38 +115,34 @@ def insert_dataset(session, version, config, dataset, attributes):
         session.add(dataset)
 
 
-def publish_dataset(session, version, dataset):
-    dataset_path = str(dataset['path'])
-
+def publish_dataset(session, version, path):
     # check that there is no public version of this dataset
     public_dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
+        Dataset.path == str(path),
         Dataset.public == True
     ).one_or_none()
 
     if public_dataset and public_dataset.version != version:
         raise RuntimeError('A public dataset with the path %s and the version %s was found' %
-                           (dataset_path, public_dataset.version))
+                           (path, public_dataset.version))
 
     # mark this dataset public
     dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
+        Dataset.path == str(path),
         Dataset.version == version
     ).one_or_none()
 
     if dataset is None:
         raise RuntimeError('No dataset with the name %s and the version %s found' %
-                           (dataset_path, public_dataset.version))
+                           (path, public_dataset.version))
 
     dataset.public = True
 
 
-def unpublish_dataset(session, dataset):
-    dataset_path = str(dataset['path'])
-
+def unpublish_dataset(session, path):
     # find the public version of this dataset
     public_dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
+        Dataset.path == str(path),
         Dataset.public == True
     ).one_or_none()
 
@@ -163,20 +151,14 @@ def unpublish_dataset(session, dataset):
         return public_dataset.version
 
 
-def insert_file(session, version, config, file, attributes):
-    file_name = str(file['name'])
-    file_path = str(file['path'])
-    dataset_path = str(file['dataset_path'])
-    checksum = get_file_checksum(file)
-    checksum_type = get_checksum_type()
-    mime_type = str(mimetypes.guess_type(file['abspath'])[0])
-    search_vector = get_search_vector(config, file_path)
+def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, attributes):
+    search_vector = get_search_vector(path)
 
-    logger.info('insert_file %s', file_path)
+    logger.info('insert_file %s', path)
 
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
+        Dataset.path == str(dataset_path),
         Dataset.version == version
     ).one_or_none()
 
@@ -185,7 +167,7 @@ def insert_file(session, version, config, file, attributes):
 
     # check if the file is already in the database
     file = session.query(File).filter(
-        File.path == file_path,
+        File.path == str(path),
         File.version == version
     ).one_or_none()
 
@@ -195,20 +177,20 @@ def insert_file(session, version, config, file, attributes):
             if file.attributes != attributes:
                 file.attributes = attributes
                 file.search_vector = search_vector
-                logger.debug('update file %s', file_path)
+                logger.debug('update file %s', path)
             else:
-                logger.debug('skip file %s', file_path)
+                logger.debug('skip file %s', path)
 
         else:
             # the file has been changed, but the version is the same, this is not ok
-            raise RuntimeError('%s has been changed but the version is the same' % file_path)
+            raise RuntimeError('%s has been changed but the version is the same' % path)
     else:
         # insert a new row for this file
-        logger.debug('insert file %s', file_path)
+        logger.debug('insert file %s', path)
         file = File(
-            name=file_name,
+            name=name,
             version=version,
-            path=file_path,
+            path=str(path),
             checksum=checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,

@@ -2,10 +2,10 @@ import argparse
 
 from .commands import (archive_datasets, clean, fetch_files, ingest_datasets,
                        list_local, list_public, list_remote, match_local,
-                       match_remote, publish_datasets, update_files,
-                       write_jsons, write_thumbnails)
+                       match_remote, publish_datasets, write_jsons,
+                       write_thumbnails)
+from .models import Store
 from .utils import setup_env, setup_logging
-from .utils.config import parse_config, parse_filelist, parse_version
 
 
 def main():
@@ -32,7 +32,6 @@ def main():
     subparsers.add_parser('match_local').set_defaults(func=match_local)
     subparsers.add_parser('match_remote').set_defaults(func=match_remote)
     subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
-    subparsers.add_parser('update_files').set_defaults(func=update_files)
     subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
     subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
 
@@ -42,37 +41,36 @@ def main():
     args = parser.parse_args()
 
     if hasattr(args, 'func'):
-        version = parse_version(args.version)
-        config = parse_config(args.path, version)
-        filelist = parse_filelist(args.filelist_file)
+        store = Store(args)
+        if store.pattern is None:
+            parser.error('no pattern could be found for path')
+        elif store.schema is None:
+            parser.error('no schema could be found for path')
 
-        if config is False:
-            parser.error('no pattern/schema could be found for path')
-
-        args.func(version, config, filelist)
+        args.func(store)
     else:
         parser.print_help()
 
 
-def run(version, config, filelist=None):
-    clean(version, config, filelist)
-    match_remote(version, config, filelist)
-    fetch_files(version, config, filelist)
-    write_jsons(version, config, filelist)
-    write_thumbnails(version, config, filelist)
-    ingest_datasets(version, config, filelist)
-    publish_datasets(version, config, filelist)
+def run(store=None):
+    clean(store)
+    match_remote(store)
+    fetch_files(store)
+    write_jsons(store)
+    write_thumbnails(store)
+    ingest_datasets(store)
+    publish_datasets(store)
 
 
-def run_all(version, config, filelist=None):
-    clean(version, config, filelist)
-    list_remote(version, config, filelist)
-    match_remote(version, config, filelist)
-    fetch_files(version, config, filelist)
-    list_local(version, config, filelist)
-    match_local(version, config, filelist)
-    write_jsons(version, config, filelist)
-    write_thumbnails(version, config, filelist)
-    ingest_datasets(version, config, filelist)
-    publish_datasets(version, config, filelist)
-    archive_datasets(version, config, filelist)
+def run_all(store=None):
+    clean(store)
+    list_remote(store)
+    match_remote(store)
+    fetch_files(store)
+    list_local(store)
+    match_local(store)
+    write_jsons(store)
+    write_thumbnails(store)
+    ingest_datasets(store)
+    publish_datasets(store)
+    archive_datasets(store)

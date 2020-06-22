@@ -15,16 +15,16 @@ DPI = 96
 LEVELS = 10
 
 
-def write_thumbnail(file, output_abspath=None):
+def write_thumbnail(abspath, output_abspath=None):
     mock = os.getenv('MOCK', '').lower() in ['t', 'true', 1]
 
     if not output_abspath:
-        output_abspath = file['abspath'].with_suffix('.png')
+        output_abspath = abspath.with_suffix('.png')
 
     logger.info('write_file_thumbnail %s', output_abspath)
 
     try:
-        with Dataset(file['abspath'], mode='r') as dataset:
+        with Dataset(abspath, mode='r') as dataset:
 
             for var_name, variable in dataset.variables.items():
                 if len(variable.dimensions) > 1:

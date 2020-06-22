@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from isimip_publisher.utils import setup_env
 from isimip_publisher.utils.database import (Dataset, File,
                                              init_database_session)
@@ -86,16 +87,6 @@ def test_match_local(setup, script_runner):
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
-
-
-def test_update_files(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'update_files')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('update_files')
 
 
 def test_write_jsons(setup, script_runner):
