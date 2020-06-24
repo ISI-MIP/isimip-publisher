@@ -11,7 +11,6 @@ from .utils.patterns import match_datasets
 
 def archive_datasets(store):
     public_path = Path(os.environ['PUBLIC_DIR'])
-    archive_path = Path(os.environ['ARCHIVE_DIR']) / store.version
 
     if not store.datasets:
         public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
@@ -24,6 +23,8 @@ def archive_datasets(store):
         dataset_version = dataset.unpublish(session)
 
         if dataset_version:
+            archive_path = Path(os.environ['ARCHIVE_DIR']) / dataset_version
+
             for file in dataset.files:
                 file.validate(store.schema)
                 move_files(public_path, archive_path, [

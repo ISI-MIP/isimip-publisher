@@ -55,7 +55,7 @@ class Dataset(object):
         publish_dataset(session, version, self.path)
 
     def unpublish(self, session):
-        unpublish_dataset(session, self.path)
+        return unpublish_dataset(session, self.path)
 
 
 class File(object):
