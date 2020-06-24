@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 import subprocess
-import uuid
 from pathlib import Path
 
 from .checksum import get_checksum
@@ -131,5 +130,5 @@ def mock_file(mock_path):
     empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
     shutil.copyfile(empty_file, mock_path)
     update_netcdf_global_attributes(mock_path, {
-        'random_uuid': uuid.uuid4()
+        'path': mock_path
     })
