@@ -12,8 +12,10 @@ from .utils.patterns import match_datasets
 def archive_datasets(store):
     public_path = Path(os.environ['PUBLIC_DIR'])
     archive_path = Path(os.environ['ARCHIVE_DIR']) / store.version
-    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
-    store.datasets = match_datasets(store.pattern, public_path, public_files)
+
+    if not store.datasets:
+        public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
+        store.datasets = match_datasets(store.pattern, public_path, public_files)
 
     session = init_database_session()
 
@@ -116,6 +118,18 @@ def match_remote(store):
     remote_path = Path(os.environ['REMOTE_DIR'])
     remote_files = list_files(remote_path, store.path, store.pattern, remote_dest=remote_dest, filelist=store.filelist)
     store.datasets = match_datasets(store.pattern, remote_path, remote_files)
+
+    for dataset in store.datasets:
+        dataset.validate(store.schema)
+
+        for file in dataset.files:
+            file.validate(store.schema)
+
+
+def match_public(store):
+    public_path = Path(os.environ['PUBLIC_DIR'])
+    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
+    store.datasets = match_datasets(store.pattern, public_path, public_files)
 
     for dataset in store.datasets:
         dataset.validate(store.schema)

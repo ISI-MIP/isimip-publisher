@@ -140,6 +140,16 @@ def test_list_public(setup, script_runner):
     assert len(response.stdout.splitlines()) == 6
 
 
+def test_match_public(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'match_public')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
 def test_archive_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',

@@ -91,9 +91,6 @@ isimip-publisher <path> list_local
 # match local datasets
 isimip-publisher <path> match_local
 
-# update the global attributes accoding to the config
-isimip-publisher <path> update_files
-
 # create a JSON file with metadata for each dataset and file
 isimip-publisher <path> write_jsons
 

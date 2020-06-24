@@ -2,8 +2,8 @@ import argparse
 
 from .commands import (archive_datasets, clean, fetch_files, ingest_datasets,
                        list_local, list_public, list_remote, match_local,
-                       match_remote, publish_datasets, write_jsons,
-                       write_thumbnails)
+                       match_public, match_remote, publish_datasets,
+                       write_jsons, write_thumbnails)
 from .models import Store
 from .utils import setup_env, setup_logging
 
@@ -31,6 +31,7 @@ def main():
     subparsers.add_parser('list_public').set_defaults(func=list_public)
     subparsers.add_parser('match_local').set_defaults(func=match_local)
     subparsers.add_parser('match_remote').set_defaults(func=match_remote)
+    subparsers.add_parser('match_public').set_defaults(func=match_public)
     subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
     subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
     subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
@@ -56,6 +57,7 @@ def run(store=None):
     clean(store)
     match_remote(store)
     fetch_files(store)
+    match_local(store)
     write_jsons(store)
     write_thumbnails(store)
     ingest_datasets(store)
@@ -73,4 +75,6 @@ def run_all(store=None):
     write_thumbnails(store)
     ingest_datasets(store)
     publish_datasets(store)
+    list_public(store)
+    match_public(store)
     archive_datasets(store)
