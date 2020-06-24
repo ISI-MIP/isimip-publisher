@@ -14,52 +14,48 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
-For a `conda` setup, create an environment and install `cartopy`:
+Since `cartopy` has currently problems when installing using `pip`, we recommend a conda setup. First create an environment and install `cartopy`:
 
 ```bash
-conda create isimip
+conda create -n isimip
+conda activate isimip
 conda install cartopy
 ```
 
-For a regular setup install some prerequisites using the systems package manager:
-
-```bash
-# Debian/Ubuntu
-apt install
-
-# CentOS
-yum install
-
-# openSUSE
-zypper install libproj-devel geos-devel
-```
-
-Install, using pip:
+Next, `isimip-publisher` using pip:
 
 ```bash
 pip install git+https://github.com/ISI-MIP/isimip-publisher
 ```
 
-Create a `.env` file with the following (enviroment) variables:
+Create an `.env` file with the following (enviroment) variables:
 
 ```
+# Log level and location of the log file
 LOG_LEVEL=ERROR
 LOG_FILE=/path/to/logfile
 
-CONFIG_DIR=.
+# If MOCK is set to True no files are actually copied. Empty mock files are used instead.
+MOCK=False
 
+# Remote (ssh) destination, e.g. user@example.com, and path on the remote machine
 REMOTE_DEST=localhost
 REMOTE_DIR=/path/to/remote/
+
+# Local, public and archive path on the local machine
 LOCAL_DIR=/path/to/local/
 PUBLIC_DIR=/path/to/public/
 ARCHIVE_DIR=/path/to/public/
 
-PATH_PATTERN=^(?P<simulation_round>\w+)/(?P<product>\w+)/(?P<sector>\w+)/(?P<model>[\w-+]+)/
-
+# PostgreSQL database connection
 DATABASE=postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
+
+# Location of pattern and schema. Can be path or URL. Several location are seperated by spaces.
+PATTERN_LOCATIONS=https://protocol.isimip.org/pattern/
+SCHEMA_LOCATIONS=https://protocol.isimip.org/schema/
 ```
 
-A database user and a database has to be created:
+A database user and a database has to be created and the `pg_trgm` needs to be activated:
 
 ```pgsql
 CREATE USER "isimip_metadata" WITH PASSWORD 'supersecretpassword';
@@ -103,6 +99,12 @@ isimip-publisher <path> ingest_datasets
 # copy files from LOCAL_DIR to PUPLIC_DIR
 isimip-publisher <path> publish_datasets
 
+# list local files
+isimip-publisher <path> list_public
+
+# match local datasets
+isimip-publisher <path> match_public
+
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
 isimip-publisher <path> archive_datasets
 
@@ -112,7 +114,7 @@ isimip-publisher <path> clean
 
 `<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
 
-`fetch_files`, `update_files`, `write_checksums`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
+`fetch_files`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
 isimip-publisher <path> run
@@ -121,7 +123,7 @@ isimip-publisher <path> run
 For all commands a list of files with absolute pathes (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
-isimip-publisher  -f /path/to/files.txt <path> run
+isimip-publisher -f /path/to/files.txt <path> run
 ```
 
 Test
