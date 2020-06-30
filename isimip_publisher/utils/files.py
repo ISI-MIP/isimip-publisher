@@ -86,7 +86,7 @@ def copy_files(remote_dest, remote_path, local_path, path, files):
         os.remove(include_file)
 
 
-def move_files(source_dir, target_dir, files):
+def move_files(source_dir, target_dir, files, keep=False):
     moves = []
     for source_path in files:
         logger.info('move_files %s', source_path)
@@ -107,8 +107,12 @@ def move_files(source_dir, target_dir, files):
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
         # copy the file
-        logger.debug('mv %s %s', source_path, target_path)
-        shutil.move(source_path, target_path)
+        if keep:
+            logger.debug('cp %s %s', source_path, target_path)
+            shutil.copy(source_path, target_path)
+        else:
+            logger.debug('mv %s %s', source_path, target_path)
+            shutil.move(source_path, target_path)
 
 
 def delete_files(local_path, path):
