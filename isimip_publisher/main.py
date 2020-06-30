@@ -54,7 +54,6 @@ def main():
 
 
 def run(store=None):
-    clean(store)
     match_remote(store)
     fetch_files(store)
     match_local(store)
