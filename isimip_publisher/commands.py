@@ -159,7 +159,7 @@ def publish_datasets(store):
                 file.abspath,
                 file.abspath.with_suffix('.json'),
                 file.abspath.with_suffix('.png')
-            ], keep=True)
+            ])
 
         session.commit()
 
