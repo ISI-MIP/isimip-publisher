@@ -2,8 +2,8 @@ import logging
 import os
 import uuid
 
-from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Text,
-                        create_engine, func, inspect)
+from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
+                        Text, create_engine, func, inspect)
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -16,6 +16,12 @@ Base = declarative_base()
 def get_search_vector(path):
     search_string = str(path).replace('_', ' ').replace('-', ' ').replace('/', ' ')
     return func.setweight(func.to_tsvector(search_string), 'A')
+
+
+# association table between resources and datasets
+resources_datasets = Table('resources_datasets', Base.metadata,
+                           Column('resource_id', UUID, ForeignKey('resources.id')),
+                           Column('dataset_id', UUID, ForeignKey('datasets.id')))
 
 
 class Dataset(Base):
@@ -36,6 +42,7 @@ class Dataset(Base):
     public = Column(Boolean, nullable=False)
 
     files = relationship('File', back_populates='dataset')
+    resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
 
     def __repr__(self):
         return str(self.id)
@@ -60,6 +67,25 @@ class File(Base):
     search_vector = Column(TSVECTOR, nullable=False)
 
     dataset = relationship('Dataset', back_populates='files')
+
+    def __repr__(self):
+        return str(self.id)
+
+
+class Resource(Base):
+
+    __tablename__ = 'resources'
+
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    path = Column(Text, nullable=False, index=True)
+    version = Column(String(8), nullable=False, index=True)
+
+    doi = Column(Text, nullable=False, index=True)
+    title = Column(Text, nullable=False)
+    type = Column(Text, nullable=False, index=True)
+    datacite = Column(JSONB, nullable=False)
+
+    datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
 
     def __repr__(self):
         return str(self.id)
@@ -151,6 +177,19 @@ def unpublish_dataset(session, path):
         return public_dataset.version
 
 
+def retrieve_datasets(session, path, public=None):
+    like_path = '{}%'.format(path)
+    if public is None:
+        return session.query(Dataset).filter(
+            Dataset.path.like(like_path),
+        ).order_by(Dataset.path).all()
+    else:
+        return session.query(Dataset).filter(
+            Dataset.path.like(like_path),
+            Dataset.public == public
+        ).order_by(Dataset.path).all()
+
+
 def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, attributes):
     search_vector = get_search_vector(path)
 
@@ -199,6 +238,34 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
             search_vector=search_vector
         )
         session.add(file)
+
+
+def insert_resource(session, path, version, datacite, datasets):
+    # check if the file is already in the database
+    resource = session.query(Resource).filter(
+        Resource.path == str(path),
+        Resource.version == version
+    ).one_or_none()
+
+    if resource:
+        if resource.datacite == datacite:
+            logger.debug('skip resource %s', path)
+        else:
+            raise RuntimeError('A resource with path={} and version={} has already been registered'.format(path, version))
+    else:
+        # insert a new resource
+        logger.debug('insert resource %s', path)
+        resource = Resource(
+            path=str(path),
+            version=str(version),
+            doi=datacite['identifier'],
+            title=datacite['titles'][0]['title'],
+            type=datacite['resourceType'].lower(),
+            datacite=datacite
+        )
+        for dataset in datasets:
+            resource.datasets.append(dataset)
+        session.add(resource)
 
 
 def update_words_view(session):

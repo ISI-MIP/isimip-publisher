@@ -3,10 +3,12 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from .utils.database import (init_database_session, update_attributes_view,
+from .utils.database import (init_database_session, insert_resource,
+                             retrieve_datasets, update_attributes_view,
                              update_words_view)
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.patterns import match_datasets
+from .utils.validation import validate_datasets
 
 
 def archive_datasets(store):
@@ -63,6 +65,33 @@ def ingest_datasets(store):
 
     update_words_view(session)
     update_attributes_view(session)
+    session.commit()
+
+
+def ingest_resource(store):
+    datasets_base_url = os.environ['DATASETS_BASE_URL']
+    public_path = Path(os.environ['PUBLIC_DIR'])
+    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
+    store.datasets = match_datasets(store.pattern, public_path, public_files)
+
+    session = init_database_session()
+
+    database_datasets = retrieve_datasets(session, store.path, public=True)
+    validate_datasets(store.datasets, database_datasets)
+
+    for dataset, database_dataset in zip(store.datasets, database_datasets):
+        dataset.validate(store.schema)
+
+        for file in dataset.files:
+            file.validate(store.schema)
+
+        store.datacite['relatedIdentifiers'].append({
+            'relationType': 'HasPart',
+            'relatedIdentifier': datasets_base_url + database_dataset.id,
+            'relatedIdentifierType': 'URL'
+        })
+
+    insert_resource(session, store.path, store.version, store.datacite, database_datasets)
     session.commit()
 
 

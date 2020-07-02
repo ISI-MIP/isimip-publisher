@@ -150,6 +150,18 @@ def test_match_public(setup, script_runner):
     assert not response.stderr
 
 
+def test_ingest_resource(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        '-d',
+        'testing/datacite.json',
+        'round/product/sector/model',
+        'ingest_resource')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
 def test_archive_datasets(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',

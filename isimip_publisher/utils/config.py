@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from datetime import date, datetime
@@ -30,6 +31,17 @@ def parse_filelist(filelist_file):
 
     logger.debug('filelist = %s', filelist)
     return filelist
+
+
+def parse_datacite(datacite_file):
+    if datacite_file:
+        with open(datacite_file) as f:
+            datacite = json.loads(f.read())
+    else:
+        datacite = None
+
+    logger.debug('datacite = %s', datacite)
+    return datacite
 
 
 def load_pattern(path):

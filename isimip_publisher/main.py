@@ -1,9 +1,9 @@
 import argparse
 
 from .commands import (archive_datasets, clean, fetch_files, ingest_datasets,
-                       list_local, list_public, list_remote, match_local,
-                       match_public, match_remote, publish_datasets,
-                       write_jsons, write_thumbnails)
+                       ingest_resource, list_local, list_public, list_remote,
+                       match_local, match_public, match_remote,
+                       publish_datasets, write_jsons, write_thumbnails)
 from .models import Store
 from .utils import setup_env, setup_logging
 
@@ -16,6 +16,8 @@ def main():
     parser.add_argument('path', help='path of the files to publish')
     parser.add_argument('-f', dest='filelist_file', default=None,
                         help='path to a file containing the list of files')
+    parser.add_argument('-d', dest='datacite_file', default=None,
+                        help='path to a file containing DateCite metadata (only for ingest_resource)')
     parser.add_argument('-v', dest='version', default=False,
                         help='version date override [default: today]')
 
@@ -25,6 +27,7 @@ def main():
     subparsers.add_parser('clean').set_defaults(func=clean)
     subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
     subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
+    subparsers.add_parser('ingest_resource').set_defaults(func=ingest_resource)
     subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
     subparsers.add_parser('list_remote').set_defaults(func=list_remote)
     subparsers.add_parser('list_local').set_defaults(func=list_local)
@@ -47,6 +50,9 @@ def main():
             parser.error('no pattern could be found for path')
         elif store.schema is None:
             parser.error('no schema could be found for path')
+        elif (args.func == ingest_resource):
+            if store.datacite is None:
+                parser.error('no DateCite metadata file was provided')
 
         args.func(store)
     else:

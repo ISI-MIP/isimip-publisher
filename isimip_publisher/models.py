@@ -3,8 +3,8 @@ import mimetypes
 from .utils import order_dict
 from .utils.checksum import (get_checksum, get_checksum_from_string,
                              get_checksum_type)
-from .utils.config import (load_pattern, load_schema, parse_filelist,
-                           parse_version)
+from .utils.config import (load_pattern, load_schema, parse_datacite,
+                           parse_filelist, parse_version)
 from .utils.database import (insert_dataset, insert_file, publish_dataset,
                              unpublish_dataset)
 from .utils.json import write_file_json
@@ -18,6 +18,7 @@ class Store(object):
         self.path = args.path
         self.version = parse_version(args.version)
         self.filelist = parse_filelist(args.filelist_file)
+        self.datacite = parse_datacite(args.datacite_file)
 
         self.pattern = load_pattern(self.path)
         self.schema = load_schema(self.path)
