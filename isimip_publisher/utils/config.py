@@ -9,6 +9,18 @@ from .fetch import fetch_pattern, fetch_schema
 logger = logging.getLogger(__name__)
 
 
+def parse_env():
+    return {
+        'remote_dest': os.environ['REMOTE_DEST'],
+        'remote_path': Path(os.environ['REMOTE_DIR']),
+        'local_path': Path(os.environ['LOCAL_DIR']),
+        'public_path': Path(os.environ['PUBLIC_DIR']),
+        'archive_path': Path(os.environ['ARCHIVE_DIR']),
+        'datasets_base_url': os.environ['DATASETS_BASE_URL'],
+        'mock': os.getenv('MOCK', '').lower() in ['t', 'true', 1]
+    }
+
+
 def parse_version(version):
     if version:
         try:

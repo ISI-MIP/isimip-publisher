@@ -4,8 +4,7 @@ from pathlib import Path
 import pytest
 
 from isimip_publisher.utils import setup_env
-from isimip_publisher.utils.database import (Dataset, File,
-                                             init_database_session)
+from isimip_publisher.utils.database import Dataset, init_database_session
 
 
 @pytest.fixture(scope='session')
@@ -20,8 +19,12 @@ def setup():
     shutil.rmtree(test_dir / 'archive', ignore_errors=True)
 
     session = init_database_session()
-    session.query(File).delete()
-    session.query(Dataset).delete()
+    for dataset in session.query(Dataset):
+        for file in dataset.files:
+            session.delete(file)
+        for resource in dataset.resources:
+            session.delete(resource)
+        session.delete(dataset)
     session.commit()
 
 

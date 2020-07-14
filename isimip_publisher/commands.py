@@ -12,11 +12,10 @@ from .utils.validation import validate_datasets
 
 
 def archive_datasets(store):
-    public_path = Path(os.environ['PUBLIC_DIR'])
-
     if not store.datasets:
-        public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
-        store.datasets = match_datasets(store.pattern, public_path, public_files)
+        public_files = list_files(store.public_path, store.path, store.pattern,
+                                  include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.public_path, public_files)
 
     session = init_database_session()
 
@@ -29,7 +28,7 @@ def archive_datasets(store):
 
             for file in dataset.files:
                 file.validate(store.schema)
-                move_files(public_path, archive_path, [
+                move_files(store.public_path, archive_path, [
                     file.abspath,
                     file.abspath.with_suffix('.json'),
                     file.abspath.with_suffix('.png')
@@ -39,17 +38,14 @@ def archive_datasets(store):
 
 
 def clean(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    delete_files(local_path, store.path)
+    delete_files(store.local_path, store.path)
 
 
 def ingest_datasets(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-
     if not store.datasets:
-        local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-        store.datasets = match_datasets(store.pattern, local_path, local_files)
+        local_files = list_files(store.local_path, store.path, store.pattern,
+                                 include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
     session = init_database_session()
 
@@ -69,10 +65,9 @@ def ingest_datasets(store):
 
 
 def ingest_resource(store):
-    datasets_base_url = os.environ['DATASETS_BASE_URL']
-    public_path = Path(os.environ['PUBLIC_DIR'])
-    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
-    store.datasets = match_datasets(store.pattern, public_path, public_files)
+    public_files = list_files(store.public_path, store.path, store.pattern,
+                              include=store.include, exclude=store.exclude)
+    store.datasets = match_datasets(store.pattern, store.public_path, public_files)
 
     session = init_database_session()
 
@@ -87,7 +82,7 @@ def ingest_resource(store):
 
         store.datacite['relatedIdentifiers'].append({
             'relationType': 'HasPart',
-            'relatedIdentifier': datasets_base_url + database_dataset.id,
+            'relatedIdentifier': store.datasets_base_url + database_dataset.id,
             'relatedIdentifierType': 'URL'
         })
 
@@ -96,45 +91,40 @@ def ingest_resource(store):
 
 
 def fetch_files(store):
-    remote_dest = os.environ['REMOTE_DEST']
-    remote_path = Path(os.environ['REMOTE_DIR'])
-    local_path = Path(os.environ['LOCAL_DIR'])
-    remote_files = list_files(remote_path, store.path, store.pattern, remote_dest=remote_dest, filelist=store.filelist)
+    remote_files = list_files(store.remote_path, store.path, store.pattern,
+                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(18))
-    for n in copy_files(remote_dest, remote_path, local_path, store.path, remote_files):
+    for n in copy_files(store.remote_dest, store.remote_path, store.local_path, store.path,
+                        remote_files, mock=store.mock):
         t.update(n)
 
 
 def list_local(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-
+    local_files = list_files(store.local_path, store.path, store.pattern,
+                             include=store.include, exclude=store.exclude)
     for file_path in local_files:
         print(file_path)
 
 
 def list_public(store):
-    public_path = Path(os.environ['PUBLIC_DIR'])
-    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
-
+    public_files = list_files(store.public_path, store.path, store.pattern,
+                              include=store.include, exclude=store.exclude)
     for file_path in public_files:
         print(file_path)
 
 
 def list_remote(store):
-    remote_dest = os.environ['REMOTE_DEST']
-    remote_path = Path(os.environ['REMOTE_DIR'])
-    remote_files = list_files(remote_path, store.path, store.pattern, remote_dest=remote_dest, filelist=store.filelist)
-
+    remote_files = list_files(store.remote_path, store.path, store.pattern,
+                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
     for file_path in remote_files:
         print(file_path)
 
 
 def match_local(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-    store.datasets = match_datasets(store.pattern, local_path, local_files)
+    local_files = list_files(store.local_path, store.path, store.pattern,
+                             include=store.include, exclude=store.exclude)
+    store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
     for dataset in store.datasets:
         dataset.validate(store.schema)
@@ -144,10 +134,9 @@ def match_local(store):
 
 
 def match_remote(store):
-    remote_dest = os.environ['REMOTE_DEST']
-    remote_path = Path(os.environ['REMOTE_DIR'])
-    remote_files = list_files(remote_path, store.path, store.pattern, remote_dest=remote_dest, filelist=store.filelist)
-    store.datasets = match_datasets(store.pattern, remote_path, remote_files)
+    remote_files = list_files(store.remote_path, store.path, store.pattern,
+                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
+    store.datasets = match_datasets(store.pattern, store.remote_path, remote_files)
 
     for dataset in store.datasets:
         dataset.validate(store.schema)
@@ -157,9 +146,9 @@ def match_remote(store):
 
 
 def match_public(store):
-    public_path = Path(os.environ['PUBLIC_DIR'])
-    public_files = list_files(public_path, store.path, store.pattern, filelist=store.filelist)
-    store.datasets = match_datasets(store.pattern, public_path, public_files)
+    public_files = list_files(store.public_path, store.path, store.pattern,
+                              include=store.include, exclude=store.exclude)
+    store.datasets = match_datasets(store.pattern, store.public_path, public_files)
 
     for dataset in store.datasets:
         dataset.validate(store.schema)
@@ -169,12 +158,10 @@ def match_public(store):
 
 
 def publish_datasets(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-    public_path = Path(os.environ['PUBLIC_DIR'])
-
     if not store.datasets:
-        local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-        store.datasets = match_datasets(store.pattern, local_path, local_files)
+        local_files = list_files(store.local_path, store.path, store.pattern,
+                                 include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
     session = init_database_session()
 
@@ -184,7 +171,7 @@ def publish_datasets(store):
 
         for file in dataset.files:
             file.validate(store.schema)
-            move_files(local_path, public_path, [
+            move_files(store.local_path, store.public_path, [
                 file.abspath,
                 file.abspath.with_suffix('.json'),
                 file.abspath.with_suffix('.png')
@@ -194,11 +181,10 @@ def publish_datasets(store):
 
 
 def write_jsons(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-
     if not store.datasets:
-        local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-        store.datasets = match_datasets(store.pattern, local_path, local_files)
+        local_files = list_files(store.local_path, store.path, store.pattern,
+                                 include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
     for dataset in tqdm(store.datasets, desc='write_jsons'.ljust(18)):
         for file in dataset.files:
@@ -207,13 +193,12 @@ def write_jsons(store):
 
 
 def write_thumbnails(store):
-    local_path = Path(os.environ['LOCAL_DIR'])
-
     if not store.datasets:
-        local_files = list_files(local_path, store.path, store.pattern, filelist=store.filelist)
-        store.datasets = match_datasets(store.pattern, local_path, local_files)
+        local_files = list_files(store.local_path, store.path, store.pattern,
+                                 include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
     for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
         for file in dataset.files:
             file.validate(store.schema)
-            file.write_thumbnail()
+            file.write_thumbnail(mock=store.mock)

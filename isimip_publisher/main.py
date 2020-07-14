@@ -14,8 +14,10 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', help='path of the files to publish')
-    parser.add_argument('-f', dest='filelist_file', default=None,
-                        help='path to a file containing the list of files')
+    parser.add_argument('-i', dest='include_file', default=None,
+                        help='path to a file containing a list of files to include')
+    parser.add_argument('-e', dest='exclude_file', default=None,
+                        help='path to a file containing a list of files to exclude')
     parser.add_argument('-d', dest='datacite_file', default=None,
                         help='path to a file containing DateCite metadata (only for ingest_resource)')
     parser.add_argument('-v', dest='version', default=False,
@@ -43,6 +45,9 @@ def main():
     subparsers.add_parser('run_all').set_defaults(func=run_all)
 
     args = parser.parse_args()
+
+    if args.include_file and args.exclude_file:
+        parser.error('include_file and exclude_file are mutually exclusive')
 
     if hasattr(args, 'func'):
         store = Store(args)

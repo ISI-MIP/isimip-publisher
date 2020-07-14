@@ -15,9 +15,7 @@ DPI = 96
 LEVELS = 10
 
 
-def write_thumbnail(abspath, output_abspath=None):
-    mock = os.getenv('MOCK', '').lower() in ['t', 'true', 1]
-
+def write_thumbnail(abspath, output_abspath=None, mock=False):
     if not output_abspath:
         output_abspath = abspath.with_suffix('.png')
 

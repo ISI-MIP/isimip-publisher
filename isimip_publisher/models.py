@@ -4,7 +4,7 @@ from .utils import order_dict
 from .utils.checksum import (get_checksum, get_checksum_from_string,
                              get_checksum_type)
 from .utils.config import (load_pattern, load_schema, parse_datacite,
-                           parse_filelist, parse_version)
+                           parse_env, parse_filelist, parse_version)
 from .utils.database import (insert_dataset, insert_file, publish_dataset,
                              unpublish_dataset)
 from .utils.json import write_file_json
@@ -16,8 +16,13 @@ class Store(object):
 
     def __init__(self, args):
         self.path = args.path
+
+        for attr, value in parse_env().items():
+            setattr(self, attr, value)
+
         self.version = parse_version(args.version)
-        self.filelist = parse_filelist(args.filelist_file)
+        self.include = parse_filelist(args.include_file)
+        self.exclude = parse_filelist(args.exclude_file)
         self.datacite = parse_datacite(args.datacite_file)
 
         self.pattern = load_pattern(self.path)
@@ -94,8 +99,8 @@ class File(object):
 
         write_file_json(self.abspath, order_dict(attributes))
 
-    def write_thumbnail(self):
-        write_thumbnail(self.abspath)
+    def write_thumbnail(self, mock=False):
+        write_thumbnail(self.abspath, mock=False)
 
     def insert(self, session, version):
         insert_file(session, version, self.dataset.path, self.name, self.path,

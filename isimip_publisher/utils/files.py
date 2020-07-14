@@ -10,7 +10,7 @@ from .netcdf import update_netcdf_global_attributes
 logger = logging.getLogger(__name__)
 
 
-def list_files(base_path, path, pattern, remote_dest=None, filelist=None):
+def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude=None):
     abs_path = base_path / path
 
     if remote_dest:
@@ -39,15 +39,19 @@ def list_files(base_path, path, pattern, remote_dest=None, filelist=None):
     for line in output.splitlines():
         file_abspath = line.decode()
         file_path = file_abspath.replace(str(base_path) + os.sep, '')
-        if not filelist or file_path in filelist:
-            files.append(file_path)
+
+        if include and file_path not in include:
+            continue
+
+        if exclude and file_path in exclude:
+            continue
+
+        files.append(file_path)
 
     return files
 
 
-def copy_files(remote_dest, remote_path, local_path, path, files):
-    mock = os.getenv('MOCK', '').lower() in ['t', 'true', 1]
-
+def copy_files(remote_dest, remote_path, local_path, path, files, mock=False):
     # create the local_dir
     (local_path / path).mkdir(parents=True, exist_ok=True)
 
