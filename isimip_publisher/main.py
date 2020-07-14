@@ -1,9 +1,10 @@
 import argparse
 
-from .commands import (archive_datasets, clean, fetch_files, ingest_datasets,
-                       ingest_resource, list_local, list_public, list_remote,
-                       match_local, match_public, match_remote,
-                       publish_datasets, write_jsons, write_thumbnails)
+from .commands import (archive_datasets, check, clean, fetch_files,
+                       ingest_datasets, ingest_resource, list_local,
+                       list_public, list_remote, match_local, match_public,
+                       match_remote, publish_datasets, write_jsons,
+                       write_thumbnails)
 from .models import Store
 from .utils import setup_env, setup_logging
 
@@ -26,11 +27,12 @@ def main():
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
     # add a subparser for each subcommand
-    subparsers.add_parser('clean').set_defaults(func=clean)
     subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
+    subparsers.add_parser('check').set_defaults(func=check)
+    subparsers.add_parser('clean').set_defaults(func=clean)
+    subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
     subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
     subparsers.add_parser('ingest_resource').set_defaults(func=ingest_resource)
-    subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
     subparsers.add_parser('list_remote').set_defaults(func=list_remote)
     subparsers.add_parser('list_local').set_defaults(func=list_local)
     subparsers.add_parser('list_public').set_defaults(func=list_public)

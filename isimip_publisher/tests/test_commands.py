@@ -153,6 +153,16 @@ def test_match_public(setup, script_runner):
     assert not response.stderr
 
 
+def test_check(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'check')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
 def test_ingest_resource(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',

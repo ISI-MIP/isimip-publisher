@@ -32,7 +32,11 @@ def match_datasets(pattern, base_path, files):
             identifiers=identifiers
         ))
 
-    dataset_list = sorted(dataset_dict.values(), key=lambda d: d.path)
+    # sort datasets and files and return
+    dataset_list = sorted(dataset_dict.values(), key=lambda d: str(d.path))
+    for dataset in dataset_list:
+        dataset.files = sorted(dataset.files, key=lambda f: str(f.path))
+
     return dataset_list
 
 
@@ -55,7 +59,8 @@ def match_files(pattern, base_path, files):
             'identifiers': identifiers
         })
 
-    return file_list
+    # sort files and return
+    return sorted(file_list, key=lambda f: str(f.path))
 
 
 def match_dataset(pattern, file_abspath):

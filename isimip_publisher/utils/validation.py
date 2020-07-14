@@ -13,11 +13,3 @@ def validate_identifiers(schema, identifiers):
     except jsonschema.exceptions.ValidationError as e:
         logger.error('identifiers = %s', identifiers)
         raise e
-
-
-def validate_datasets(datasets, database_datasets):
-    assert len(datasets) == len(database_datasets)
-
-    sorted_datasets = sorted(datasets, key=lambda d: str(d.path))
-    for dataset, database_dataset in zip(sorted_datasets, database_datasets):
-        assert str(dataset.path) == database_dataset.path, (str(dataset.path), database_dataset.path)

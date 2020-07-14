@@ -8,7 +8,6 @@ from .utils.database import (init_database_session, insert_resource,
                              update_words_view)
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.patterns import match_datasets
-from .utils.validation import validate_datasets
 
 
 def archive_datasets(store):
@@ -35,6 +34,30 @@ def archive_datasets(store):
                 ])
 
         session.commit()
+
+
+def check(store):
+    public_files = list_files(store.public_path, store.path, store.pattern,
+                              include=store.include, exclude=store.exclude)
+    store.datasets = match_datasets(store.pattern, store.public_path, public_files)
+
+    session = init_database_session()
+
+    db_datasets = retrieve_datasets(session, store.path, public=True)
+
+    assert len(store.datasets) == len(db_datasets)
+
+    for dataset, db_dataset in zip(store.datasets, db_datasets):
+        dataset.validate(store.schema)
+
+        assert str(dataset.path) == db_dataset.path, (str(dataset.path), db_dataset.path)
+        assert dataset.checksum == db_dataset.checksum, (dataset.checksum, db_dataset.checksum)
+
+        for file, db_file in zip(dataset.files, db_dataset.files):
+            file.validate(store.schema)
+
+            assert str(file.path) == db_file.path, (str(file.path), db_file.path)
+            assert file.checksum == db_file.checksum, (file.checksum, db_file.checksum)
 
 
 def clean(store):
@@ -71,22 +94,29 @@ def ingest_resource(store):
 
     session = init_database_session()
 
-    database_datasets = retrieve_datasets(session, store.path, public=True)
-    validate_datasets(store.datasets, database_datasets)
+    db_datasets = retrieve_datasets(session, store.path, public=True)
 
-    for dataset, database_dataset in zip(store.datasets, database_datasets):
+    assert len(store.datasets) == len(db_datasets)
+
+    for dataset, db_dataset in zip(store.datasets, db_datasets):
         dataset.validate(store.schema)
 
-        for file in dataset.files:
+        assert str(dataset.path) == db_dataset.path, (str(dataset.path), db_dataset.path)
+        assert dataset.checksum == db_dataset.checksum, (dataset.checksum, db_dataset.checksum)
+
+        for file, db_file in zip(dataset.files, db_dataset.files):
             file.validate(store.schema)
+
+            assert str(file.path) == db_file.path, (str(file.path), db_file.path)
+            assert file.checksum == db_file.checksum, (file.checksum, db_file.checksum)
 
         store.datacite['relatedIdentifiers'].append({
             'relationType': 'HasPart',
-            'relatedIdentifier': store.datasets_base_url + database_dataset.id,
+            'relatedIdentifier': store.datasets_base_url + db_dataset.id,
             'relatedIdentifierType': 'URL'
         })
 
-    insert_resource(session, store.path, store.version, store.datacite, database_datasets)
+    insert_resource(session, store.path, store.version, store.datacite, db_datasets)
     session.commit()
 
 

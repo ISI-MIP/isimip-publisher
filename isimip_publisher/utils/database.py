@@ -179,15 +179,23 @@ def unpublish_dataset(session, path):
 
 def retrieve_datasets(session, path, public=None):
     like_path = '{}%'.format(path)
+
     if public is None:
-        return session.query(Dataset).filter(
+        datasets = session.query(Dataset).filter(
             Dataset.path.like(like_path),
-        ).order_by(Dataset.path).all()
+        ).all()
     else:
-        return session.query(Dataset).filter(
+        datasets = session.query(Dataset).filter(
             Dataset.path.like(like_path),
             Dataset.public == public
-        ).order_by(Dataset.path).all()
+        ).all()
+
+    # sort datasets and files (using python to have a consistant order) and return
+    datasets = sorted(datasets, key=lambda d: d.path)
+    for dataset in datasets:
+        dataset.files = sorted(dataset.files, key=lambda f: f.path)
+
+    return datasets
 
 
 def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, attributes):
