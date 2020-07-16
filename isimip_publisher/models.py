@@ -73,7 +73,7 @@ class File(object):
         self.abspath = abspath
         self.identifiers = identifiers
 
-        self.mime_type = str(mimetypes.guess_type(self.abspath)[0])
+        self.mime_type = str(mimetypes.guess_type(str(self.abspath))[0])
         self.checksum_type = get_checksum_type()
         self.clean = False
 

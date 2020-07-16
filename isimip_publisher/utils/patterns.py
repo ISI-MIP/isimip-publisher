@@ -40,29 +40,6 @@ def match_datasets(pattern, base_path, files):
     return dataset_list
 
 
-def match_files(pattern, base_path, files):
-    file_list = []
-
-    for file in files:
-        file_abspath = base_path / file
-
-        logger.info('match_files %s', file_abspath)
-
-        file_path, file_name, identifiers = match_file(pattern, file_abspath)
-        dataset_path, dataset_name, _ = match_dataset(pattern, file_abspath)
-
-        file_list.append({
-            'name': file_name,
-            'path': file_path,
-            'abspath': file_abspath,
-            'dataset_path': dataset_path,
-            'identifiers': identifiers
-        })
-
-    # sort files and return
-    return sorted(file_list, key=lambda f: str(f.path))
-
-
 def match_dataset(pattern, file_abspath):
     return match(pattern, file_abspath, 'path', 'dataset')
 
