@@ -14,17 +14,15 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
-Since `cartopy` has currently problems when installing using `pip`, we recommend a conda setup. First create an environment and install `cartopy`:
+First create a virtual envronment in the directory `env` using:
 
-```bash
-conda create -n isimip
-conda activate isimip
-conda install cartopy
+```
+python3 -m venv env
 ```
 
-Next, `isimip-publisher` using pip:
+Next, install `isimip-publisher` directly from GitHub using
 
-```bash
+```
 pip install git+https://github.com/ISI-MIP/isimip-publisher
 ```
 
