@@ -49,15 +49,11 @@ def check(store):
 
     for dataset, db_dataset in zip(store.datasets, db_datasets):
         dataset.validate(store.schema)
-
-        assert str(dataset.path) == db_dataset.path, (str(dataset.path), db_dataset.path)
-        assert dataset.checksum == db_dataset.checksum, (dataset.checksum, db_dataset.checksum)
+        dataset.check(db_dataset)
 
         for file, db_file in zip(dataset.files, db_dataset.files):
             file.validate(store.schema)
-
-            assert str(file.path) == db_file.path, (str(file.path), db_file.path)
-            assert file.checksum == db_file.checksum, (file.checksum, db_file.checksum)
+            file.check(db_file)
 
 
 def clean(store):
@@ -100,15 +96,11 @@ def ingest_resource(store):
 
     for dataset, db_dataset in zip(store.datasets, db_datasets):
         dataset.validate(store.schema)
-
-        assert str(dataset.path) == db_dataset.path, (str(dataset.path), db_dataset.path)
-        assert dataset.checksum == db_dataset.checksum, (dataset.checksum, db_dataset.checksum)
+        dataset.check(db_dataset)
 
         for file, db_file in zip(dataset.files, db_dataset.files):
             file.validate(store.schema)
-
-            assert str(file.path) == db_file.path, (str(file.path), db_file.path)
-            assert file.checksum == db_file.checksum, (file.checksum, db_file.checksum)
+            file.check(db_file)
 
         store.datacite['relatedIdentifiers'].append({
             'relationType': 'HasPart',

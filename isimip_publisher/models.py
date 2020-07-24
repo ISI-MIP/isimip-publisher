@@ -1,4 +1,7 @@
+import logging
 import mimetypes
+
+import jsonschema
 
 from .utils import order_dict
 from .utils.checksum import (get_checksum, get_checksum_from_string,
@@ -9,7 +12,8 @@ from .utils.database import (insert_dataset, insert_file, publish_dataset,
                              unpublish_dataset)
 from .utils.json import write_file_json
 from .utils.thumbnails import write_thumbnail
-from .utils.validation import validate_identifiers
+
+logger = logging.getLogger(__name__)
 
 
 class Store(object):
@@ -52,7 +56,20 @@ class Dataset(object):
 
     def validate(self, schema):
         # validate if self.clean is not true yet
-        return self.clean or validate_identifiers(schema, self.identifiers)
+        if self.clean:
+            return self.clean
+        else:
+            try:
+                jsonschema.validate(schema=schema, instance=self.identifiers)
+                self.clean = True
+            except jsonschema.exceptions.ValidationError as e:
+                logger.error('identifiers = %s', self.identifiers)
+                raise e
+
+    def check(self, db_file):
+        logger.info('path = %s, checksum = %s', self.path, self.checksum)
+        assert str(self.path) == db_file.path, (str(self.path), db_file.path)
+        assert self.checksum == db_file.checksum, (self.checksum, db_file.checksum)
 
     def insert(self, session, version):
         insert_dataset(session, version, self.name, self.path, self.checksum, self.checksum_type, self.identifiers)
@@ -87,7 +104,20 @@ class File(object):
 
     def validate(self, schema):
         # validate if self.clean is not true yet
-        return self.clean or validate_identifiers(schema, self.identifiers)
+        if self.clean:
+            return self.clean
+        else:
+            try:
+                jsonschema.validate(schema=schema, instance=self.identifiers)
+                self.clean = True
+            except jsonschema.exceptions.ValidationError as e:
+                logger.error('identifiers = %s', self.identifiers)
+                raise e
+
+    def check(self, db_file):
+        logger.info('path = %s, checksum = %s', self.path, self.checksum)
+        assert str(self.path) == db_file.path, (str(self.path), db_file.path)
+        assert self.checksum == db_file.checksum, (self.checksum, db_file.checksum)
 
     def write_json(self):
         attributes = {
