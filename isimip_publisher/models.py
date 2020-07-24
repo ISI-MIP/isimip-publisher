@@ -4,8 +4,8 @@ import mimetypes
 import jsonschema
 
 from .utils import order_dict
-from .utils.checksum import (get_checksum, get_checksum_from_string,
-                             get_checksum_type)
+from .utils.checksum import (get_checksum, get_checksum_type,
+                             get_checksums_checksum)
 from .utils.config import (load_pattern, load_schema, parse_datacite,
                            parse_env, parse_filelist, parse_version)
 from .utils.database import (insert_dataset, insert_file, publish_dataset,
@@ -51,7 +51,7 @@ class Dataset(object):
     @property
     def checksum(self):
         if not self._checksum:
-            self._checksum = get_checksum_from_string(''.join([file.checksum for file in self.files]))
+            self._checksum = get_checksums_checksum([file.checksum for file in self.files])
         return self._checksum
 
     def validate(self, schema):
@@ -66,10 +66,10 @@ class Dataset(object):
                 logger.error('identifiers = %s', self.identifiers)
                 raise e
 
-    def check(self, db_file):
+    def check(self, db_dataset):
         logger.info('path = %s, checksum = %s', self.path, self.checksum)
-        assert str(self.path) == db_file.path, (str(self.path), db_file.path)
-        assert self.checksum == db_file.checksum, (self.checksum, db_file.checksum)
+        assert str(self.path) == db_dataset.path, (str(self.path), db_dataset.path)
+        assert self.checksum == db_dataset.checksum, (self.checksum, db_dataset.checksum)
 
     def insert(self, session, version):
         insert_dataset(session, version, self.name, self.path, self.checksum, self.checksum_type, self.identifiers)

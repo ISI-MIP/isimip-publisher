@@ -4,9 +4,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_checksum_from_string(string):
+def get_checksums_checksum(checksums):
     m = hashlib.sha1()
-    m.update(string.encode())
+    for checksum in checksums:
+        m.update(checksum.encode())
     return m.hexdigest()
 
 
