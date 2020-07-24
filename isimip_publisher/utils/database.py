@@ -259,7 +259,8 @@ def insert_resource(session, path, version, datacite, datasets):
     ).one_or_none()
 
     if resource:
-        assert resource.path == str(path)
+        if resource.path != str(path):
+            raise RuntimeError('A resource with doi={} has already been registered, but for a different path={}'.format(doi, path))
 
         if resource.datacite == datacite:
             logger.debug('skip resource %s', path)
