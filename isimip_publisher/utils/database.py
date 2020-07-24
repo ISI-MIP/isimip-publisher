@@ -81,8 +81,6 @@ class Resource(Base):
     version = Column(String(8), nullable=False, index=True)
 
     doi = Column(Text, nullable=False, index=True)
-    title = Column(Text, nullable=False)
-    type = Column(Text, nullable=False, index=True)
     datacite = Column(JSONB, nullable=False)
 
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
@@ -249,26 +247,37 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
 
 
 def insert_resource(session, path, version, datacite, datasets):
-    # check if the file is already in the database
+    # get the doi and the datacite version
+    doi = datacite.get('identifier')
+    datacite_version = datacite.get('version')
+    assert doi is not None
+    assert datacite_version is not None
+
+    # look for the resource in the database
     resource = session.query(Resource).filter(
-        Resource.path == str(path),
-        Resource.version == version
+        Resource.doi == doi
     ).one_or_none()
 
     if resource:
+        assert resource.path == str(path)
+
         if resource.datacite == datacite:
             logger.debug('skip resource %s', path)
         else:
-            raise RuntimeError('A resource with path={} and version={} has already been registered'.format(path, version))
+            # check that the datacite version is not the same
+            if resource.datacite.get('version') == datacite_version:
+                raise RuntimeError('A resource with doi={} has already been registered, and the datacite metadata '
+                                   'has been updated, but the version={} is the same'.format(doi, datacite_version))
+
+            # update the datecite metadata
+            resource.datacite = datacite
     else:
         # insert a new resource
         logger.debug('insert resource %s', path)
         resource = Resource(
             path=str(path),
             version=str(version),
-            doi=datacite['identifier'],
-            title=datacite['titles'][0]['title'],
-            type=datacite['resourceType'].lower(),
+            doi=doi,
             datacite=datacite
         )
         for dataset in datasets:
