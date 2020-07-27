@@ -1,5 +1,6 @@
 {
-  "identifier": "10.12345/isimip/002",
+  "identifier": "10.12345/isimip/001",
+  "version": "1.0.0",
   "creators": [
     {
       "creatorName": "Mustermann, E.",
@@ -73,7 +74,6 @@
       "relatedIdentifierType": "DOI"
     }
   ],
-  "version": "1.0.0",
   "rightsList": [
     {
       "rights": "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",

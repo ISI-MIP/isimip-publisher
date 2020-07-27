@@ -259,6 +259,34 @@ def insert_resource(session, path, version, datacite, datasets):
     ).one_or_none()
 
     if resource:
+        raise RuntimeError('A resource with doi={} has already been registered.')
+
+    # insert a new resource
+    logger.debug('insert resource %s', path)
+    resource = Resource(
+        path=str(path),
+        version=str(version),
+        doi=doi,
+        datacite=datacite
+    )
+    for dataset in datasets:
+        resource.datasets.append(dataset)
+    session.add(resource)
+
+
+def update_resource(session, path, version, datacite):
+    # get the doi and the datacite version
+    doi = datacite.get('identifier')
+    datacite_version = datacite.get('version')
+    assert doi is not None
+    assert datacite_version is not None
+
+    # look for the resource in the database
+    resource = session.query(Resource).filter(
+        Resource.doi == doi
+    ).one_or_none()
+
+    if resource:
         if resource.path != str(path):
             raise RuntimeError('A resource with doi={} has already been registered, but for a different path={}'.format(doi, path))
 
@@ -267,23 +295,13 @@ def insert_resource(session, path, version, datacite, datasets):
         else:
             # check that the datacite version is not the same
             if resource.datacite.get('version') == datacite_version:
-                raise RuntimeError('A resource with doi={} has already been registered, and the datacite metadata '
+                raise RuntimeError('A resource with doi={} is in the database, and the datacite metadata '
                                    'has been updated, but the version={} is the same'.format(doi, datacite_version))
 
             # update the datecite metadata
             resource.datacite = datacite
     else:
-        # insert a new resource
-        logger.debug('insert resource %s', path)
-        resource = Resource(
-            path=str(path),
-            version=str(version),
-            doi=doi,
-            datacite=datacite
-        )
-        for dataset in datasets:
-            resource.datasets.append(dataset)
-        session.add(resource)
+        raise RuntimeError('A resource with doi={} can not be found in the database'.format(doi))
 
 
 def update_words_view(session):

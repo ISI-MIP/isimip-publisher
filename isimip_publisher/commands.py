@@ -4,8 +4,9 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .utils.database import (init_database_session, insert_resource,
-                             retrieve_datasets, update_attributes_view,
-                             update_words_view)
+                             retrieve_datasets, update_attributes_view)
+from .utils.database import update_resource as update_db_resource
+from .utils.database import update_words_view
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.patterns import match_datasets
 
@@ -83,30 +84,18 @@ def ingest_datasets(store):
 
 
 def ingest_resource(store):
-    public_files = list_files(store.public_path, store.path, store.pattern,
-                              include=store.include, exclude=store.exclude)
-    store.datasets = match_datasets(store.pattern, store.public_path, public_files)
-
     session = init_database_session()
 
-    db_datasets = retrieve_datasets(session, store.path, public=True)
+    datasets = retrieve_datasets(session, store.path, public=True)
 
-    assert len(store.datasets) == len(db_datasets)
-
-    for dataset, db_dataset in zip(store.datasets, db_datasets):
-        for file, db_file in zip(dataset.files, db_dataset.files):
-            file.validate(store.schema)
-            file.check(db_file)
-        dataset.validate(store.schema)
-        dataset.check(db_dataset)
-
+    for dataset in datasets:
         store.datacite['relatedIdentifiers'].append({
             'relationType': 'HasPart',
-            'relatedIdentifier': store.datasets_base_url + db_dataset.id,
+            'relatedIdentifier': store.datasets_base_url + dataset.id,
             'relatedIdentifierType': 'URL'
         })
 
-    insert_resource(session, store.path, store.version, store.datacite, db_datasets)
+    insert_resource(session, store.path, store.version, store.datacite, datasets)
     session.commit()
 
 
@@ -222,3 +211,11 @@ def write_thumbnails(store):
         for file in dataset.files:
             file.validate(store.schema)
             file.write_thumbnail(mock=store.mock)
+
+
+def update_resource(store):
+    session = init_database_session()
+
+    update_db_resource(session, store.path, store.version, store.datacite)
+
+    session.commit()

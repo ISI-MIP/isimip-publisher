@@ -3,8 +3,8 @@ import argparse
 from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, ingest_resource, list_local,
                        list_public, list_remote, match_local, match_public,
-                       match_remote, publish_datasets, write_jsons,
-                       write_thumbnails)
+                       match_remote, publish_datasets, update_resource,
+                       write_jsons, write_thumbnails)
 from .models import Store
 from .utils import setup_env, setup_logging
 
@@ -20,7 +20,7 @@ def main():
     parser.add_argument('-e', dest='exclude_file', default=None,
                         help='path to a file containing a list of files to exclude')
     parser.add_argument('-d', dest='datacite_file', default=None,
-                        help='path to a file containing DateCite metadata (only for ingest_resource)')
+                        help='path to a file containing DateCite metadata (only for ingest_resource, update_resource)')
     parser.add_argument('-v', dest='version', default=False,
                         help='version date override [default: today]')
 
@@ -40,6 +40,7 @@ def main():
     subparsers.add_parser('match_remote').set_defaults(func=match_remote)
     subparsers.add_parser('match_public').set_defaults(func=match_public)
     subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
+    subparsers.add_parser('update_resource').set_defaults(func=update_resource)
     subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
     subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
 

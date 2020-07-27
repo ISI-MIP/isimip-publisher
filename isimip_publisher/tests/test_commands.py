@@ -167,9 +167,33 @@ def test_ingest_resource(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         '-d',
-        'testing/datacite.json',
+        'testing/datacite/001.json',
         'round/product/sector/model',
         'ingest_resource')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
+def test_update_resource(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        '-d',
+        'testing/datacite/001b.json',
+        'round/product/sector/model',
+        'update_resource')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
+def test_update_resource_error(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        '-d',
+        'testing/datacite/001b.json',
+        'round/product/sector/model',
+        'update_resource')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
