@@ -248,7 +248,7 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
 
 def insert_resource(session, path, version, datacite, datasets):
     # get the doi and the datacite version
-    doi = datacite.get('identifier')
+    doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')
     assert doi is not None
     assert datacite_version is not None
@@ -276,7 +276,7 @@ def insert_resource(session, path, version, datacite, datasets):
 
 def update_resource(session, path, version, datacite):
     # get the doi and the datacite version
-    doi = datacite.get('identifier')
+    doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')
     assert doi is not None
     assert datacite_version is not None
