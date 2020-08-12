@@ -14,14 +14,14 @@ def match_datasets(pattern, base_path, files):
 
         logger.info('match_datasets %s', file_abspath)
 
-        file_path, file_name, identifiers = match_file(pattern, file_abspath)
-        dataset_path, dataset_name, _ = match_dataset(pattern, file_abspath)
+        file_path, file_name, file_identifiers = match_file(pattern, file_abspath)
+        dataset_path, dataset_name, dataset_identifiers = match_dataset(pattern, file_abspath)
 
         if dataset_path not in dataset_dict:
             dataset_dict[dataset_path] = Dataset(
                 name=dataset_name,
                 path=dataset_path,
-                identifiers=identifiers
+                attributes=file_identifiers
             )
 
         dataset_dict[dataset_path].files.append(File(
@@ -29,7 +29,7 @@ def match_datasets(pattern, base_path, files):
             name=file_name,
             path=file_path,
             abspath=file_abspath,
-            identifiers=identifiers
+            attributes=dataset_identifiers
         ))
 
     # sort datasets and files and return

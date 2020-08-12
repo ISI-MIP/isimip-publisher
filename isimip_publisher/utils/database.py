@@ -4,7 +4,7 @@ import uuid
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
                         Text, create_engine, func, inspect)
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -13,8 +13,13 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-def get_search_vector(path):
-    search_string = str(path).replace('_', ' ').replace('-', ' ').replace('/', ' ')
+def get_specifiers(attributes):
+    return [str(value) for value in attributes.values()]
+
+
+def get_search_vector(attributes):
+    values = [str(value) for value in attributes.values()]
+    search_string = ' '.join(values)
     return func.setweight(func.to_tsvector(search_string), 'A')
 
 
@@ -38,6 +43,7 @@ class Dataset(Base):
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
+    specifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
 
@@ -64,6 +70,7 @@ class File(Base):
     checksum_type = Column(Text, nullable=False)
     mime_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
+    specifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
 
     dataset = relationship('Dataset', back_populates='files')
@@ -100,8 +107,6 @@ def init_database_session():
 
 
 def insert_dataset(session, version, name, path, checksum, checksum_type, attributes):
-    search_vector = get_search_vector(path)
-
     logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
@@ -112,10 +117,11 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, attrib
 
     if dataset:
         if dataset.checksum == checksum:
-            # if the dataset already exists, update its attributes
+            # if the dataset already exists, update its specifiers or attributes
             if dataset.attributes != attributes:
                 dataset.attributes = attributes
-                dataset.search_vector = search_vector
+                dataset.specifiers = get_specifiers(attributes)
+                dataset.search_vector = get_search_vector(attributes)
                 logger.debug('update dataset %s', path)
             else:
                 logger.debug('skip dataset %s', path)
@@ -133,7 +139,8 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, attrib
             checksum=checksum,
             checksum_type=checksum_type,
             attributes=attributes,
-            search_vector=search_vector,
+            specifiers=get_specifiers(attributes),
+            search_vector=get_search_vector(attributes),
             public=False
         )
         session.add(dataset)
@@ -197,8 +204,6 @@ def retrieve_datasets(session, path, public=None):
 
 
 def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, attributes):
-    search_vector = get_search_vector(path)
-
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -218,14 +223,14 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
 
     if file:
         if file.checksum == checksum:
-            # the file itself has not changed, update the attributes
+            # the file itself has not changed, update the specifiers or attributes
             if file.attributes != attributes:
                 file.attributes = attributes
-                file.search_vector = search_vector
+                file.specifiers = get_specifiers(attributes)
+                file.search_vector = get_search_vector(attributes)
                 logger.debug('update file %s', path)
             else:
                 logger.debug('skip file %s', path)
-
         else:
             # the file has been changed, but the version is the same, this is not ok
             raise RuntimeError('%s has been changed but the version is the same' % path)
@@ -240,8 +245,9 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,
             attributes=attributes,
+            specifiers=get_specifiers(attributes),
             dataset=dataset,
-            search_vector=search_vector
+            search_vector=get_search_vector(attributes)
         )
         session.add(file)
 

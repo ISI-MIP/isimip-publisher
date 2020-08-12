@@ -1,5 +1,10 @@
 {
-  "identifier": "10.12345/isimip/001",
+  "identifiers": [
+    {
+      "identifier": "10.12345/isimip/001",
+      "identifierType": "DOI"
+    }
+  ],
   "version": "1.0.0",
   "creators": [
     {

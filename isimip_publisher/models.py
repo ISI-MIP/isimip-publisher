@@ -37,10 +37,10 @@ class Store(object):
 
 class Dataset(object):
 
-    def __init__(self, name, path, identifiers):
+    def __init__(self, name=None, path=None, attributes=None):
         self.name = name
         self.path = path
-        self.identifiers = identifiers
+        self.attributes = attributes
 
         self.files = []
         self.checksum_type = get_checksum_type()
@@ -60,10 +60,10 @@ class Dataset(object):
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.identifiers)
+                jsonschema.validate(schema=schema, instance=self.attributes)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('identifiers = %s', self.identifiers)
+                logger.error('attributes = %s', self.attributes)
                 raise e
 
     def check(self, db_dataset):
@@ -72,7 +72,8 @@ class Dataset(object):
         assert self.checksum == db_dataset.checksum, (self.checksum, db_dataset.checksum)
 
     def insert(self, session, version):
-        insert_dataset(session, version, self.name, self.path, self.checksum, self.checksum_type, self.identifiers)
+        insert_dataset(session, version, self.name, self.path,
+                       self.checksum, self.checksum_type, self.attributes)
 
     def publish(self, session, version):
         publish_dataset(session, version, self.path)
@@ -83,12 +84,12 @@ class Dataset(object):
 
 class File(object):
 
-    def __init__(self, dataset, name, path, abspath, identifiers):
+    def __init__(self, dataset=None, name=None, path=None, abspath=None, attributes=None):
         self.dataset = dataset
         self.name = name
         self.path = path
         self.abspath = abspath
-        self.identifiers = identifiers
+        self.attributes = attributes
 
         self.mime_type = str(mimetypes.guess_type(str(self.abspath))[0])
         self.checksum_type = get_checksum_type()
@@ -108,10 +109,10 @@ class File(object):
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.identifiers)
+                jsonschema.validate(schema=schema, instance=self.attributes)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('identifiers = %s', self.identifiers)
+                logger.error('attributes = %s', self.attributes)
                 raise e
 
     def check(self, db_file):
@@ -125,7 +126,7 @@ class File(object):
             'checksum':  self.checksum,
             'checksum_type':  self.checksum_type
         }
-        attributes.update(self.identifiers)
+        attributes.update(self.attributes)
 
         write_file_json(self.abspath, order_dict(attributes))
 
@@ -134,4 +135,4 @@ class File(object):
 
     def insert(self, session, version):
         insert_file(session, version, self.dataset.path, self.name, self.path,
-                    self.mime_type, self.checksum, self.checksum_type, self.identifiers)
+                    self.mime_type, self.checksum, self.checksum_type, self.attributes)
