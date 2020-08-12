@@ -3,8 +3,8 @@ import argparse
 from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, ingest_resource, list_local,
                        list_public, list_remote, match_local, match_public,
-                       match_remote, publish_datasets, update_resource,
-                       write_jsons, write_thumbnails)
+                       match_remote, publish_datasets, update_index,
+                       update_resource, write_jsons, write_thumbnails)
 from .models import Store
 from .utils import setup_env, setup_logging
 
@@ -40,6 +40,7 @@ def main():
     subparsers.add_parser('match_remote').set_defaults(func=match_remote)
     subparsers.add_parser('match_public').set_defaults(func=match_public)
     subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
+    subparsers.add_parser('update_index').set_defaults(func=update_index)
     subparsers.add_parser('update_resource').set_defaults(func=update_resource)
     subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
     subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)

@@ -4,7 +4,7 @@ import uuid
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
                         Text, create_engine, func, inspect)
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -14,7 +14,7 @@ Base = declarative_base()
 
 
 def get_specifiers(attributes):
-    return [str(value) for value in attributes.values()]
+    return [[key, value] for key, value in attributes.items() if isinstance(value, str)]
 
 
 def get_search_vector(attributes):
@@ -43,7 +43,7 @@ class Dataset(Base):
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
-    specifiers = Column(ARRAY(Text), nullable=False)
+    specifiers = Column(JSONB, nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
 
@@ -70,7 +70,7 @@ class File(Base):
     checksum_type = Column(Text, nullable=False)
     mime_type = Column(Text, nullable=False)
     attributes = Column(JSONB, nullable=False)
-    specifiers = Column(ARRAY(Text), nullable=False)
+    specifiers = Column(JSONB, nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
 
     dataset = relationship('Dataset', back_populates='files')
@@ -91,6 +91,18 @@ class Resource(Base):
     datacite = Column(JSONB, nullable=False)
 
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
+
+    def __repr__(self):
+        return str(self.id)
+
+
+class Tree(Base):
+
+    __tablename__ = 'trees'
+
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    tree_dict = Column(JSONB, nullable=False)
+    tree_list = Column(JSONB, nullable=False)
 
     def __repr__(self):
         return str(self.id)
@@ -308,6 +320,62 @@ def update_resource(session, path, version, datacite):
             resource.datacite = datacite
     else:
         raise RuntimeError('A resource with doi={} can not be found in the database'.format(doi))
+
+
+def update_tree(session):
+    datasets = session.query(Dataset).filter(
+        Dataset.public == True
+    ).order_by(Dataset.path)
+
+    # step 1: recursively build tree_dict
+    tree_dict = {}
+    for dataset in datasets:
+        build_tree_dict(tree_dict, dataset.specifiers)
+
+    # step 2: recursively build tree_list
+    tree_list = build_tree_list(tree_dict)
+
+    tree = session.query(Tree).one_or_none()
+    if tree:
+        # insert a new tree
+        logger.debug('update tree')
+        tree.tree_dict = tree_dict
+        tree.tree_list = tree_list
+
+    else:
+        # insert a new tree
+        logger.debug('insert tree')
+        tree = Tree(
+            tree_dict=tree_dict,
+            tree_list=tree_list
+        )
+        session.add(tree)
+
+
+def build_tree_dict(tree_dict, specifiers):
+    identifier, specifier = specifiers[0]
+
+    if specifier not in tree_dict:
+        tree_dict[specifier] = {
+            'identifier': identifier,
+            'specifier': specifier,
+            'items': {}
+        }
+
+    if len(specifiers) > 1:
+        build_tree_dict(tree_dict[specifier]['items'], specifiers[1:])
+
+
+def build_tree_list(tree_dict):
+    tree_list = []
+    for specifier, item in tree_dict.items():
+        tree_list.append({
+            'identifier': item.get('identifier'),
+            'specifier': item.get('specifier'),
+            'items': build_tree_list(item.get('items'))
+        })
+
+    return tree_list
 
 
 def update_words_view(session):

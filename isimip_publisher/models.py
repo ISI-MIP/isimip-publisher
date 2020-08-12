@@ -3,7 +3,6 @@ import mimetypes
 
 import jsonschema
 
-from .utils import order_dict
 from .utils.checksum import (get_checksum, get_checksum_type,
                              get_checksums_checksum)
 from .utils.config import (load_pattern, load_schema, parse_datacite,
@@ -128,7 +127,7 @@ class File(object):
         }
         attributes.update(self.attributes)
 
-        write_file_json(self.abspath, order_dict(attributes))
+        write_file_json(self.abspath, attributes)
 
     def write_thumbnail(self, mock=False):
         write_thumbnail(self.abspath, mock=False)

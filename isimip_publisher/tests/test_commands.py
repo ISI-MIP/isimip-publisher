@@ -153,6 +153,16 @@ def test_match_public(setup, script_runner):
     assert not response.stderr
 
 
+def test_update_index(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'update_index')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
 def test_check(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',

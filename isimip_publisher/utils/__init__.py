@@ -1,6 +1,5 @@
 import logging
 import os
-from collections import OrderedDict
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -19,10 +18,6 @@ def setup_logging():
         logging.basicConfig(level=level, format='[%(asctime)s] %(levelname)s %(name)s: %(message)s', filename=filename)
     else:
         logging.basicConfig(level=level, format='[%(asctime)s] %(levelname)s %(name)s: %(message)s')
-
-
-def order_dict(unsorted):
-    return OrderedDict([(key, unsorted[key]) for key in sorted(unsorted)])
 
 
 def get_subparser_title(module):

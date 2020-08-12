@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .utils.database import (init_database_session, insert_resource,
                              retrieve_datasets, update_attributes_view)
 from .utils.database import update_resource as update_db_resource
-from .utils.database import update_words_view
+from .utils.database import update_tree, update_words_view
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.patterns import match_datasets
 
@@ -78,8 +78,10 @@ def ingest_datasets(store):
 
         session.commit()
 
+    update_tree(session)
     update_words_view(session)
     update_attributes_view(session)
+
     session.commit()
 
 
@@ -211,6 +213,16 @@ def write_thumbnails(store):
         for file in dataset.files:
             file.validate(store.schema)
             file.write_thumbnail(mock=store.mock)
+
+
+def update_index(store):
+    session = init_database_session()
+
+    update_tree(session)
+    update_words_view(session)
+    update_attributes_view(session)
+
+    session.commit()
 
 
 def update_resource(store):
