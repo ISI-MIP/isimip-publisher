@@ -22,7 +22,7 @@ def match_datasets(pattern, base_path, files):
             dataset_dict[dataset_path] = Dataset(
                 name=dataset_name,
                 path=dataset_path,
-                specifiers=file_specifiers
+                specifiers=dataset_specifiers
             )
 
         dataset_dict[dataset_path].files.append(File(
@@ -30,7 +30,7 @@ def match_datasets(pattern, base_path, files):
             name=file_name,
             path=file_path,
             abspath=file_abspath,
-            specifiers=dataset_specifiers
+            specifiers=file_specifiers
         ))
 
     # sort datasets and files and return
