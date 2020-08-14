@@ -55,7 +55,7 @@ class Dataset(object):
     @property
     def json(self):
         return {
-            'specifiers': self.specifiers
+            'specifiers': dict(self.specifiers)
         }
 
     def validate(self, schema):
@@ -109,7 +109,7 @@ class File(object):
     @property
     def json(self):
         return {
-            'specifiers': self.specifiers
+            'specifiers': dict(self.specifiers)
         }
 
     def validate(self, schema):
