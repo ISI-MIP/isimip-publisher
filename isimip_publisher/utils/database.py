@@ -13,10 +13,6 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-def get_specifiers(attributes):
-    return [[key, value] for key, value in attributes.items() if isinstance(value, str)]
-
-
 def get_search_vector(attributes):
     values = [str(value) for value in attributes.values()]
     search_string = ' '.join(values)
@@ -118,7 +114,7 @@ def init_database_session():
     return session
 
 
-def insert_dataset(session, version, name, path, checksum, checksum_type, attributes):
+def insert_dataset(session, version, name, path, checksum, checksum_type, specifiers, attributes):
     logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
@@ -130,9 +126,9 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, attrib
     if dataset:
         if dataset.checksum == checksum:
             # if the dataset already exists, update its specifiers or attributes
-            if dataset.attributes != attributes:
+            if dataset.specifiers != specifiers or dataset.attributes != attributes:
+                dataset.specifiers = specifiers
                 dataset.attributes = attributes
-                dataset.specifiers = get_specifiers(attributes)
                 dataset.search_vector = get_search_vector(attributes)
                 logger.debug('update dataset %s', path)
             else:
@@ -151,7 +147,7 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, attrib
             checksum=checksum,
             checksum_type=checksum_type,
             attributes=attributes,
-            specifiers=get_specifiers(attributes),
+            specifiers=specifiers,
             search_vector=get_search_vector(attributes),
             public=False
         )
@@ -215,7 +211,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, attributes):
+def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, specifiers, attributes):
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -236,9 +232,9 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
     if file:
         if file.checksum == checksum:
             # the file itself has not changed, update the specifiers or attributes
-            if file.attributes != attributes:
+            if file.specifiers != specifiers or file.attributes != attributes:
+                file.specifiers = specifiers
                 file.attributes = attributes
-                file.specifiers = get_specifiers(attributes)
                 file.search_vector = get_search_vector(attributes)
                 logger.debug('update file %s', path)
             else:
@@ -257,7 +253,7 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,
             attributes=attributes,
-            specifiers=get_specifiers(attributes),
+            specifiers=specifiers,
             dataset=dataset,
             search_vector=get_search_vector(attributes)
         )

@@ -36,11 +36,13 @@ class Store(object):
 
 class Dataset(object):
 
-    def __init__(self, name=None, path=None, attributes=None):
+    def __init__(self, name=None, path=None, specifiers=None):
         self.name = name
         self.path = path
-        self.attributes = attributes
-
+        self.specifiers = list(specifiers.items())
+        self.attributes = {
+            'specifiers': specifiers
+        }
         self.files = []
         self.checksum_type = get_checksum_type()
         self.clean = False
@@ -72,7 +74,7 @@ class Dataset(object):
 
     def insert(self, session, version):
         insert_dataset(session, version, self.name, self.path,
-                       self.checksum, self.checksum_type, self.attributes)
+                       self.checksum, self.checksum_type, self.specifiers, self.attributes)
 
     def publish(self, session, version):
         publish_dataset(session, version, self.path)
@@ -83,13 +85,15 @@ class Dataset(object):
 
 class File(object):
 
-    def __init__(self, dataset=None, name=None, path=None, abspath=None, attributes=None):
+    def __init__(self, dataset=None, name=None, path=None, abspath=None, specifiers=None):
         self.dataset = dataset
         self.name = name
         self.path = path
         self.abspath = abspath
-        self.attributes = attributes
-
+        self.specifiers = list(specifiers.items())
+        self.attributes = {
+            'specifiers': specifiers
+        }
         self.mime_type = str(mimetypes.guess_type(str(self.abspath))[0])
         self.checksum_type = get_checksum_type()
         self.clean = False
@@ -134,4 +138,4 @@ class File(object):
 
     def insert(self, session, version):
         insert_file(session, version, self.dataset.path, self.name, self.path,
-                    self.mime_type, self.checksum, self.checksum_type, self.attributes)
+                    self.mime_type, self.checksum, self.checksum_type, self.specifiers, self.attributes)

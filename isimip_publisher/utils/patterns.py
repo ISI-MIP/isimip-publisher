@@ -15,14 +15,14 @@ def match_datasets(pattern, base_path, files):
 
         logger.info('match_datasets %s', file_abspath)
 
-        file_path, file_name, file_attributes = match_file(pattern, file_abspath)
-        dataset_path, dataset_name, dataset_attributes = match_dataset(pattern, file_abspath)
+        file_path, file_name, file_specifiers = match_file(pattern, file_abspath)
+        dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
 
         if dataset_path not in dataset_dict:
             dataset_dict[dataset_path] = Dataset(
                 name=dataset_name,
                 path=dataset_path,
-                attributes=file_attributes
+                specifiers=file_specifiers
             )
 
         dataset_dict[dataset_path].files.append(File(
@@ -30,7 +30,7 @@ def match_datasets(pattern, base_path, files):
             name=file_name,
             path=file_path,
             abspath=file_abspath,
-            attributes=dataset_attributes
+            specifiers=dataset_specifiers
         ))
 
     # sort datasets and files and return
@@ -54,23 +54,23 @@ def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
     filename_pattern = pattern[filename_pattern_key]
 
     # match the dirname and the filename
-    dirname_match, dirname_attributes = match_string(dirname_pattern, str(file_abspath.parent))
-    filename_match, filename_attributes = match_string(filename_pattern, str(file_abspath.name))
+    dirname_match, dirname_specifiers = match_string(dirname_pattern, str(file_abspath.parent))
+    filename_match, filename_specifiers = match_string(filename_pattern, str(file_abspath.name))
 
     path = Path(dirname_match) / filename_match
     name = filename_match
 
-    # assert that any value in dirname_attributes at least starts with
-    # its corresponding value (same key) in filename_attributes
+    # assert that any value in dirname_specifiers at least starts with
+    # its corresponding value (same key) in filename_specifiers
     # e.g. 'ewe' and 'ewe_north-sea'
-    for key, value in filename_attributes.items():
-        if key in dirname_attributes:
-            f, d = filename_attributes[key], dirname_attributes[key]
+    for key, value in filename_specifiers.items():
+        if key in dirname_specifiers:
+            f, d = filename_specifiers[key], dirname_specifiers[key]
             assert d.lower().startswith(f.lower()), (f, d)
 
-    dirname_attributes.update(filename_attributes)
+    dirname_specifiers.update(filename_specifiers)
 
-    return path, name, dirname_attributes
+    return path, name, dirname_specifiers
 
 
 def match_string(pattern, string):
@@ -81,12 +81,12 @@ def match_string(pattern, string):
     match = pattern.search(string)
     assert match is not None, 'No match for %s' % string
 
-    attributes = OrderedDict()
+    specifiers = OrderedDict()
     for key, value in match.groupdict().items():
         if value is not None:
             if value.isdigit():
-                attributes[key] = int(value)
+                specifiers[key] = int(value)
             else:
-                attributes[key] = value
+                specifiers[key] = value
 
-    return match.group(0), attributes
+    return match.group(0), specifiers
