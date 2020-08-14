@@ -39,10 +39,7 @@ class Dataset(object):
     def __init__(self, name=None, path=None, specifiers=None):
         self.name = name
         self.path = path
-        self.specifiers = list(specifiers.items())
-        self.attributes = {
-            'specifiers': specifiers
-        }
+        self.specifiers = specifiers
         self.files = []
         self.checksum_type = get_checksum_type()
         self.clean = False
@@ -55,16 +52,22 @@ class Dataset(object):
             self._checksum = get_checksums_checksum([file.checksum for file in self.files])
         return self._checksum
 
+    @property
+    def json(self):
+        return {
+            'specifiers': self.specifiers
+        }
+
     def validate(self, schema):
         # validate if self.clean is not true yet
         if self.clean:
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.attributes)
+                jsonschema.validate(schema=schema, instance=self.json)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('attributes = %s', self.attributes)
+                logger.error('instance = %s', self.json)
                 raise e
 
     def check(self, db_dataset):
@@ -74,7 +77,7 @@ class Dataset(object):
 
     def insert(self, session, version):
         insert_dataset(session, version, self.name, self.path,
-                       self.checksum, self.checksum_type, self.specifiers, self.attributes)
+                       self.checksum, self.checksum_type, self.specifiers)
 
     def publish(self, session, version):
         publish_dataset(session, version, self.path)
@@ -90,10 +93,7 @@ class File(object):
         self.name = name
         self.path = path
         self.abspath = abspath
-        self.specifiers = list(specifiers.items())
-        self.attributes = {
-            'specifiers': specifiers
-        }
+        self.specifiers = specifiers
         self.mime_type = str(mimetypes.guess_type(str(self.abspath))[0])
         self.checksum_type = get_checksum_type()
         self.clean = False
@@ -106,16 +106,22 @@ class File(object):
             self._checksum = get_checksum(self.abspath)
         return self._checksum
 
+    @property
+    def json(self):
+        return {
+            'specifiers': self.specifiers
+        }
+
     def validate(self, schema):
         # validate if self.clean is not true yet
         if self.clean:
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.attributes)
+                jsonschema.validate(schema=schema, instance=self.json)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('attributes = %s', self.attributes)
+                logger.error('instance = %s', self.json)
                 raise e
 
     def check(self, db_file):
@@ -124,18 +130,20 @@ class File(object):
         assert self.checksum == db_file.checksum, (self.checksum, db_file.checksum)
 
     def write_json(self):
-        attributes = {
-            'path': str(self.path),
-            'checksum':  self.checksum,
-            'checksum_type':  self.checksum_type
+        data = {
+            'file': {
+                'path': str(self.path),
+                'checksum':  self.checksum,
+                'checksum_type':  self.checksum_type
+            }
         }
-        attributes.update(self.attributes)
+        data.update(self.json)
 
-        write_file_json(self.abspath, attributes)
+        write_file_json(self.abspath, data)
 
     def write_thumbnail(self, mock=False):
         write_thumbnail(self.abspath, mock=False)
 
     def insert(self, session, version):
         insert_file(session, version, self.dataset.path, self.name, self.path,
-                    self.mime_type, self.checksum, self.checksum_type, self.specifiers, self.attributes)
+                    self.mime_type, self.checksum, self.checksum_type, self.specifiers)

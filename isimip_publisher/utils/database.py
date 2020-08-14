@@ -4,7 +4,7 @@ import uuid
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
                         Text, create_engine, func, inspect)
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-def get_search_vector(attributes):
-    values = [str(value) for value in attributes.values()]
+def get_search_vector(specifiers):
+    values = [str(value) for value in specifiers.values()]
     search_string = ' '.join(values)
     return func.setweight(func.to_tsvector(search_string), 'A')
 
@@ -38,8 +38,8 @@ class Dataset(Base):
     version = Column(String(8), nullable=False, index=True)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
-    attributes = Column(JSONB, nullable=False)
     specifiers = Column(JSONB, nullable=False)
+    identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
 
@@ -65,8 +65,8 @@ class File(Base):
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     mime_type = Column(Text, nullable=False)
-    attributes = Column(JSONB, nullable=False)
     specifiers = Column(JSONB, nullable=False)
+    identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
 
     dataset = relationship('Dataset', back_populates='files')
@@ -114,7 +114,7 @@ def init_database_session():
     return session
 
 
-def insert_dataset(session, version, name, path, checksum, checksum_type, specifiers, attributes):
+def insert_dataset(session, version, name, path, checksum, checksum_type, specifiers):
     logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
@@ -125,11 +125,11 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
 
     if dataset:
         if dataset.checksum == checksum:
-            # if the dataset already exists, update its specifiers or attributes
-            if dataset.specifiers != specifiers or dataset.attributes != attributes:
+            # if the dataset already exists, update its specifiers
+            if dataset.specifiers != specifiers:
                 dataset.specifiers = specifiers
-                dataset.attributes = attributes
-                dataset.search_vector = get_search_vector(attributes)
+                dataset.identifiers = list(specifiers.keys())
+                dataset.search_vector = get_search_vector(specifiers)
                 logger.debug('update dataset %s', path)
             else:
                 logger.debug('skip dataset %s', path)
@@ -146,9 +146,9 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
             version=version,
             checksum=checksum,
             checksum_type=checksum_type,
-            attributes=attributes,
             specifiers=specifiers,
-            search_vector=get_search_vector(attributes),
+            identifiers=list(specifiers.keys()),
+            search_vector=get_search_vector(specifiers),
             public=False
         )
         session.add(dataset)
@@ -211,7 +211,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, specifiers, attributes):
+def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, specifiers):
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -231,11 +231,11 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
 
     if file:
         if file.checksum == checksum:
-            # the file itself has not changed, update the specifiers or attributes
-            if file.specifiers != specifiers or file.attributes != attributes:
+            # the file itself has not changed, update the specifiers
+            if file.specifiers != specifiers:
                 file.specifiers = specifiers
-                file.attributes = attributes
-                file.search_vector = get_search_vector(attributes)
+                file.identifiers = list(specifiers.keys())
+                file.search_vector = get_search_vector(specifiers)
                 logger.debug('update file %s', path)
             else:
                 logger.debug('skip file %s', path)
@@ -252,10 +252,10 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
             checksum=checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,
-            attributes=attributes,
             specifiers=specifiers,
-            dataset=dataset,
-            search_vector=get_search_vector(attributes)
+            identifiers=list(specifiers.keys()),
+            search_vector=get_search_vector(specifiers),
+            dataset=dataset
         )
         session.add(file)
 
@@ -326,7 +326,8 @@ def update_tree(session):
     # step 1: recursively build tree_dict
     tree_dict = {}
     for dataset in datasets:
-        build_tree_dict(tree_dict, dataset.specifiers)
+        specifiers = [(identifier, dataset.specifiers[identifier]) for identifier in dataset.identifiers]
+        build_tree_dict(tree_dict, specifiers)
 
     # step 2: recursively build tree_list
     tree_list = build_tree_list(tree_dict)
@@ -400,7 +401,7 @@ def update_attributes_view(session):
         logger.debug('update attributes view')
     else:
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(attributes) AS key FROM public.datasets
+            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(specifiers) AS key FROM public.datasets
         ''')
         session.connection().execute('''
             CREATE INDEX ON attributes(key)
