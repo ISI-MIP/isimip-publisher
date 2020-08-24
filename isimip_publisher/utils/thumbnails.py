@@ -6,6 +6,8 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 
+from ..config import settings
+
 logger = logging.getLogger(__name__)
 
 WIDTH = 800
@@ -14,7 +16,7 @@ DPI = 96
 LEVELS = 10
 
 
-def write_thumbnail(abspath, output_abspath=None, mock=False):
+def write_thumbnail(abspath, output_abspath=None):
     if not output_abspath:
         output_abspath = abspath.with_suffix('.png')
 
@@ -27,7 +29,7 @@ def write_thumbnail(abspath, output_abspath=None, mock=False):
                 if len(variable.dimensions) > 1:
                     break
 
-            if not mock:
+            if not settings.MOCK:
                 try:
                     lat = dataset.variables['lat'][:]
                     lon = dataset.variables['lon'][:]

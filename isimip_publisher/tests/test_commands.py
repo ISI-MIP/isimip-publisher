@@ -1,15 +1,16 @@
+import os
 import shutil
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 
-from isimip_publisher.utils import setup_env
 from isimip_publisher.utils.database import Dataset, init_database_session
 
 
 @pytest.fixture(scope='session')
 def setup():
-    setup_env()
+    load_dotenv(Path().cwd() / '.env')
 
     base_dir = Path(__file__).parent.parent.parent
     test_dir = base_dir / 'testing'
@@ -18,7 +19,7 @@ def setup():
     shutil.rmtree(test_dir / 'public', ignore_errors=True)
     shutil.rmtree(test_dir / 'archive', ignore_errors=True)
 
-    session = init_database_session()
+    session = init_database_session(os.getenv('DATABASE'))
     for dataset in session.query(Dataset):
         for file in dataset.files:
             session.delete(file)

@@ -21,7 +21,7 @@ env:
   - DATABASE=postgresql+psycopg2://@/test_isimip_metadata
   - PATTERN_LOCATIONS=${PWD}/testing/pattern/
   - SCHEMA_LOCATIONS=${PWD}/testing/schema/
-  - DATASETS_BASE_URL=http://localhost:8000/datasets/
+  - ISIMIP_DATA_URL=http://localhost:8000/
   jobs:
   - MOCK=True
   - MOCK=False

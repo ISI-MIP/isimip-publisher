@@ -1,5 +1,4 @@
 import logging
-import os
 import uuid
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
@@ -104,8 +103,8 @@ class Tree(Base):
         return str(self.id)
 
 
-def init_database_session():
-    engine = create_engine(os.getenv('DATABASE'))
+def init_database_session(database_settings):
+    engine = create_engine(database_settings)
 
     Base.metadata.create_all(engine)
 

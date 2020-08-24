@@ -1,14 +1,17 @@
+import json
 import logging
 import mimetypes
+from datetime import datetime
+from pathlib import Path
 
 import jsonschema
 
+from .config import settings
 from .utils.checksum import (get_checksum, get_checksum_type,
                              get_checksums_checksum)
-from .utils.config import (load_pattern, load_schema, parse_datacite,
-                           parse_env, parse_filelist, parse_version)
 from .utils.database import (insert_dataset, insert_file, publish_dataset,
                              unpublish_dataset)
+from .utils.fetch import fetch_pattern, fetch_schema
 from .utils.json import write_file_json
 from .utils.thumbnails import write_thumbnail
 
@@ -17,21 +20,98 @@ logger = logging.getLogger(__name__)
 
 class Store(object):
 
-    def __init__(self, args):
-        self.path = args.path
-
-        for attr, value in parse_env().items():
-            setattr(self, attr, value)
-
-        self.version = parse_version(args.version)
-        self.include = parse_filelist(args.include_file)
-        self.exclude = parse_filelist(args.exclude_file)
-        self.datacite = parse_datacite(args.datacite_file)
-
-        self.pattern = load_pattern(self.path)
-        self.schema = load_schema(self.path)
-
+    def __init__(self, path):
+        self.path = path
         self.datasets = []
+
+    @property
+    def remote_dest(self):
+        assert settings.REMOTE_DEST is not None, 'REMOTE_DEST is not set'
+        return settings.REMOTE_DEST
+
+    @property
+    def remote_path(self):
+        assert settings.REMOTE_DIR is not None, 'REMOTE_DIR is not set'
+        return Path(settings.REMOTE_DIR).expanduser()
+
+    @property
+    def local_path(self):
+        assert settings.LOCAL_DIR is not None, 'LOCAL_DIR is not set'
+        return Path(settings.LOCAL_DIR).expanduser()
+
+    @property
+    def public_path(self):
+        assert settings.PUBLIC_DIR is not None, 'PUBLIC_DIR is not set'
+        return Path(settings.PUBLIC_DIR).expanduser()
+
+    @property
+    def archive_path(self):
+        assert settings.ARCHIVE_DIR is not None, 'ARCHIVE_DIR is not set'
+        return Path(settings.ARCHIVE_DIR).expanduser()
+
+    @property
+    def database(self):
+        assert settings.DATABASE is not None, 'DATABASE is not set'
+        return settings.DATABASE
+
+    @property
+    def isimip_data_url(self):
+        assert settings.ISIMIP_DATA_URL is not None, 'ISIMIP_DATA_URL is not set'
+        return settings.ISIMIP_DATA_URL.rstrip('/')
+
+    @property
+    def version(self):
+        if not hasattr(self, '_version'):
+            try:
+                datetime.strptime(settings.VERSION, '%Y%m%d')
+                self._version = settings.VERSION
+            except ValueError:
+                raise AssertionError("Incorrect version format, should be YYYYMMDD")
+
+        return self._version
+
+    @property
+    def exclude(self):
+        if not hasattr(self, '_exclude'):
+            self._exclude = self.parse_filelist(settings.EXCLUDE_FILE)
+        return self._exclude
+
+    @property
+    def include(self):
+        if not hasattr(self, '_include'):
+            self._include = self.parse_filelist(settings.INCLUDE_FILE)
+        return self._include
+
+    @property
+    def datacite(self):
+        if not hasattr(self, '_datacite'):
+            assert settings.DATACITE_FILE is not None, 'DATACITE_FILE is not set'
+
+            with open(settings.DATACITE_FILE) as f:
+                self._datacite = json.loads(f.read())
+
+        return self._datacite
+
+    @property
+    def pattern(self):
+        if not hasattr(self, '_pattern'):
+            self._pattern = fetch_pattern(settings.PATTERN_LOCATIONS.split(), self.path)
+        return self._pattern
+
+    @property
+    def schema(self):
+        if not hasattr(self, '_schema'):
+            self._schema = fetch_schema(settings.SCHEMA_LOCATIONS.split(), self.path)
+        return self._schema
+
+    def parse_filelist(self, filelist_file):
+        if filelist_file:
+            with open(filelist_file) as f:
+                filelist = f.read().splitlines()
+        else:
+            filelist = None
+
+        return filelist
 
 
 class Dataset(object):
@@ -57,6 +137,11 @@ class Dataset(object):
         return {
             'specifiers': dict(self.specifiers)
         }
+
+    @property
+    def isimip_data_url(self):
+        assert settings.ISIMIP_DATA_URL is not None, 'ISIMIP_DATA_URL is not set'
+        return settings.ISIMIP_DATA_URL.strip('/') + '/datasets/' + self.id
 
     def validate(self, schema):
         # validate if self.clean is not true yet
@@ -141,8 +226,8 @@ class File(object):
 
         write_file_json(self.abspath, data)
 
-    def write_thumbnail(self, mock=False):
-        write_thumbnail(self.abspath, mock=False)
+    def write_thumbnail(self):
+        write_thumbnail(self.abspath)
 
     def insert(self, session, version):
         insert_file(session, version, self.dataset.path, self.name, self.path,

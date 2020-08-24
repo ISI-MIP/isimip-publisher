@@ -17,7 +17,7 @@ def archive_datasets(store):
                                   include=store.include, exclude=store.exclude)
         store.datasets = match_datasets(store.pattern, store.public_path, public_files)
 
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     for dataset in tqdm(store.datasets, desc='archive_datasets'.ljust(18)):
         dataset.validate(store.schema)
@@ -42,7 +42,7 @@ def check(store):
                               include=store.include, exclude=store.exclude)
     store.datasets = match_datasets(store.pattern, store.public_path, public_files)
 
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     db_datasets = retrieve_datasets(session, store.path, public=True)
 
@@ -66,7 +66,7 @@ def ingest_datasets(store):
                                  include=store.include, exclude=store.exclude)
         store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     for dataset in tqdm(store.datasets, desc='ingest_datasets'.ljust(18)):
         dataset.validate(store.schema)
@@ -86,14 +86,14 @@ def ingest_datasets(store):
 
 
 def ingest_resource(store):
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     datasets = retrieve_datasets(session, store.path, public=True)
 
     for dataset in datasets:
         store.datacite['relatedIdentifiers'].append({
             'relationType': 'HasPart',
-            'relatedIdentifier': store.datasets_base_url + dataset.id,
+            'relatedIdentifier': store.isimip_data_url + '/datasets/' + dataset.id,
             'relatedIdentifierType': 'URL'
         })
 
@@ -106,8 +106,7 @@ def fetch_files(store):
                               remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(18))
-    for n in copy_files(store.remote_dest, store.remote_path, store.local_path, store.path,
-                        remote_files, mock=store.mock):
+    for n in copy_files(store.remote_dest, store.remote_path, store.local_path, store.path, remote_files):
         t.update(n)
 
 
@@ -174,7 +173,7 @@ def publish_datasets(store):
                                  include=store.include, exclude=store.exclude)
         store.datasets = match_datasets(store.pattern, store.local_path, local_files)
 
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
         dataset.validate(store.schema)
@@ -212,11 +211,11 @@ def write_thumbnails(store):
     for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
         for file in dataset.files:
             file.validate(store.schema)
-            file.write_thumbnail(mock=store.mock)
+            file.write_thumbnail()
 
 
 def update_index(store):
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     update_tree(session)
     update_words_view(session)
@@ -226,7 +225,7 @@ def update_index(store):
 
 
 def update_resource(store):
-    session = init_database_session()
+    session = init_database_session(store.database)
 
     update_db_resource(session, store.path, store.version, store.datacite)
 

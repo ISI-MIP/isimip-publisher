@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from ..config import settings
 from .checksum import get_checksum
 from .netcdf import update_netcdf_global_attributes
 
@@ -51,11 +52,11 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
     return files
 
 
-def copy_files(remote_dest, remote_path, local_path, path, files, mock=False):
+def copy_files(remote_dest, remote_path, local_path, path, files):
     # create the local_dir
     (local_path / path).mkdir(parents=True, exist_ok=True)
 
-    if mock:
+    if settings.MOCK:
         for file in files:
             mock_path = local_path / file
             mock_path.parent.mkdir(parents=True, exist_ok=True)
