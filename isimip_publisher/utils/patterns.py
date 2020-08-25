@@ -18,6 +18,9 @@ def match_datasets(pattern, base_path, files):
         file_path, file_name, file_specifiers = match_file(pattern, file_abspath)
         dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
 
+        logger.debug(dataset_specifiers)
+        logger.debug(file_specifiers)
+
         if dataset_path not in dataset_dict:
             dataset_dict[dataset_path] = Dataset(
                 name=dataset_name,
