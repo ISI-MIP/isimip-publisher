@@ -34,7 +34,10 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
 
     logger.debug('args = %s', args)
 
-    output = subprocess.check_output(args)
+    try:
+        output = subprocess.check_output(args)
+    except subprocess.CalledProcessError:
+        output = ''
 
     files = []
     for line in output.splitlines():
