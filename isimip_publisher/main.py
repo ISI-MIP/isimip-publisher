@@ -12,14 +12,14 @@ from .models import Store
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', help='path of the files to publish')
-    parser.add_argument('-c', '--config-file', dest='config_file',
+
+    parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
 
     parser.add_argument('-i', '--include', dest='include_file',
                         help='Path to a file containing a list of files to include')
     parser.add_argument('-e', '--exclude', dest='exclude_file',
                         help='Path to a file containing a list of files to exclude')
-
     parser.add_argument('-d', '--datacite-file', dest='datacite_file',
                         help='Path to a file containing DateCite metadata (only for ingest_resource, update_resource)')
     parser.add_argument('-v', '--version', dest='version',
