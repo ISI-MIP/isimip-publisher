@@ -22,8 +22,7 @@ class Settings(object):
     DEFAULTS = {
         'LOG_LEVEL': 'WARN',
         'VERSION': date.today().strftime('%Y%m%d'),
-        'PATTERN_LOCATIONS': 'https://protocol.isimip.org/pattern/',
-        'SCHEMA_LOCATIONS': 'https://protocol.isimip.org/pattern/',
+        'PROTOCOL_LOCATIONS': 'https://protocol.isimip.org https://protocol2.isimip.org',
         'ISIMIP_DATA_URL': 'https://data.isimip.org/'
     }
 

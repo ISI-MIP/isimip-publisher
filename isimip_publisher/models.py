@@ -95,13 +95,13 @@ class Store(object):
     @property
     def pattern(self):
         if not hasattr(self, '_pattern'):
-            self._pattern = fetch_pattern(settings.PATTERN_LOCATIONS.split(), self.path)
+            self._pattern = fetch_pattern(settings.PROTOCOL_LOCATIONS.split(), self.path)
         return self._pattern
 
     @property
     def schema(self):
         if not hasattr(self, '_schema'):
-            self._schema = fetch_schema(settings.SCHEMA_LOCATIONS.split(), self.path)
+            self._schema = fetch_schema(settings.PROTOCOL_LOCATIONS.split(), self.path)
         return self._schema
 
     def parse_filelist(self, filelist_file):

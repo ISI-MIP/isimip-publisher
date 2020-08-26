@@ -19,8 +19,7 @@ env:
   - PUBLIC_DIR=${PWD}/testing/public/
   - ARCHIVE_DIR=${PWD}/testing/archive/
   - DATABASE=postgresql+psycopg2://@/test_isimip_metadata
-  - PATTERN_LOCATIONS=${PWD}/testing/pattern/
-  - SCHEMA_LOCATIONS=${PWD}/testing/schema/
+  - PROTOCOL_LOCATIONS=${PWD}/testing/protocol/
   - ISIMIP_DATA_URL=http://localhost:8000/
   jobs:
   - MOCK=True

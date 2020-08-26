@@ -10,11 +10,11 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-def fetch_pattern(pattern_locations, path):
+def fetch_pattern(bases, path):
     path_components = path.strip(os.sep).split(os.sep)
     for i in range(len(path_components), 0, -1):
-        pattern_path = Path(os.sep.join(path_components[:i+1])).with_suffix('.json')
-        pattern_json = fetch_json(pattern_locations, pattern_path)
+        pattern_path = Path('pattern').joinpath(os.sep.join(path_components[:i+1])).with_suffix('.json')
+        pattern_json = fetch_json(bases, pattern_path)
 
         if pattern_json:
             logger.info('pattern_path = %s', pattern_path)
@@ -37,11 +37,11 @@ def fetch_pattern(pattern_locations, path):
             return pattern
 
 
-def fetch_schema(schema_locations, path):
+def fetch_schema(bases, path):
     path_components = path.strip(os.sep).split(os.sep)
     for i in range(len(path_components), 0, -1):
-        schema_path = Path(os.sep.join(path_components[:i+1])).with_suffix('.json')
-        schema_json = fetch_json(schema_locations, schema_path)
+        schema_path = Path('schema').joinpath(os.sep.join(path_components[:i+1])).with_suffix('.json')
+        schema_json = fetch_json(bases, schema_path)
 
         if schema_json:
             logger.info('schema_path = %s', schema_path)
@@ -52,7 +52,7 @@ def fetch_schema(schema_locations, path):
 def fetch_json(bases, path):
     for base in bases:
         if urlparse(base).scheme:
-            location = base.rstrip('/') + path.as_posix()
+            location = base.rstrip('/') + '/' + path.as_posix()
             logger.debug('json_url = %s', location)
             response = requests.get(location)
 
