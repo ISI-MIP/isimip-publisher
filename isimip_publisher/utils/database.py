@@ -1,5 +1,5 @@
 import logging
-import uuid
+from uuid import uuid4
 
 from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
                         Text, create_engine, func, inspect)
@@ -31,7 +31,7 @@ class Dataset(Base):
         Index('datasets_search_vector_idx', 'search_vector', postgresql_using='gin'),
     )
 
-    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
@@ -56,7 +56,7 @@ class File(Base):
         Index('files_search_vector_idx', 'search_vector', postgresql_using='gin'),
     )
 
-    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
@@ -78,7 +78,7 @@ class Resource(Base):
 
     __tablename__ = 'resources'
 
-    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
 
@@ -95,7 +95,7 @@ class Tree(Base):
 
     __tablename__ = 'trees'
 
-    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid.uuid4().hex)
+    id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     tree_dict = Column(JSONB, nullable=False)
     tree_list = Column(JSONB, nullable=False)
 
@@ -210,7 +210,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, name, path, mime_type, checksum, checksum_type, specifiers):
+def insert_file(session, version, dataset_path, uuid, name, path, mime_type, checksum, checksum_type, specifiers):
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -229,6 +229,10 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
     ).one_or_none()
 
     if file:
+        if uuid is not None and file.id != uuid:
+            # the file is already stored with a different id
+            raise RuntimeError('%s is already stored with the same version but a different id' % path)
+
         if file.checksum == checksum:
             # the file itself has not changed, update the specifiers
             if file.specifiers != specifiers:
@@ -245,6 +249,7 @@ def insert_file(session, version, dataset_path, name, path, mime_type, checksum,
         # insert a new row for this file
         logger.debug('insert file %s', path)
         file = File(
+            id=uuid,
             name=name,
             version=version,
             path=str(path),

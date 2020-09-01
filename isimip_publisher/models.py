@@ -9,11 +9,8 @@ import jsonschema
 from .config import settings
 from .utils.checksum import (get_checksum, get_checksum_type,
                              get_checksums_checksum)
-from .utils.database import (insert_dataset, insert_file, publish_dataset,
-                             unpublish_dataset)
 from .utils.fetch import fetch_pattern, fetch_schema
-from .utils.json import write_file_json
-from .utils.thumbnails import write_thumbnail
+from .utils.netcdf import get_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -132,43 +129,19 @@ class Dataset(object):
             self._checksum = get_checksums_checksum([file.checksum for file in self.files])
         return self._checksum
 
-    @property
-    def json(self):
-        return {
-            'specifiers': dict(self.specifiers)
-        }
-
-    @property
-    def isimip_data_url(self):
-        assert settings.ISIMIP_DATA_URL is not None, 'ISIMIP_DATA_URL is not set'
-        return settings.ISIMIP_DATA_URL.strip('/') + '/datasets/' + self.id
-
     def validate(self, schema):
         # validate if self.clean is not true yet
         if self.clean:
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.json)
+                jsonschema.validate(schema=schema, instance={
+                    'specifiers': dict(self.specifiers)
+                })
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
                 logger.error('instance = %s', self.json)
                 raise e
-
-    def check(self, db_dataset):
-        logger.info('path = %s, checksum = %s', self.path, self.checksum)
-        assert str(self.path) == db_dataset.path, (str(self.path), db_dataset.path)
-        assert self.checksum == db_dataset.checksum, (self.checksum, db_dataset.checksum)
-
-    def insert(self, session, version):
-        insert_dataset(session, version, self.name, self.path,
-                       self.checksum, self.checksum_type, self.specifiers)
-
-    def publish(self, session, version):
-        publish_dataset(session, version, self.path)
-
-    def unpublish(self, session):
-        return unpublish_dataset(session, self.path)
 
 
 class File(object):
@@ -183,7 +156,14 @@ class File(object):
         self.checksum_type = get_checksum_type()
         self.clean = False
 
+        self._uuid = None
         self._checksum = None
+
+    @property
+    def uuid(self):
+        if not self._uuid:
+            self._uuid = get_netcdf_global_attributes(self.abspath).get('isimip_id')
+        return self._uuid
 
     @property
     def checksum(self):
@@ -194,6 +174,10 @@ class File(object):
     @property
     def json(self):
         return {
+            'id': self._uuid,
+            'path': str(self.path),
+            'checksum':  self.checksum,
+            'checksum_type':  self.checksum_type,
             'specifiers': dict(self.specifiers)
         }
 
@@ -203,32 +187,10 @@ class File(object):
             return self.clean
         else:
             try:
-                jsonschema.validate(schema=schema, instance=self.json)
+                jsonschema.validate(schema=schema, instance={
+                    'specifiers': dict(self.specifiers)
+                })
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
                 logger.error('instance = %s', self.json)
                 raise e
-
-    def check(self, db_file):
-        logger.info('path = %s, checksum = %s', self.path, self.checksum)
-        assert str(self.path) == db_file.path, (str(self.path), db_file.path)
-        assert self.checksum == db_file.checksum, (self.checksum, db_file.checksum)
-
-    def write_json(self):
-        data = {
-            'file': {
-                'path': str(self.path),
-                'checksum':  self.checksum,
-                'checksum_type':  self.checksum_type
-            }
-        }
-        data.update(self.json)
-
-        write_file_json(self.abspath, data)
-
-    def write_thumbnail(self):
-        write_thumbnail(self.abspath)
-
-    def insert(self, session, version):
-        insert_file(session, version, self.dataset.path, self.name, self.path,
-                    self.mime_type, self.checksum, self.checksum_type, self.specifiers)

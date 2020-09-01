@@ -16,7 +16,7 @@ DPI = 96
 LEVELS = 10
 
 
-def write_thumbnail(abspath, output_abspath=None):
+def write_thumbnail_file(abspath, output_abspath=None):
     if not output_abspath:
         output_abspath = abspath.with_suffix('.png')
 
