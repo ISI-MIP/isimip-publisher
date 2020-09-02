@@ -171,26 +171,37 @@ def publish_datasets(store):
 
 
 def archive_datasets(store):
+    public_files = list_files(store.public_path, store.path, store.pattern,
+                              include=store.include, exclude=store.exclude)
+
     session = init_database_session(store.database)
     datasets = retrieve_datasets(session, store.path, public=True)
 
     for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-        dataset_version = unpublish_dataset(session, dataset.path)
+        # check if one of the files of this dataset is actually in public_files
+        dataset_in_public_files = False
+        for file in dataset.files:
+            if file.path in public_files:
+                dataset_in_public_files = True
+                break
 
-        if dataset_version:
-            archive_path = store.archive_path / dataset_version
+        if dataset_in_public_files:
+            dataset_version = unpublish_dataset(session, dataset.path)
 
-            for file in dataset.files:
-                files = []
-                file_abspath = store.public_path.joinpath(file.path)
-                if file_abspath.is_file():
-                    files.append(file_abspath)
-                if file_abspath.with_suffix('.json').is_file():
-                    files.append(file_abspath.with_suffix('.json'))
-                if file_abspath.with_suffix('.png').is_file():
-                    files.append(file_abspath.with_suffix('.png'))
+            if dataset_version:
+                archive_path = store.archive_path / dataset_version
 
-                move_files(store.public_path, archive_path, files)
+                for file in dataset.files:
+                    files = []
+                    file_abspath = store.public_path.joinpath(file.path)
+                    if file_abspath.is_file():
+                        files.append(file_abspath)
+                    if file_abspath.with_suffix('.json').is_file():
+                        files.append(file_abspath.with_suffix('.json'))
+                    if file_abspath.with_suffix('.png').is_file():
+                        files.append(file_abspath.with_suffix('.png'))
+
+                    move_files(store.public_path, archive_path, files)
 
         session.commit()
 

@@ -81,13 +81,6 @@ def main():
 
     if hasattr(args, 'func'):
         store = Store(args.path)
-        if store.pattern is None:
-            parser.error('no pattern could be found for path')
-        elif store.schema is None:
-            parser.error('no schema could be found for path')
-        elif (args.func in ['register_doi', 'update_doi']):
-            if store.datacite is None:
-                parser.error('no DateCite metadata file was provided')
 
         try:
             args.func(store)

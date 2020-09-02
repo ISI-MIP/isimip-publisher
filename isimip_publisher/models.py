@@ -92,13 +92,23 @@ class Store(object):
     @property
     def pattern(self):
         if not hasattr(self, '_pattern'):
+            assert settings.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
             self._pattern = fetch_pattern(settings.PROTOCOL_LOCATIONS.split(), self.path)
+
+            assert self._pattern is not None, 'No pattern found for {}'.format(self.path)
+
         return self._pattern
 
     @property
     def schema(self):
         if not hasattr(self, '_schema'):
+            assert settings.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
             self._schema = fetch_schema(settings.PROTOCOL_LOCATIONS.split(), self.path)
+
+            assert self._schema is not None, 'No schema found for {}'.format(self.path)
+
         return self._schema
 
     def parse_filelist(self, filelist_file):
