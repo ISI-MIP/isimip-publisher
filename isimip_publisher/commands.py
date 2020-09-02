@@ -130,7 +130,6 @@ def ingest_datasets(store):
 
         session.commit()
 
-    update_tree(session)
     update_words_view(session)
     update_attributes_view(session)
 
@@ -166,6 +165,10 @@ def publish_datasets(store):
 
         session.commit()
 
+    update_tree(session)
+
+    session.commit()
+
 
 def archive_datasets(store):
     session = init_database_session(store.database)
@@ -190,6 +193,10 @@ def archive_datasets(store):
                 move_files(store.public_path, archive_path, files)
 
         session.commit()
+
+    update_tree(session)
+
+    session.commit()
 
 
 def register_doi(store):
