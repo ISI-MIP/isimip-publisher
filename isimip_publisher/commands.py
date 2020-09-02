@@ -177,31 +177,29 @@ def archive_datasets(store):
     session = init_database_session(store.database)
     datasets = retrieve_datasets(session, store.path, public=True)
 
-    for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-        # check if one of the files of this dataset is actually in public_files
-        dataset_in_public_files = False
-        for file in dataset.files:
-            if file.path in public_files:
-                dataset_in_public_files = True
-                break
+    # remove datasets from db_datasets which have no files in public_files
+    db_datasets = []
+    for db_dataset in retrieve_datasets(session, store.path, public=True):
+        if any([file.path in public_files for file in db_dataset.files]):
+            db_datasets.append(db_dataset)
 
-        if dataset_in_public_files:
-            dataset_version = unpublish_dataset(session, dataset.path)
+    for db_dataset in tqdm(db_datasets, desc='archive_datasets'.ljust(18)):
+        dataset_version = unpublish_dataset(session, db_dataset.path)
 
-            if dataset_version:
-                archive_path = store.archive_path / dataset_version
+        if dataset_version:
+            archive_path = store.archive_path / dataset_version
 
-                for file in dataset.files:
-                    files = []
-                    file_abspath = store.public_path.joinpath(file.path)
-                    if file_abspath.is_file():
-                        files.append(file_abspath)
-                    if file_abspath.with_suffix('.json').is_file():
-                        files.append(file_abspath.with_suffix('.json'))
-                    if file_abspath.with_suffix('.png').is_file():
-                        files.append(file_abspath.with_suffix('.png'))
+            for file in db_dataset.files:
+                files = []
+                file_abspath = store.public_path.joinpath(file.path)
+                if file_abspath.is_file():
+                    files.append(file_abspath)
+                if file_abspath.with_suffix('.json').is_file():
+                    files.append(file_abspath.with_suffix('.json'))
+                if file_abspath.with_suffix('.png').is_file():
+                    files.append(file_abspath.with_suffix('.png'))
 
-                    move_files(store.public_path, archive_path, files)
+                move_files(store.public_path, archive_path, files)
 
         session.commit()
 
@@ -238,20 +236,25 @@ def update_doi(store):
 def check(store):
     public_files = list_files(store.public_path, store.path, store.pattern,
                               include=store.include, exclude=store.exclude)
-    store.datasets = match_datasets(store.pattern, store.public_path, public_files)
+    datasets = match_datasets(store.pattern, store.public_path, public_files)
 
-    for dataset in store.datasets:
+    for dataset in datasets:
         dataset.validate(store.schema)
         for file in dataset.files:
             file.validate(store.schema)
 
+
     session = init_database_session(store.database)
 
-    db_datasets = retrieve_datasets(session, store.path, public=True)
+    # remove datasets from db_datasets which have no files in public_files
+    db_datasets = []
+    for db_dataset in retrieve_datasets(session, store.path, public=True):
+        if any([file.path in public_files for file in db_dataset.files]):
+            db_datasets.append(db_dataset)
 
-    assert len(store.datasets) == len(db_datasets)
+    assert len(datasets) == len(db_datasets), (len(datasets), len(db_datasets))
 
-    for dataset, db_dataset in zip(store.datasets, db_datasets):
+    for dataset, db_dataset in zip(datasets, db_datasets):
         for file, db_file in zip(dataset.files, db_dataset.files):
             logger.info('path = %s, checksum = %s', file.path, file.checksum)
             assert str(file.path) == db_file.path, (str(file.path), db_file.path)
