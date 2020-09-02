@@ -26,34 +26,14 @@ Next, install `isimip-publisher` directly from GitHub using
 pip install git+https://github.com/ISI-MIP/isimip-publisher
 ```
 
-Create an `.env` file with the following (enviroment) variables:
+If you want to make changes to the source code, clone the repository and use `pip install -e` instead:
 
 ```
-# Log level and location of the log file
-LOG_LEVEL=ERROR
-LOG_FILE=/path/to/logfile
-
-# If MOCK is set to True no files are actually copied. Empty mock files are used instead.
-MOCK=False
-
-# Remote (ssh) destination, e.g. user@example.com, and path on the remote machine
-REMOTE_DEST=localhost
-REMOTE_DIR=/path/to/remote/
-
-# Local, public and archive path on the local machine
-LOCAL_DIR=/path/to/local/
-PUBLIC_DIR=/path/to/public/
-ARCHIVE_DIR=/path/to/public/
-
-# PostgreSQL database connection
-DATABASE=postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
-
-# Location of pattern and schema. Can be path or URL. Several location are seperated by spaces.
-PATTERN_LOCATIONS=https://protocol.isimip.org/pattern/
-SCHEMA_LOCATIONS=https://protocol.isimip.org/schema/
+git clone git@github.com:ISI-MIP/isimip-publisher
+pip install -e isimip-publisher
 ```
 
-A database user and a database has to be created and the `pg_trgm` needs to be activated:
+PostgreSQL has to be available and a database user and a database has to be created, and the `pg_trgm` extension needs to be activated:
 
 ```pgsql
 CREATE USER "isimip_metadata" WITH PASSWORD 'supersecretpassword';
@@ -64,6 +44,62 @@ CREATE EXTENSION pg_trgm;
 
 Usage
 -----
+
+The publisher has several options which can be inspected using the help option `-h, --help`:
+
+The application can then be used:
+
+```
+usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e EXCLUDE_FILE] [-d DATACITE_FILE] [-v VERSION]
+                        [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR] [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
+                        [--archive-dir ARCHIVE_DIR] [--database DATABASE] [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
+                        [--isimip-data-url ISIMIP_DATA_URL] [--log-level LOG_LEVEL] [--log-file LOG_FILE]
+                        path
+                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,write_thumbnails,ingest_datasets,publish_datasets,archive_datasets,register_doi,update_doi,check,clean,update_index,run}
+                        ...
+
+positional arguments:
+  path                  path of the files to publish
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config-file CONFIG_FILE
+                        File path of the config file
+  -i INCLUDE_FILE, --include INCLUDE_FILE
+                        Path to a file containing a list of files to include
+  -e EXCLUDE_FILE, --exclude EXCLUDE_FILE
+                        Path to a file containing a list of files to exclude
+  -d DATACITE_FILE, --datacite-file DATACITE_FILE
+                        Path to a file containing DateCite metadata (only for register_doi, update_doi)
+  -v VERSION, --version VERSION
+                        version date override [default: today]
+  --remote-dest REMOTE_DEST
+                        Remote destination to fetch files from, e.g. user@example.com
+  --remote-dir REMOTE_DIR
+                        Remote directory to fetch files from
+  --local-dir LOCAL_DIR
+                        Local work directory
+  --public-dir PUBLIC_DIR
+                        Public directory
+  --archive-dir ARCHIVE_DIR
+                        Archive directory
+  --database DATABASE   Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname
+  --mock MOCK           If set to True no files are actually copied. Empty mock files are used instead
+  --protocol-location PROTOCOL_LOCATIONS
+                        URL or file path to the protocol
+  --isimip-data-url ISIMIP_DATA_URL
+                        URL of the ISIMIP repository [default: https://data.isimip.org/]
+  --log-level LOG_LEVEL
+                        Log level (ERROR, WARN, INFO, or DEBUG)
+  --log-file LOG_FILE   Path to the log file
+
+subcommands:
+  valid subcommands
+
+  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,write_thumbnails,ingest_datasets,publish_datasets,archive_datasets,register_doi,update_doi,check,clean,update_index,run}
+```
+
+The different steps of the publication process are covered by subcommands, which can be invoced seperately.
 
 <p align="center">
   <img width="600" src="overview.svg">
@@ -79,12 +115,6 @@ isimip-publisher <path> match_remote
 # copy remote files to LOCAL_DIR
 isimip-publisher <path> fetch_files
 
-# list local files
-isimip-publisher <path> list_local
-
-# match local datasets
-isimip-publisher <path> match_local
-
 # create a JSON file with metadata for each dataset and file
 isimip-publisher <path> write_jsons
 
@@ -97,22 +127,19 @@ isimip-publisher <path> ingest_datasets
 # copy files from LOCAL_DIR to PUPLIC_DIR
 isimip-publisher <path> publish_datasets
 
-# list local files
-isimip-publisher <path> list_public
-
-# match local datasets
-isimip-publisher <path> match_public
-
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
 isimip-publisher <path> archive_datasets
 
-# cleanup the LOCAL_DIR
-isimip-publisher <path> clean
+# register a new doi
+isimip-publisher -d <doi-template> <path> register_doi
+
+# update an existing doi
+isimip-publisher -d <doi-template> <path> update_doi
 ```
 
 `<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
 
-`fetch_files`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
+`match_remote`, `fetch_files`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
 isimip-publisher <path> run
@@ -123,6 +150,27 @@ For all commands a list of files with absolute pathes (as line separated txt fil
 ```bash
 isimip-publisher -f /path/to/files.txt <path> run
 ```
+
+Default values for the optional arguments are set in the code, but can also be provided via:
+
+* a config file given by `--config-file`, or located at `isimip-qc.conf`, `~/.isimip-qc.conf`, or `/etc/isimip-qc.conf`. The config file needs to have a section `isimip-publisher` and uses lower case variables and underscores, e.g.:
+    ```
+    [isimip-publisher]
+    log_level = ERROR
+    mock = false
+
+    remote_dest = localhost
+    remote_dir = /path/to/remote/
+    local_dir = /path/to/local/
+    public_dir = /path/to/public/
+    archive_dir = /path/to/public/
+    database = postgresql+psycopg2://USER:PASSWORD@host:port/DBNAME
+
+    protocol_locations = '/path/to/isimip-protocol-3/output/ /path/to/isimip-protocol-3/output/'
+    ```
+
+* environment variables (in caps and with underscores, e.g. `MOCK`).
+
 
 Test
 ----
