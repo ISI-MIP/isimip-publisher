@@ -5,14 +5,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_checksums_checksum(checksums):
-    m = hashlib.sha1()
+    m = hashlib.sha512()
     for checksum in checksums:
         m.update(checksum.encode())
     return m.hexdigest()
 
 
 def get_checksum(abspath):
-    m = hashlib.sha1()
+    m = hashlib.sha512()
 
     with open(abspath, 'rb') as f:
         # read and update in blocks of 4K
@@ -23,4 +23,4 @@ def get_checksum(abspath):
 
 
 def get_checksum_type():
-    return 'sha1'
+    return 'sha512'
