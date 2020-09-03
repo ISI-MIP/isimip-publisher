@@ -144,13 +144,14 @@ class Dataset(object):
         if self.clean:
             return self.clean
         else:
+            instance = {
+                'specifiers': dict(self.specifiers)
+            }
             try:
-                jsonschema.validate(schema=schema, instance={
-                    'specifiers': dict(self.specifiers)
-                })
+                jsonschema.validate(schema=schema, instance=instance)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('instance = %s', self.json)
+                logger.error('instance = %s', instance)
                 raise e
 
 
@@ -196,11 +197,12 @@ class File(object):
         if self.clean:
             return self.clean
         else:
+            instance = {
+                'specifiers': dict(self.specifiers)
+            }
             try:
-                jsonschema.validate(schema=schema, instance={
-                    'specifiers': dict(self.specifiers)
-                })
+                jsonschema.validate(schema=schema, instance=instance)
                 self.clean = True
             except jsonschema.exceptions.ValidationError as e:
-                logger.error('instance = %s', self.json)
+                logger.error('instance = %s', instance)
                 raise e

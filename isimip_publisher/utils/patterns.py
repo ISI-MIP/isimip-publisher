@@ -69,7 +69,8 @@ def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
     for key, value in filename_specifiers.items():
         if key in dirname_specifiers:
             f, d = filename_specifiers[key], dirname_specifiers[key]
-            assert d.lower().startswith(f.lower()), (f, d)
+            assert d.lower().startswith(f.lower()), \
+                'dirname_specifier "{}" does not match filename_specifier "{}" in {}'.format(f, d, file_abspath)
 
     dirname_specifiers.update(filename_specifiers)
 
@@ -82,7 +83,7 @@ def match_string(pattern, string):
 
     # try to match the string
     match = pattern.search(string)
-    assert match is not None, 'No match for %s' % string
+    assert match is not None, 'No match for {} ("{}")'.format(string, pattern.pattern)
 
     specifiers = OrderedDict()
     for key, value in match.groupdict().items():
