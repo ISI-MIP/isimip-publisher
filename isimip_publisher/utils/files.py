@@ -18,7 +18,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
         args = ['ssh', remote_dest, 'find', str(abs_path)]
 
         for suffix in pattern['suffix']:
-            args += ['-name', '\'*{}*\''.format(suffix)]
+            args += ['-name', '\'*{}\''.format(suffix)]
 
             if suffix != pattern['suffix'][-1]:
                 args += ['-or']
@@ -27,7 +27,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
         args = ['find', str(abs_path)]
 
         for suffix in pattern['suffix']:
-            args += ['-name', '*{}*'.format(suffix)]
+            args += ['-name', '*{}'.format(suffix)]
 
             if suffix != pattern['suffix'][-1]:
                 args += ['-or']
