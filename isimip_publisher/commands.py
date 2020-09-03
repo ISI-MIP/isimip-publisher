@@ -175,7 +175,6 @@ def archive_datasets(store):
                               include=store.include, exclude=store.exclude)
 
     session = init_database_session(store.database)
-    datasets = retrieve_datasets(session, store.path, public=True)
 
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
@@ -243,7 +242,6 @@ def check(store):
         for file in dataset.files:
             file.validate(store.schema)
 
-
     session = init_database_session(store.database)
 
     # remove datasets from db_datasets which have no files in public_files
@@ -252,19 +250,32 @@ def check(store):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
-    assert len(datasets) == len(db_datasets), (len(datasets), len(db_datasets))
+    assert len(datasets) == len(db_datasets), \
+        'Length mismatch {} != {}'.format(len(datasets), len(db_datasets))
 
     for dataset, db_dataset in zip(datasets, db_datasets):
         for file, db_file in zip(dataset.files, db_dataset.files):
-            logger.info('path = %s, checksum = %s', file.path, file.checksum)
-            assert str(file.path) == db_file.path, (str(file.path), db_file.path)
-            assert file.checksum == db_file.checksum, (file.checksum, db_file.checksum)
-            if file.uuid:
-                assert str(file.uuid) == db_file.id, (str(file.uuid), db_file.id)
+            # check file
+            assert str(file.path) == db_file.path, \
+                'Path mismatch {} != {} for file {}'.format(file.path, db_file.path, db_file.id)
 
-        logger.info('path = %s, checksum = %s', dataset.path, dataset.checksum)
-        assert str(dataset.path) == db_dataset.path, (str(dataset.path), db_dataset.path)
-        assert dataset.checksum == db_dataset.checksum, (dataset.checksum, db_dataset.checksum)
+            if file.uuid:
+                assert str(file.uuid) == db_file.id, \
+                    'UUID mismatch {} != {} for file {}'.format(file.uuid, db_file.id, db_file.id)
+
+            # patch checksum_type in order to compute checksum with a non default checksum_type
+            file.checksum_type = db_file.checksum_type
+            assert file.checksum == db_file.checksum, \
+                'Checksum mismatch {} != {} for file {}'.format(file.checksum, db_file.checksum, db_file.id)
+
+        # check dataset
+        assert str(dataset.path) == db_dataset.path, \
+            'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
+
+        # patch checksum_type in order to compute checksum with a non default checksum_type
+        dataset.checksum_type = db_file.checksum_type
+        assert dataset.checksum == db_dataset.checksum, \
+            'Checksum mismatch {} != {} for dataset {}'.format(dataset.checksum, db_dataset.checksum, db_dataset.id)
 
 
 def clean(store):

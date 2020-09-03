@@ -136,7 +136,7 @@ class Dataset(object):
     @property
     def checksum(self):
         if not self._checksum:
-            self._checksum = get_checksums_checksum([file.checksum for file in self.files])
+            self._checksum = get_checksums_checksum([file.checksum for file in self.files], self.checksum_type)
         return self._checksum
 
     def validate(self, schema):
@@ -178,7 +178,7 @@ class File(object):
     @property
     def checksum(self):
         if not self._checksum:
-            self._checksum = get_checksum(self.abspath)
+            self._checksum = get_checksum(self.abspath, self.checksum_type)
         return self._checksum
 
     @property
