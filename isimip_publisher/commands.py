@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -147,9 +148,9 @@ def publish_datasets(store):
         for file in dataset.files:
             file.validate(store.schema)
 
-            assert file.abspath.is_file()
-            assert file.abspath.with_suffix('.json').is_file()
-            assert file.abspath.with_suffix('.png').is_file()
+            assert Path(file.abspath).is_file()
+            assert Path(file.abspath).with_suffix('.json').is_file()
+            assert Path(file.abspath).with_suffix('.png').is_file()
 
     session = init_database_session(store.database)
 
@@ -158,9 +159,9 @@ def publish_datasets(store):
 
         for file in dataset.files:
             move_files(store.local_path, store.public_path, [
-                file.abspath,
-                file.abspath.with_suffix('.json'),
-                file.abspath.with_suffix('.png')
+                Path(file.abspath),
+                Path(file.abspath).with_suffix('.json'),
+                Path(file.abspath).with_suffix('.png')
             ])
 
         session.commit()
@@ -176,9 +177,14 @@ def archive_datasets(store):
 
     session = init_database_session(store.database)
 
+    if [store.path] == public_files:
+        db_path = Path(store.path).parent.as_posix()
+    else:
+        db_path = store.path
+
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, store.path, public=True):
+    for db_dataset in retrieve_datasets(session, db_path, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
@@ -190,7 +196,7 @@ def archive_datasets(store):
 
             for file in db_dataset.files:
                 files = []
-                file_abspath = store.public_path.joinpath(file.path)
+                file_abspath = store.public_path / file.path
                 if file_abspath.is_file():
                     files.append(file_abspath)
                 if file_abspath.with_suffix('.json').is_file():
@@ -256,7 +262,7 @@ def check(store):
     for dataset, db_dataset in zip(datasets, db_datasets):
         for file, db_file in zip(dataset.files, db_dataset.files):
             # check file
-            assert str(file.path) == db_file.path, \
+            assert file.path == db_file.path, \
                 'Path mismatch {} != {} for file {}'.format(file.path, db_file.path, db_file.id)
 
             if file.uuid:
@@ -269,7 +275,7 @@ def check(store):
                 'Checksum mismatch {} != {} for file {}'.format(file.checksum, db_file.checksum, db_file.id)
 
         # check dataset
-        assert str(dataset.path) == db_dataset.path, \
+        assert dataset.path == db_dataset.path, \
             'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
 
         # patch checksum_type in order to compute checksum with a non default checksum_type

@@ -24,22 +24,22 @@ def match_datasets(pattern, base_path, files):
         if dataset_path not in dataset_dict:
             dataset_dict[dataset_path] = Dataset(
                 name=dataset_name,
-                path=dataset_path,
+                path=dataset_path.as_posix(),
                 specifiers=dataset_specifiers
             )
 
         dataset_dict[dataset_path].files.append(File(
             dataset=dataset_dict[dataset_path],
             name=file_name,
-            path=file_path,
-            abspath=file_abspath,
+            path=file_path.as_posix(),
+            abspath=file_abspath.as_posix(),
             specifiers=file_specifiers
         ))
 
     # sort datasets and files and return
-    dataset_list = sorted(dataset_dict.values(), key=lambda d: str(d.path))
+    dataset_list = sorted(dataset_dict.values(), key=lambda dataset: dataset.path)
     for dataset in dataset_list:
-        dataset.files = sorted(dataset.files, key=lambda f: str(f.path))
+        dataset.files = sorted(dataset.files, key=lambda file: file.path)
 
     return dataset_list
 
@@ -57,8 +57,8 @@ def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
     filename_pattern = pattern[filename_pattern_key]
 
     # match the dirname and the filename
-    dirname_match, dirname_specifiers = match_string(dirname_pattern, str(file_abspath.parent))
-    filename_match, filename_specifiers = match_string(filename_pattern, str(file_abspath.name))
+    dirname_match, dirname_specifiers = match_string(dirname_pattern, file_abspath.parent.as_posix())
+    filename_match, filename_specifiers = match_string(filename_pattern, file_abspath.name)
 
     path = Path(dirname_match) / filename_match
     name = filename_match

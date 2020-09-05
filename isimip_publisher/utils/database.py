@@ -118,7 +118,7 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
 
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
-        Dataset.path == str(path),
+        Dataset.path == path,
         Dataset.version == version
     ).one_or_none()
 
@@ -141,7 +141,7 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
         logger.debug('insert dataset %s', path)
         dataset = Dataset(
             name=name,
-            path=str(path),
+            path=path,
             version=version,
             checksum=checksum,
             checksum_type=checksum_type,
@@ -156,7 +156,7 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
 def publish_dataset(session, version, path):
     # check that there is no public version of this dataset
     public_dataset = session.query(Dataset).filter(
-        Dataset.path == str(path),
+        Dataset.path == path,
         Dataset.public == True
     ).one_or_none()
 
@@ -166,7 +166,7 @@ def publish_dataset(session, version, path):
 
     # mark this dataset public
     dataset = session.query(Dataset).filter(
-        Dataset.path == str(path),
+        Dataset.path == path,
         Dataset.version == version
     ).one_or_none()
 
@@ -180,7 +180,7 @@ def publish_dataset(session, version, path):
 def unpublish_dataset(session, path):
     # find the public version of this dataset
     public_dataset = session.query(Dataset).filter(
-        Dataset.path == str(path),
+        Dataset.path == path,
         Dataset.public == True
     ).one_or_none()
 
@@ -215,7 +215,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, mime_type, che
 
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
-        Dataset.path == str(dataset_path),
+        Dataset.path == dataset_path,
         Dataset.version == version
     ).one_or_none()
 
@@ -224,7 +224,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, mime_type, che
 
     # check if the file is already in the database
     file = session.query(File).filter(
-        File.path == str(path),
+        File.path == path,
         File.version == version
     ).one_or_none()
 
@@ -252,7 +252,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, mime_type, che
             id=uuid,
             name=name,
             version=version,
-            path=str(path),
+            path=path,
             checksum=checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,
@@ -282,7 +282,7 @@ def insert_resource(session, path, version, datacite, datasets):
     # insert a new resource
     logger.debug('insert resource %s', path)
     resource = Resource(
-        path=str(path),
+        path=path,
         version=str(version),
         doi=doi,
         datacite=datacite
@@ -305,7 +305,7 @@ def update_resource(session, path, version, datacite):
     ).one_or_none()
 
     if resource:
-        if resource.path != str(path):
+        if resource.path != path:
             raise RuntimeError('A resource with doi={} has already been registered, but for a different path={}'.format(doi, path))
 
         if resource.datacite == datacite:

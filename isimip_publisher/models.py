@@ -163,7 +163,7 @@ class File(object):
         self.path = path
         self.abspath = abspath
         self.specifiers = specifiers
-        self.mime_type = str(mimetypes.guess_type(str(self.abspath))[0])
+        self.mime_type = str(mimetypes.guess_type(self.abspath)[0])
         self.checksum_type = get_checksum_type()
         self.clean = False
 
@@ -172,7 +172,7 @@ class File(object):
 
     @property
     def uuid(self):
-        if not self._uuid and self.path.suffix.startswith('.nc'):
+        if not self._uuid and Path(self.path).suffix.startswith('.nc'):
             self._uuid = get_netcdf_global_attributes(self.abspath).get('isimip_id')
         return self._uuid
 
@@ -186,9 +186,9 @@ class File(object):
     def json(self):
         return {
             'id': self._uuid,
-            'path': str(self.path),
-            'checksum':  self.checksum,
-            'checksum_type':  self.checksum_type,
+            'path': self.path,
+            'checksum': self.checksum,
+            'checksum_type': self.checksum_type,
             'specifiers': dict(self.specifiers)
         }
 

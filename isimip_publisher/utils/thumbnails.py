@@ -18,7 +18,7 @@ LEVELS = 10
 
 def write_thumbnail_file(abspath, output_abspath=None):
     if not output_abspath:
-        output_abspath = abspath.with_suffix('.png')
+        output_abspath = Path(abspath).with_suffix('.png')
 
     logger.info('write_file_thumbnail %s', output_abspath)
 

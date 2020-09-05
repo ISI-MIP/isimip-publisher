@@ -15,7 +15,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
     abs_path = base_path / path
 
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', str(abs_path)]
+        args = ['ssh', remote_dest, 'find', abs_path.as_posix()]
 
         for suffix in pattern['suffix']:
             args += ['-name', '\'*{}\''.format(suffix)]
@@ -24,7 +24,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
                 args += ['-or']
 
     else:
-        args = ['find', str(abs_path)]
+        args = ['find', abs_path.as_posix()]
 
         for suffix in pattern['suffix']:
             args += ['-name', '*{}'.format(suffix)]
@@ -42,7 +42,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
     files = []
     for line in output.splitlines():
         file_abspath = line.decode()
-        file_path = file_abspath.replace(str(base_path) + os.sep, '')
+        file_path = file_abspath.replace(base_path.as_posix() + os.sep, '')
 
         if include and file_path not in include:
             continue
@@ -57,7 +57,11 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
 
 def copy_files(remote_dest, remote_path, local_path, path, files):
     # create the local_dir
-    (local_path / path).mkdir(parents=True, exist_ok=True)
+    abs_path = local_path / path
+    if abs_path.is_dir():
+        abs_path.mkdir(parents=True, exist_ok=True)
+    else:
+        abs_path.parent.mkdir(parents=True, exist_ok=True)
 
     if settings.MOCK:
         for file in files:
@@ -74,8 +78,8 @@ def copy_files(remote_dest, remote_path, local_path, path, files):
             for file in files:
                 f.write(file.replace(path, '') + os.linesep)
 
-        source = remote_dest + ':' + str(remote_path / path) + os.path.sep
-        destination = str(local_path / path) + os.path.sep
+        source = remote_dest + ':' + (remote_path / path).as_posix() + os.path.sep
+        destination = (local_path / path).as_posix() + os.path.sep
         args = [
             'rsync', '-aviL',
             '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
@@ -99,7 +103,7 @@ def move_files(source_dir, target_dir, files, keep=False):
     for source_path in files:
         logger.info('move_files %s', source_path)
 
-        target_path = Path(str(source_path).replace(str(source_dir), str(target_dir)))
+        target_path = Path(target_dir) / Path(source_path).relative_to(source_dir)
 
         # check if the file is already public
         if target_path.exists():
