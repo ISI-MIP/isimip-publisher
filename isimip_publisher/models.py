@@ -172,7 +172,7 @@ class File(object):
 
     @property
     def uuid(self):
-        if not self._uuid:
+        if not self._uuid and self.path.suffix.startswith('.nc'):
             self._uuid = get_netcdf_global_attributes(self.abspath).get('isimip_id')
         return self._uuid
 

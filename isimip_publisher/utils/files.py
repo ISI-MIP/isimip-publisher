@@ -139,8 +139,16 @@ def chmod_file(file_path):
 
 
 def mock_file(mock_path):
-    empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
+    if mock_path.suffix.startswith('.nc'):
+        empty_file = Path(__file__).parent.parent / 'extras' / 'empty.nc'
+    else:
+        empty_file = Path(__file__).parent.parent / 'extras' / 'empty.txt'
+
     shutil.copyfile(empty_file, mock_path)
-    update_netcdf_global_attributes(mock_path, {
-        'path': mock_path
-    })
+
+    if mock_path.suffix.startswith('.nc'):
+        update_netcdf_global_attributes(mock_path, {
+            'path': mock_path
+        })
+    else:
+        mock_path.write_text('path: ' + mock_path.as_posix() + os.linesep)
