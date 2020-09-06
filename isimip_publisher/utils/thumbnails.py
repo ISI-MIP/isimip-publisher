@@ -24,28 +24,34 @@ def write_thumbnail_file(abspath, output_abspath=None):
 
     try:
         with Dataset(abspath, mode='r') as dataset:
+            # find the variable with the most dimensions
+            variable = sorted(dataset.variables.values(), key=lambda variable: variable.ndim)[-1]
 
-            for var_name, variable in dataset.variables.items():
-                if len(variable.dimensions) > 1:
-                    break
-
-            if not settings.MOCK:
+            if not settings.MOCK and variable.ndim in [3, 4, 5, 6]:
                 try:
                     lat = dataset.variables['lat'][:]
                     lon = dataset.variables['lon'][:]
-                    var = dataset.variables[var_name][1, :, :]
+
+                    if variable.ndim == 3:
+                        var = variable[0, :, :]
+                    elif variable.ndim == 4:
+                        var = variable[0, 0, :, :]
+                    elif variable.ndim == 5:
+                        var = variable[0, 0, 0, :, :]
+                    else:
+                        var = variable[0, 0, 0, 0, :, :]
 
                     plt.clf()
                     plt.axes(projection=ccrs.PlateCarree()).coastlines()
                     plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
-                    plt.title(var_name)
+                    plt.title(variable.name)
 
                     fig = plt.gcf()
                     fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
                     fig.savefig(output_abspath, dpi=DPI)
 
                     return
-                except (IndexError, ValueError) as e:
+                except (IndexError, ValueError, TypeError) as e:
                     logger.warn(e)
     except OSError:
         pass
