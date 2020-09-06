@@ -93,7 +93,7 @@ def main():
 def run(store=None):
     match_remote(store)
     fetch_files(store)
-    write_jsons(store)
     write_thumbnails(store)
+    write_jsons(store)
     ingest_datasets(store)
     publish_datasets(store)
