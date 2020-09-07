@@ -4,7 +4,8 @@ from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, list_local, list_public, list_remote,
                        match_local, match_public, match_remote,
                        publish_datasets, register_doi, update_doi,
-                       update_index, write_jsons, write_thumbnails)
+                       update_index, write_checksums, write_jsons,
+                       write_thumbnails)
 from .config import settings
 from .models import Store
 
@@ -59,8 +60,9 @@ def get_parser(add_subparsers=False):
         subparsers.add_parser('match_local').set_defaults(func=match_local)
         subparsers.add_parser('match_public').set_defaults(func=match_public)
         subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
-        subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
         subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
+        subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
+        subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
         subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
         subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
         subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
@@ -94,6 +96,7 @@ def run(store=None):
     match_remote(store)
     fetch_files(store)
     write_thumbnails(store)
+    write_checksums(store)
     write_jsons(store)
     ingest_datasets(store)
     publish_datasets(store)

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+from .utils.checksum import write_checksum_file
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
@@ -76,6 +77,22 @@ def fetch_files(store):
         t.update(n)
 
 
+def write_thumbnails(store):
+    if not store.datasets:
+        local_files = list_files(store.local_path, store.path, store.pattern,
+                                 include=store.include, exclude=store.exclude)
+        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+
+        for dataset in store.datasets:
+            dataset.validate(store.schema)
+            for file in dataset.files:
+                file.validate(store.schema)
+
+    for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
+        for file in dataset.files:
+            write_thumbnail_file(file.abspath)
+
+
 def write_jsons(store):
     if not store.datasets:
         local_files = list_files(store.local_path, store.path, store.pattern,
@@ -92,7 +109,7 @@ def write_jsons(store):
             write_json_file(file.abspath, file.json)
 
 
-def write_thumbnails(store):
+def write_checksums(store):
     if not store.datasets:
         local_files = list_files(store.local_path, store.path, store.pattern,
                                  include=store.include, exclude=store.exclude)
@@ -103,9 +120,9 @@ def write_thumbnails(store):
             for file in dataset.files:
                 file.validate(store.schema)
 
-    for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
+    for dataset in tqdm(store.datasets, desc='write_checksums'.ljust(18)):
         for file in dataset.files:
-            write_thumbnail_file(file.abspath)
+            write_checksum_file(file.abspath, file.path, file.checksum)
 
 
 def ingest_datasets(store):
@@ -160,8 +177,9 @@ def publish_datasets(store):
         for file in dataset.files:
             move_files(store.local_path, store.public_path, [
                 Path(file.abspath),
-                Path(file.abspath).with_suffix('.json'),
-                Path(file.abspath).with_suffix('.png')
+                Path(file.abspath).with_suffix('.png'),
+                Path(file.abspath).with_suffix('.' + file.checksum_type),
+                Path(file.abspath).with_suffix('.json')
             ])
 
         session.commit()
@@ -199,10 +217,9 @@ def archive_datasets(store):
                 file_abspath = store.public_path / file.path
                 if file_abspath.is_file():
                     files.append(file_abspath)
-                if file_abspath.with_suffix('.json').is_file():
-                    files.append(file_abspath.with_suffix('.json'))
-                if file_abspath.with_suffix('.png').is_file():
-                    files.append(file_abspath.with_suffix('.png'))
+                for suffix in ['.png', '.' + file.checksum_type, '.json']:
+                    if file_abspath.with_suffix(suffix).is_file():
+                        files.append(file_abspath.with_suffix(suffix))
 
                 move_files(store.public_path, archive_path, files)
 
