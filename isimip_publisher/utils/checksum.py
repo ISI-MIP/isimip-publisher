@@ -18,8 +18,8 @@ def get_checksums_checksum(checksums, checksum_type=CHECKSUM_TYPE):
 def get_checksum(abspath, checksum_type=CHECKSUM_TYPE):
     m = hashlib.new(checksum_type)
     with open(abspath, 'rb') as f:
-        # read and update in blocks of 4K
-        for block in iter(lambda: f.read(4096), b''):
+        # read and update in blocks of 64K
+        for block in iter(lambda: f.read(65536), b''):
             m.update(block)
     return m.hexdigest()
 
@@ -34,4 +34,4 @@ def write_checksum_file(abspath, checksum, path):
     logger.info('write_checksum_file %s', checksum_path)
 
     with open(checksum_path, 'w') as f:
-        f.write('{}  {}\n'.format(path, checksum))
+        f.write('{}  {}\n'.format(checksum, path))
