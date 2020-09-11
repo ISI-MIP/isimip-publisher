@@ -1,6 +1,5 @@
 import json
 import logging
-import mimetypes
 from datetime import datetime
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from .config import settings
 from .utils.checksum import (get_checksum, get_checksum_type,
                              get_checksums_checksum)
 from .utils.fetch import fetch_pattern, fetch_schema
+from .utils.files import get_mime_type, get_size
 from .utils.netcdf import get_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,14 @@ class Dataset(object):
         self.checksum_type = get_checksum_type()
         self.clean = False
 
+        self._size = None
         self._checksum = None
+
+    @property
+    def size(self):
+        if not self._size:
+            self._size = sum([file.size for file in self.files])
+        return self._size
 
     @property
     def checksum(self):
@@ -163,18 +170,25 @@ class File(object):
         self.path = path
         self.abspath = abspath
         self.specifiers = specifiers
-        self.mime_type = str(mimetypes.guess_type(self.abspath)[0])
         self.checksum_type = get_checksum_type()
         self.clean = False
 
         self._uuid = None
+        self._size = None
         self._checksum = None
+        self._mime_type = None
 
     @property
     def uuid(self):
         if not self._uuid and Path(self.path).suffix.startswith('.nc'):
             self._uuid = get_netcdf_global_attributes(self.abspath).get('isimip_id')
         return self._uuid
+
+    @property
+    def size(self):
+        if not self._size:
+            self._size = get_size(self.abspath)
+        return self._size
 
     @property
     def checksum(self):
@@ -187,12 +201,20 @@ class File(object):
         return self._checksum
 
     @property
+    def mime_type(self):
+        if not self._mime_type:
+            self._mime_type = get_mime_type(self.abspath)
+        return self._mime_type
+
+    @property
     def json(self):
         return {
             'id': self._uuid,
             'path': self.path,
+            'size': self.size,
             'checksum': self.checksum,
             'checksum_type': self.checksum_type,
+            'mime_type': self.mime_type,
             'specifiers': dict(self.specifiers)
         }
 

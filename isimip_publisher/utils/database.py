@@ -1,8 +1,8 @@
 import logging
 from uuid import uuid4
 
-from sqlalchemy import (Boolean, Column, ForeignKey, Index, String, Table,
-                        Text, create_engine, func, inspect)
+from sqlalchemy import (Boolean, Column, ForeignKey, Index, Integer, String,
+                        Table, Text, create_engine, func, inspect)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -35,6 +35,7 @@ class Dataset(Base):
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
+    size = Column(Integer, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     specifiers = Column(JSONB, nullable=False)
@@ -61,6 +62,7 @@ class File(Base):
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
+    size = Column(Integer, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     mime_type = Column(Text, nullable=False)
@@ -113,7 +115,7 @@ def init_database_session(database_settings):
     return session
 
 
-def insert_dataset(session, version, name, path, checksum, checksum_type, specifiers):
+def insert_dataset(session, version, name, path, size, checksum, checksum_type, specifiers):
     logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
@@ -143,6 +145,7 @@ def insert_dataset(session, version, name, path, checksum, checksum_type, specif
             name=name,
             path=path,
             version=version,
+            size=size,
             checksum=checksum,
             checksum_type=checksum_type,
             specifiers=specifiers,
@@ -210,7 +213,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, uuid, name, path, mime_type, checksum, checksum_type, specifiers):
+def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, mime_type, specifiers):
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -251,8 +254,9 @@ def insert_file(session, version, dataset_path, uuid, name, path, mime_type, che
         file = File(
             id=uuid,
             name=name,
-            version=version,
             path=path,
+            version=version,
+            size=size,
             checksum=checksum,
             checksum_type=checksum_type,
             mime_type=mime_type,

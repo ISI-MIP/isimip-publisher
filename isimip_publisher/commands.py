@@ -139,12 +139,12 @@ def ingest_datasets(store):
     session = init_database_session(store.database)
 
     for dataset in tqdm(store.datasets, desc='ingest_datasets'.ljust(18)):
-        insert_dataset(session, store.version, dataset.name, dataset.path,
+        insert_dataset(session, store.version, dataset.name, dataset.path, dataset.size,
                        dataset.checksum, dataset.checksum_type, dataset.specifiers)
 
         for file in dataset.files:
             insert_file(session, store.version, file.dataset.path, file.uuid, file.name, file.path,
-                        file.mime_type, file.checksum, file.checksum_type, file.specifiers)
+                        file.size, file.checksum, file.checksum_type, file.mime_type, file.specifiers)
 
         session.commit()
 
