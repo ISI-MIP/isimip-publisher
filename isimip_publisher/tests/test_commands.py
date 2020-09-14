@@ -103,6 +103,16 @@ def test_write_jsons(setup, script_runner):
     assert response.stderr.strip().startswith('write_jsons')
 
 
+def test_write_checksums(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'write_checksums')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr.strip().startswith('write_checksums')
+
+
 def test_write_thumbnails(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
