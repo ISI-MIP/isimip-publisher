@@ -164,4 +164,7 @@ def get_size(file_abspath):
 
 
 def get_mime_type(file_abspath):
-    return mimetypes.guess_type(file_abspath)[0]
+    if settings.MOCK:
+        return 'text/plain'
+    else:
+        return mimetypes.guess_type(file_abspath)[0]
