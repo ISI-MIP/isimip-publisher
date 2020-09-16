@@ -122,7 +122,7 @@ def write_checksums(store):
 
     for dataset in tqdm(store.datasets, desc='write_checksums'.ljust(18)):
         for file in dataset.files:
-            write_checksum_file(file.abspath, file.path, file.checksum)
+            write_checksum_file(file.abspath, file.checksum, file.path)
 
 
 def ingest_datasets(store):
