@@ -1,7 +1,7 @@
 import logging
 from uuid import uuid4
 
-from sqlalchemy import (Boolean, Column, ForeignKey, Index, Integer, String,
+from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
                         Table, Text, create_engine, func, inspect)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -35,7 +35,7 @@ class Dataset(Base):
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
-    size = Column(Integer, nullable=False)
+    size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     specifiers = Column(JSONB, nullable=False)
@@ -62,7 +62,7 @@ class File(Base):
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
-    size = Column(Integer, nullable=False)
+    size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
     mime_type = Column(Text, nullable=False)
