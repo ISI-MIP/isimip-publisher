@@ -1,5 +1,4 @@
 import logging
-import mimetypes
 import os
 import shutil
 import subprocess
@@ -161,10 +160,3 @@ def mock_file(mock_path):
 
 def get_size(file_abspath):
     return Path(file_abspath).stat().st_size
-
-
-def get_mime_type(file_abspath):
-    if settings.MOCK:
-        return 'text/plain'
-    else:
-        return mimetypes.guess_type(file_abspath)[0]

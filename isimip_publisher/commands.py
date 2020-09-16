@@ -144,7 +144,7 @@ def ingest_datasets(store):
 
         for file in dataset.files:
             insert_file(session, store.version, file.dataset.path, file.uuid, file.name, file.path,
-                        file.size, file.checksum, file.checksum_type, file.mime_type, file.specifiers)
+                        file.size, file.checksum, file.checksum_type, file.specifiers)
 
         session.commit()
 

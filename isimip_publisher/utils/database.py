@@ -65,7 +65,6 @@ class File(Base):
     size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
-    mime_type = Column(Text, nullable=False)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
@@ -213,7 +212,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, mime_type, specifiers):
+def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers):
     logger.info('insert_file %s', path)
 
     # get the dataset from the database
@@ -259,7 +258,6 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
             size=size,
             checksum=checksum,
             checksum_type=checksum_type,
-            mime_type=mime_type,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),

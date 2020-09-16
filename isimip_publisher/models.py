@@ -9,7 +9,7 @@ from .config import settings
 from .utils.checksum import (get_checksum, get_checksum_type,
                              get_checksums_checksum)
 from .utils.fetch import fetch_pattern, fetch_schema
-from .utils.files import get_mime_type, get_size
+from .utils.files import get_size
 from .utils.netcdf import get_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
@@ -176,7 +176,6 @@ class File(object):
         self._uuid = None
         self._size = None
         self._checksum = None
-        self._mime_type = None
 
     @property
     def uuid(self):
@@ -201,12 +200,6 @@ class File(object):
         return self._checksum
 
     @property
-    def mime_type(self):
-        if not self._mime_type:
-            self._mime_type = get_mime_type(self.abspath)
-        return self._mime_type
-
-    @property
     def json(self):
         return {
             'id': self._uuid,
@@ -214,7 +207,6 @@ class File(object):
             'size': self.size,
             'checksum': self.checksum,
             'checksum_type': self.checksum_type,
-            'mime_type': self.mime_type,
             'specifiers': dict(self.specifiers)
         }
 
