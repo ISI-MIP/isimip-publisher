@@ -7,12 +7,13 @@ from .commands import (archive_datasets, check, clean, fetch_files,
                        update_index, write_checksums, write_jsons,
                        write_thumbnails)
 from .config import settings
-from .models import Store
 
 
-def get_parser(add_subparsers=False):
+def get_parser(add_path=False, add_subparsers=False):
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', help='path of the files to publish')
+
+    if add_path:
+        parser.add_argument('path', help='path of the files to publish')
 
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
@@ -77,15 +78,13 @@ def get_parser(add_subparsers=False):
 
 
 def main():
-    parser = get_parser(add_subparsers=True)
+    parser = get_parser(add_path=True, add_subparsers=True)
     args = parser.parse_args()
     settings.setup(args)
 
     if hasattr(args, 'func'):
-        store = Store(args.path)
-
         try:
-            args.func(store)
+            args.func(args.path)
         except AssertionError as e:
             parser.error(e)
     else:

@@ -1,10 +1,13 @@
 import configparser
+import json
 import logging
 import os
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+from .utils.fetch import fetch_pattern, fetch_schema
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,14 @@ class Settings(object):
         self.LOG_FILE = Path(self.LOG_FILE).expanduser() if self.LOG_FILE else None
         self.MOCK = self.MOCK in [True, 1] or self.MOCK.lower() in ['true', 't', '1']
 
+        if self.ISIMIP_DATA_URL is not None:
+            self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')
+
+        try:
+            datetime.strptime(self.VERSION, '%Y%m%d')
+        except ValueError:
+            raise AssertionError("Incorrect version format, should be YYYYMMDD")
+
         # setup logs
         if self.LOG_FILE:
             logging.basicConfig(level=self.LOG_LEVEL, filename=self.LOG_FILE,
@@ -55,13 +66,8 @@ class Settings(object):
             logging.basicConfig(level=self.LOG_LEVEL,
                                 format='[%(asctime)s] %(levelname)s %(name)s: %(message)s')
 
-        # log settings
+        # log self
         logger.debug(self)
-
-    def print(self):
-        for key, value in vars(self).items():
-            if key not in ['DATABASE']:
-                print('%s = %s' % (key, value))
 
     def read_config(self, config_file_arg):
         config_files = [config_file_arg] + self.CONFIG_FILES
@@ -75,7 +81,7 @@ class Settings(object):
     def build_settings(self, args, environ, config):
         args_dict = vars(args)
         for key, value in args_dict.items():
-            if key not in ['func', 'path', 'config_file']:
+            if key not in ['func', 'config_file']:
                 attr = key.upper()
                 if value is not None:
                     attr_value = value
@@ -88,5 +94,88 @@ class Settings(object):
 
                 setattr(self, attr, attr_value)
 
+    @property
+    def REMOTE_PATH(self):
+        assert self.REMOTE_DIR is not None, 'REMOTE_DIR is not set'
+        return Path(self.REMOTE_DIR).expanduser()
+
+    @property
+    def LOCAL_PATH(self):
+        assert self.LOCAL_DIR is not None, 'LOCAL_DIR is not set'
+        return Path(self.LOCAL_DIR).expanduser()
+
+    @property
+    def PUBLIC_PATH(self):
+        assert self.PUBLIC_DIR is not None, 'PUBLIC_DIR is not set'
+        return Path(self.PUBLIC_DIR).expanduser()
+
+    @property
+    def ARCHIVE_PATH(self):
+        assert self.ARCHIVE_DIR is not None, 'ARCHIVE_DIR is not set'
+        return Path(self.ARCHIVE_DIR).expanduser()
+
+    @property
+    def EXCLUDE(self):
+        if not hasattr(self, '_exclude'):
+            self._exclude = self.parse_filelist(self.EXCLUDE_FILE)
+        return self._exclude
+
+    @property
+    def INCLUDE(self):
+        if not hasattr(self, '_include'):
+            self._include = self.parse_filelist(self.INCLUDE_FILE)
+        return self._include
+
+    @property
+    def DATACITE(self):
+        if not hasattr(self, '_datacite'):
+            assert self.DATACITE_FILE is not None, 'DATACITE_FILE is not set'
+
+            with open(self.DATACITE_FILE) as f:
+                self._datacite = json.loads(f.read())
+
+        return self._datacite
+
+    @property
+    def PATTERN(self):
+        if not hasattr(self, '_pattern'):
+            assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
+            self._pattern = fetch_pattern(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+
+            assert self._pattern is not None, 'No pattern found for {}'.format(self.PATH)
+
+        return self._pattern
+
+    @property
+    def SCHEMA(self):
+        if not hasattr(self, '_schema'):
+            assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
+            self._schema = fetch_schema(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+
+            assert self._schema is not None, 'No schema found for {}'.format(self.PATH)
+
+        return self._schema
+
+    def parse_filelist(self, filelist_file):
+        if filelist_file:
+            with open(filelist_file) as f:
+                filelist = f.read().splitlines()
+        else:
+            filelist = None
+
+        return filelist
+
+
+class Store(object):
+
+    _shared_state = {}
+
+    def __init__(self):
+        self.__dict__ = self._shared_state
+        self.datasets = []
+
 
 settings = Settings()
+store = Store()

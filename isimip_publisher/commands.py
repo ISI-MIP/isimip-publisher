@@ -3,6 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+from .config import settings, store
 from .utils.checksum import write_checksum_file
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
@@ -17,133 +18,133 @@ from .utils.thumbnails import write_thumbnail_file
 logger = logging.getLogger(__name__)
 
 
-def list_local(store):
-    local_files = list_files(store.local_path, store.path, store.pattern,
-                             include=store.include, exclude=store.exclude)
+def list_local(path):
+    local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                             include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in local_files:
         print(file_path)
 
 
-def list_public(store):
-    public_files = list_files(store.public_path, store.path, store.pattern,
-                              include=store.include, exclude=store.exclude)
+def list_public(path):
+    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in public_files:
         print(file_path)
 
 
-def list_remote(store):
-    remote_files = list_files(store.remote_path, store.path, store.pattern,
-                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
+def list_remote(path):
+    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in remote_files:
         print(file_path)
 
 
-def match_remote(store):
-    remote_files = list_files(store.remote_path, store.path, store.pattern,
-                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
+def match_remote(path):
+    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-    for dataset in match_datasets(store.pattern, store.remote_path, remote_files):
-        dataset.validate(store.schema)
+    for dataset in match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files):
+        dataset.validate(settings.SCHEMA)
         for file in dataset.files:
-            file.validate(store.schema)
+            file.validate(settings.SCHEMA)
 
 
-def match_local(store):
-    local_files = list_files(store.local_path, store.path, store.pattern,
-                             include=store.include, exclude=store.exclude)
+def match_local(path):
+    local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                             include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-    for dataset in match_datasets(store.pattern, store.local_path, local_files):
-        dataset.validate(store.schema)
+    for dataset in match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files):
+        dataset.validate(settings.SCHEMA)
         for file in dataset.files:
-            file.validate(store.schema)
+            file.validate(settings.SCHEMA)
 
 
-def match_public(store):
-    public_files = list_files(store.public_path, store.path, store.pattern,
-                              include=store.include, exclude=store.exclude)
+def match_public(path):
+    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-    for dataset in match_datasets(store.pattern, store.public_path, public_files):
-        dataset.validate(store.schema)
+    for dataset in match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files):
+        dataset.validate(settings.SCHEMA)
         for file in dataset.files:
-            file.validate(store.schema)
+            file.validate(settings.SCHEMA)
 
 
-def fetch_files(store):
-    remote_files = list_files(store.remote_path, store.path, store.pattern,
-                              remote_dest=store.remote_dest, include=store.include, exclude=store.exclude)
+def fetch_files(path):
+    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(18))
-    for n in copy_files(store.remote_dest, store.remote_path, store.local_path, store.path, remote_files):
+    for n in copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, path, remote_files):
         t.update(n)
 
 
-def write_thumbnails(store):
+def write_thumbnails(path):
     if not store.datasets:
-        local_files = list_files(store.local_path, store.path, store.pattern,
-                                 include=store.include, exclude=store.exclude)
-        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
-            dataset.validate(store.schema)
+            dataset.validate(settings.SCHEMA)
             for file in dataset.files:
-                file.validate(store.schema)
+                file.validate(settings.SCHEMA)
 
     for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
         for file in dataset.files:
             write_thumbnail_file(file.abspath)
 
 
-def write_jsons(store):
+def write_jsons(path):
     if not store.datasets:
-        local_files = list_files(store.local_path, store.path, store.pattern,
-                                 include=store.include, exclude=store.exclude)
-        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
-            dataset.validate(store.schema)
+            dataset.validate(settings.SCHEMA)
             for file in dataset.files:
-                file.validate(store.schema)
+                file.validate(settings.SCHEMA)
 
     for dataset in tqdm(store.datasets, desc='write_jsons'.ljust(18)):
         for file in dataset.files:
             write_json_file(file.abspath, file.json)
 
 
-def write_checksums(store):
+def write_checksums(path):
     if not store.datasets:
-        local_files = list_files(store.local_path, store.path, store.pattern,
-                                 include=store.include, exclude=store.exclude)
-        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
-            dataset.validate(store.schema)
+            dataset.validate(settings.SCHEMA)
             for file in dataset.files:
-                file.validate(store.schema)
+                file.validate(settings.SCHEMA)
 
     for dataset in tqdm(store.datasets, desc='write_checksums'.ljust(18)):
         for file in dataset.files:
             write_checksum_file(file.abspath, file.checksum, file.path)
 
 
-def ingest_datasets(store):
+def ingest_datasets(path):
     if not store.datasets:
-        local_files = list_files(store.local_path, store.path, store.pattern,
-                                 include=store.include, exclude=store.exclude)
-        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
-            dataset.validate(store.schema)
+            dataset.validate(settings.SCHEMA)
             for file in dataset.files:
-                file.validate(store.schema)
+                file.validate(settings.SCHEMA)
 
-    session = init_database_session(store.database)
+    session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(store.datasets, desc='ingest_datasets'.ljust(18)):
-        insert_dataset(session, store.version, dataset.name, dataset.path, dataset.size,
+        insert_dataset(session, settings.VERSION, dataset.name, dataset.path, dataset.size,
                        dataset.checksum, dataset.checksum_type, dataset.specifiers)
 
         for file in dataset.files:
-            insert_file(session, store.version, file.dataset.path, file.uuid, file.name, file.path,
+            insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
                         file.size, file.checksum, file.checksum_type, file.specifiers)
 
         session.commit()
@@ -154,28 +155,28 @@ def ingest_datasets(store):
     session.commit()
 
 
-def publish_datasets(store):
+def publish_datasets(path):
     if not store.datasets:
-        local_files = list_files(store.local_path, store.path, store.pattern,
-                                 include=store.include, exclude=store.exclude)
-        store.datasets = match_datasets(store.pattern, store.local_path, local_files)
+        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
     for dataset in store.datasets:
-        dataset.validate(store.schema)
+        dataset.validate(settings.SCHEMA)
         for file in dataset.files:
-            file.validate(store.schema)
+            file.validate(settings.SCHEMA)
 
             assert Path(file.abspath).is_file()
             assert Path(file.abspath).with_suffix('.json').is_file()
             assert Path(file.abspath).with_suffix('.png').is_file()
 
-    session = init_database_session(store.database)
+    session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
-        publish_dataset(session, store.version, dataset.path)
+        publish_dataset(session, settings.VERSION, dataset.path)
 
         for file in dataset.files:
-            move_files(store.local_path, store.public_path, [
+            move_files(settings.LOCAL_PATH, settings.PUBLIC_PATH, [
                 Path(file.abspath),
                 Path(file.abspath).with_suffix('.png'),
                 Path(file.abspath).with_suffix('.' + file.checksum_type),
@@ -189,16 +190,16 @@ def publish_datasets(store):
     session.commit()
 
 
-def archive_datasets(store):
-    public_files = list_files(store.public_path, store.path, store.pattern,
-                              include=store.include, exclude=store.exclude)
+def archive_datasets(path):
+    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-    session = init_database_session(store.database)
+    session = init_database_session(settings.DATABASE)
 
-    if [store.path] == public_files:
-        db_path = Path(store.path).parent.as_posix()
+    if [path] == public_files:
+        db_path = Path(path).parent.as_posix()
     else:
-        db_path = store.path
+        db_path = path
 
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
@@ -210,18 +211,18 @@ def archive_datasets(store):
         dataset_version = unpublish_dataset(session, db_dataset.path)
 
         if dataset_version:
-            archive_path = store.archive_path / dataset_version
+            archive_path = settings.ARCHIVE_PATH / dataset_version
 
             for file in db_dataset.files:
                 files = []
-                file_abspath = store.public_path / file.path
+                file_abspath = settings.PUBLIC_PATH / file.path
                 if file_abspath.is_file():
                     files.append(file_abspath)
                 for suffix in ['.png', '.' + file.checksum_type, '.json']:
                     if file_abspath.with_suffix(suffix).is_file():
                         files.append(file_abspath.with_suffix(suffix))
 
-                move_files(store.public_path, archive_path, files)
+                move_files(settings.PUBLIC_PATH, archive_path, files)
 
         session.commit()
 
@@ -230,46 +231,46 @@ def archive_datasets(store):
     session.commit()
 
 
-def register_doi(store):
-    session = init_database_session(store.database)
+def register_doi(path):
+    session = init_database_session(settings.DATABASE)
 
-    datasets = retrieve_datasets(session, store.path, public=True)
+    datasets = retrieve_datasets(session, path, public=True)
 
     for dataset in datasets:
-        store.datacite['relatedIdentifiers'].append({
+        settings.DATACITE['relatedIdentifiers'].append({
             'relationType': 'HasPart',
-            'relatedIdentifier': store.isimip_data_url + '/datasets/' + dataset.id,
+            'relatedIdentifier': settings.ISIMIP_DATA_URL + '/datasets/' + dataset.id,
             'relatedIdentifierType': 'URL'
         })
 
-    insert_resource(session, store.path, store.version, store.datacite, datasets)
+    insert_resource(session, path, settings.VERSION, settings.DATACITE, datasets)
 
     session.commit()
 
 
-def update_doi(store):
-    session = init_database_session(store.database)
+def update_doi(path):
+    session = init_database_session(settings.DATABASE)
 
-    update_resource(session, store.path, store.version, store.datacite)
+    update_resource(session, path, settings.VERSION, settings.DATACITE)
 
     session.commit()
 
 
-def check(store):
-    public_files = list_files(store.public_path, store.path, store.pattern,
-                              include=store.include, exclude=store.exclude)
-    datasets = match_datasets(store.pattern, store.public_path, public_files)
+def check(path):
+    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files)
 
     for dataset in datasets:
-        dataset.validate(store.schema)
+        dataset.validate(settings.SCHEMA)
         for file in dataset.files:
-            file.validate(store.schema)
+            file.validate(settings.SCHEMA)
 
-    session = init_database_session(store.database)
+    session = init_database_session(settings.DATABASE)
 
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, store.path, public=True):
+    for db_dataset in retrieve_datasets(session, path, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
@@ -301,12 +302,12 @@ def check(store):
             'Checksum mismatch {} != {} for dataset {}'.format(dataset.checksum, db_dataset.checksum, db_dataset.id)
 
 
-def clean(store):
-    delete_files(store.local_path, store.path)
+def clean(path):
+    delete_files(settings.LOCAL_PATH, path)
 
 
-def update_index(store):
-    session = init_database_session(store.database)
+def update_index(path):
+    session = init_database_session(settings.DATABASE)
 
     update_tree(session)
     update_words_view(session)
