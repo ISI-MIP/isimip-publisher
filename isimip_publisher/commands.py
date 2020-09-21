@@ -140,8 +140,7 @@ def ingest_datasets(path):
     session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(store.datasets, desc='ingest_datasets'.ljust(18)):
-        insert_dataset(session, settings.VERSION, dataset.name, dataset.path, dataset.size,
-                       dataset.checksum, dataset.checksum_type, dataset.specifiers)
+        insert_dataset(session, settings.VERSION, dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:
             insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
@@ -295,11 +294,6 @@ def check(path):
         # check dataset
         assert dataset.path == db_dataset.path, \
             'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
-
-        # patch checksum_type in order to compute checksum with a non default checksum_type
-        dataset.checksum_type = db_file.checksum_type
-        assert dataset.checksum == db_dataset.checksum, \
-            'Checksum mismatch {} != {} for dataset {}'.format(dataset.checksum, db_dataset.checksum, db_dataset.id)
 
 
 def clean(path):

@@ -36,8 +36,6 @@ class Dataset(Base):
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
     size = Column(BigInteger, nullable=False)
-    checksum = Column(Text, nullable=False)
-    checksum_type = Column(Text, nullable=False)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
@@ -114,7 +112,7 @@ def init_database_session(database_settings):
     return session
 
 
-def insert_dataset(session, version, name, path, size, checksum, checksum_type, specifiers):
+def insert_dataset(session, version, name, path, size, specifiers):
     logger.info('insert_dataset %s', path)
 
     # check if the dataset with this version is already in the database
@@ -124,19 +122,15 @@ def insert_dataset(session, version, name, path, size, checksum, checksum_type, 
     ).one_or_none()
 
     if dataset:
-        if dataset.checksum == checksum:
-            # if the dataset already exists, update its specifiers
-            if dataset.specifiers != specifiers:
-                dataset.specifiers = specifiers
-                dataset.identifiers = list(specifiers.keys())
-                dataset.search_vector = get_search_vector(specifiers)
-                logger.debug('update dataset %s', path)
-            else:
-                logger.debug('skip dataset %s', path)
-
+        # if the dataset already exists, update its specifiers
+        if dataset.specifiers != specifiers:
+            dataset.specifiers = specifiers
+            dataset.identifiers = list(specifiers.keys())
+            dataset.search_vector = get_search_vector(specifiers)
+            logger.debug('update dataset %s', path)
         else:
-            # the file has been changed, but the version is the same, this is not ok
-            raise RuntimeError('%s has been changed but the version is the same' % path)
+            logger.debug('skip dataset %s', path)
+
     else:
         # insert a new row for this dataset
         logger.debug('insert dataset %s', path)
@@ -145,8 +139,6 @@ def insert_dataset(session, version, name, path, size, checksum, checksum_type, 
             path=path,
             version=version,
             size=size,
-            checksum=checksum,
-            checksum_type=checksum_type,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),

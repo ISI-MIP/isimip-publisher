@@ -3,8 +3,7 @@ from pathlib import Path
 
 import jsonschema
 
-from .utils.checksum import (get_checksum, get_checksum_type,
-                             get_checksums_checksum)
+from .utils.checksum import get_checksum, get_checksum_type
 from .utils.files import get_size
 from .utils.netcdf import get_netcdf_global_attributes
 
@@ -18,7 +17,6 @@ class Dataset(object):
         self.path = path
         self.specifiers = specifiers
         self.files = []
-        self.checksum_type = get_checksum_type()
         self.clean = False
 
         self._size = None
@@ -29,12 +27,6 @@ class Dataset(object):
         if not self._size:
             self._size = sum([file.size for file in self.files])
         return self._size
-
-    @property
-    def checksum(self):
-        if not self._checksum:
-            self._checksum = get_checksums_checksum([file.checksum for file in self.files], self.checksum_type)
-        return self._checksum
 
     def validate(self, schema):
         # validate if self.clean is not true yet
