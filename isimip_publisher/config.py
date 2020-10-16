@@ -115,6 +115,11 @@ class Settings(object):
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @property
+    def DATACITE_PATH(self):
+        assert self.DATACITE_DIR is not None, 'DATACITE_PATH is not set'
+        return Path(self.DATACITE_DIR).expanduser()
+
+    @property
     def EXCLUDE(self):
         if not hasattr(self, '_exclude'):
             self._exclude = self.parse_filelist(self.EXCLUDE_FILE)
@@ -129,10 +134,10 @@ class Settings(object):
     @property
     def DATACITE(self):
         if not hasattr(self, '_datacite'):
-            assert self.DATACITE_FILE is not None, 'DATACITE_FILE is not set'
-
-            with open(self.DATACITE_FILE) as f:
-                self._datacite = json.loads(f.read())
+            datacite_path = self.DATACITE_PATH / self.PATH
+            assert len(list(datacite_path.iterdir())) == 1, 'More than one DataCite file for {}'.format(self.PATH)
+            file_path = next(datacite_path.iterdir())
+            self._datacite = json.loads(file_path.read_text())
 
         return self._datacite
 

@@ -1,4 +1,5 @@
 import logging
+import warnings
 from uuid import uuid4
 
 from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
@@ -6,6 +7,8 @@ from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+
+from .datacite import gather_datasets
 
 logger = logging.getLogger(__name__)
 
@@ -258,40 +261,15 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         session.add(file)
 
 
-def insert_resource(session, path, version, datacite, datasets):
+def insert_resource(session, path, version, datacite, isimip_data_url, datasets, update=False):
     # get the doi and the datacite version
     doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')
     assert doi is not None
     assert datacite_version is not None
 
-    # look for the resource in the database
-    resource = session.query(Resource).filter(
-        Resource.doi == doi
-    ).one_or_none()
-
-    if resource:
-        raise RuntimeError('A resource with doi={} has already been registered.')
-
-    # insert a new resource
-    logger.debug('insert resource %s', path)
-    resource = Resource(
-        path=path,
-        version=str(version),
-        doi=doi,
-        datacite=datacite
-    )
-    for dataset in datasets:
-        resource.datasets.append(dataset)
-    session.add(resource)
-
-
-def update_resource(session, path, version, datacite):
-    # get the doi and the datacite version
-    doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
-    datacite_version = datacite.get('version')
-    assert doi is not None
-    assert datacite_version is not None
+    # add datasets to relatedIdentifiers
+    datacite['relatedIdentifiers'] += gather_datasets(isimip_data_url, datasets)
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
@@ -300,20 +278,37 @@ def update_resource(session, path, version, datacite):
 
     if resource:
         if resource.path != path:
-            raise RuntimeError('A resource with doi={} has already been registered, but for a different path={}'.format(doi, path))
+            message = 'A resource with doi={} was found in the database, but for a different path={}.'.format(doi, path)
+            raise RuntimeError(message)
+
+        # check that the datasets match
+        if sorted(resource.datasets, key=lambda d: d.id) != sorted(datasets, key=lambda d: d.id):
+            message = 'A resource with doi={} was found in the database, but the list of related public datasets changed. Please consider a new DOI.'.format(doi)
+            raise RuntimeError(message)
 
         if resource.datacite == datacite:
             logger.debug('skip resource %s', path)
         else:
             # check that the datacite version is not the same
             if resource.datacite.get('version') == datacite_version:
-                raise RuntimeError('A resource with doi={} is in the database, and the datacite metadata '
-                                   'has been updated, but the version={} is the same'.format(doi, datacite_version))
+                message = 'A resource with doi={} was found in the database, and the DataCite metadata has been updated, but the version={} is the same.'.format(doi, datacite_version)
+                warnings.warn(RuntimeWarning(message))
 
             # update the datecite metadata
             resource.datacite = datacite
+
     else:
-        raise RuntimeError('A resource with doi={} can not be found in the database'.format(doi))
+        # insert a new resource
+        logger.debug('insert resource %s', path)
+        resource = Resource(
+            path=path,
+            version=str(version),
+            doi=doi,
+            datacite=datacite
+        )
+        for dataset in datasets:
+            resource.datasets.append(dataset)
+        session.add(resource)
 
 
 def update_tree(session):

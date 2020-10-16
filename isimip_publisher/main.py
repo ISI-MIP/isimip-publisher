@@ -3,8 +3,8 @@ import argparse
 from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, list_local, list_public, list_remote,
                        match_local, match_public, match_remote,
-                       publish_datasets, register_doi, update_doi,
-                       update_index, write_checksums, write_jsons,
+                       publish_datasets, register_resource, update_index,
+                       update_resource, write_checksums, write_jsons,
                        write_thumbnails)
 from .config import settings
 
@@ -22,8 +22,6 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Path to a file containing a list of files to include')
     parser.add_argument('-e', '--exclude', dest='exclude_file',
                         help='Path to a file containing a list of files to exclude')
-    parser.add_argument('-d', '--datacite-file', dest='datacite_file',
-                        help='Path to a file containing DateCite metadata (only for register_doi, update_doi)')
     parser.add_argument('-v', '--version', dest='version',
                         help='version date override [default: today]')
 
@@ -37,6 +35,8 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Public directory')
     parser.add_argument('--archive-dir', dest='archive_dir',
                         help='Archive directory')
+    parser.add_argument('--datacite-dir', dest='datacite_dir',
+                        help='DataCite metadata directory')
     parser.add_argument('--database', dest='database',
                         help='Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname')
     parser.add_argument('--mock', dest='mock',
@@ -67,8 +67,7 @@ def get_parser(add_path=False, add_subparsers=False):
         subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
         subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
         subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
-        subparsers.add_parser('register_doi').set_defaults(func=register_doi)
-        subparsers.add_parser('update_doi').set_defaults(func=update_doi)
+        subparsers.add_parser('ingest_resource').set_defaults(func=update_resource)
         subparsers.add_parser('check').set_defaults(func=check)
         subparsers.add_parser('clean').set_defaults(func=clean)
         subparsers.add_parser('update_index').set_defaults(func=update_index)

@@ -8,8 +8,8 @@ from .utils.checksum import write_checksum_file
 from .utils.database import (init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
-                             update_attributes_view, update_resource,
-                             update_tree, update_words_view)
+                             update_attributes_view, update_tree,
+                             update_words_view)
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
@@ -230,27 +230,22 @@ def archive_datasets(path):
     session.commit()
 
 
-def register_doi(path):
+def register_resource(path):
     session = init_database_session(settings.DATABASE)
 
     datasets = retrieve_datasets(session, path, public=True)
 
-    for dataset in datasets:
-        settings.DATACITE['relatedIdentifiers'].append({
-            'relationType': 'HasPart',
-            'relatedIdentifier': settings.ISIMIP_DATA_URL + '/datasets/' + dataset.id,
-            'relatedIdentifierType': 'URL'
-        })
-
-    insert_resource(session, path, settings.VERSION, settings.DATACITE, datasets)
+    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
 
     session.commit()
 
 
-def update_doi(path):
+def update_resource(path):
     session = init_database_session(settings.DATABASE)
 
-    update_resource(session, path, settings.VERSION, settings.DATACITE)
+    datasets = retrieve_datasets(session, path, public=True)
+
+    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets, update=True)
 
     session.commit()
 
