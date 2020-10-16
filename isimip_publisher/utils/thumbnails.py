@@ -55,30 +55,33 @@ def write_thumbnail_file(abspath, output_abspath=None):
                     else:
                         # create a contour plot
                         if variable.ndim in [3, 4, 5, 6]:
-                            if variable.ndim == 3:
-                                var = variable[0, :, :]
-                            elif variable.ndim == 4:
-                                var = variable[0, 0, :, :]
-                            elif variable.ndim == 5:
-                                var = variable[0, 0, 0, :, :]
+                            try:
+                                if variable.ndim == 3:
+                                    var = variable[0, :, :]
+                                elif variable.ndim == 4:
+                                    var = variable[0, 0, :, :]
+                                elif variable.ndim == 5:
+                                    var = variable[0, 0, 0, :, :]
+                                else:
+                                    var = variable[0, 0, 0, 0, :, :]
+                            except (IndexError, ValueError, TypeError) as e:
+                                logger.warn(e)
                             else:
-                                var = variable[0, 0, 0, 0, :, :]
+                                plt.clf()
 
-                            plt.clf()
+                                ax = plt.axes(projection=ccrs.PlateCarree())
+                                ax.coastlines()
+                                ax.set_extent((-180, 180, -90, 90))
 
-                            ax = plt.axes(projection=ccrs.PlateCarree())
-                            ax.coastlines()
-                            ax.set_extent((-180, 180, -90, 90))
+                                plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
+                                plt.title(variable.name)
+                                plt.subplots_adjust(left=40 / WIDTH, right=1 - 40 / WIDTH, bottom=40 / HEIGHT, top=1 - 40 / HEIGHT)
 
-                            plt.contourf(lon, lat, var, LEVELS, transform=ccrs.PlateCarree())
-                            plt.title(variable.name)
-                            plt.subplots_adjust(left=40 / WIDTH, right=1 - 40 / WIDTH, bottom=40 / HEIGHT, top=1 - 40 / HEIGHT)
+                                fig = plt.gcf()
+                                fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
+                                fig.savefig(output_abspath, dpi=DPI)
 
-                            fig = plt.gcf()
-                            fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
-                            fig.savefig(output_abspath, dpi=DPI)
-
-                            return
+                                return
 
         except OSError:
             pass

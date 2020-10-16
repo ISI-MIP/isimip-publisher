@@ -184,37 +184,21 @@ def test_check(setup, script_runner):
     assert not response.stderr
 
 
-def test_register_doi(setup, script_runner):
+def test_ingest_resource(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
-        '-d',
-        'testing/datacite/001.json',
         'round/product/sector/model',
-        'register_doi')
+        'ingest_resource')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_doi(setup, script_runner):
+def test_register_resource_update(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
-        '-d',
-        'testing/datacite/001b.json',
         'round/product/sector/model',
-        'update_doi')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
-def test_update_doi_error(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        '-d',
-        'testing/datacite/001b.json',
-        'round/product/sector/model',
-        'update_doi')
+        'ingest_resource')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
