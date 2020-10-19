@@ -14,7 +14,7 @@ A command line tool to publish climate impact data from the ISIMIP project.
 Setup
 -----
 
-First create a virtual envronment in the directory `env` using:
+First create a virtual environment in the directory `env` using:
 
 ```
 python3 -m venv env
@@ -99,7 +99,7 @@ subcommands:
   {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,write_thumbnails,ingest_datasets,publish_datasets,archive_datasets,register_doi,update_doi,check,clean,update_index,run}
 ```
 
-The different steps of the publication process are covered by subcommands, which can be invoced seperately.
+The different steps of the publication process are covered by subcommands, which can be invoked separately.
 
 <p align="center">
   <img width="600" src="overview.svg">
