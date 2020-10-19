@@ -261,7 +261,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         session.add(file)
 
 
-def insert_resource(session, path, version, datacite, isimip_data_url, datasets, update=False):
+def insert_resource(session, path, version, datacite, isimip_data_url, datasets):
     # get the doi and the datacite version
     doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')

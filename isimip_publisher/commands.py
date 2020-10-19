@@ -230,22 +230,12 @@ def archive_datasets(path):
     session.commit()
 
 
-def register_resource(path):
+def ingest_resource(path):
     session = init_database_session(settings.DATABASE)
 
     datasets = retrieve_datasets(session, path, public=True)
 
     insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
-
-    session.commit()
-
-
-def update_resource(path):
-    session = init_database_session(settings.DATABASE)
-
-    datasets = retrieve_datasets(session, path, public=True)
-
-    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets, update=True)
 
     session.commit()
 
