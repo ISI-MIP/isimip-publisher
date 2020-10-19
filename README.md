@@ -47,15 +47,18 @@ Usage
 
 The publisher has several options which can be inspected using the help option `-h, --help`:
 
-The application can then be used:
-
 ```
-usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e EXCLUDE_FILE] [-d DATACITE_FILE] [-v VERSION]
-                        [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR] [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
-                        [--archive-dir ARCHIVE_DIR] [--database DATABASE] [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
-                        [--isimip-data-url ISIMIP_DATA_URL] [--log-level LOG_LEVEL] [--log-file LOG_FILE]
+usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE]
+                        [-e EXCLUDE_FILE] [-v VERSION]
+                        [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
+                        [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
+                        [--archive-dir ARCHIVE_DIR]
+                        [--datacite-dir DATACITE_DIR] [--database DATABASE]
+                        [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
+                        [--isimip-data-url ISIMIP_DATA_URL]
+                        [--log-level LOG_LEVEL] [--log-file LOG_FILE]
                         path
-                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,write_thumbnails,ingest_datasets,publish_datasets,archive_datasets,register_doi,update_doi,check,clean,update_index,run}
+                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_thumbnails,write_jsons,write_checksums,ingest_datasets,publish_datasets,archive_datasets,ingest_resource,check,clean,update_index,run}
                         ...
 
 positional arguments:
@@ -69,12 +72,11 @@ optional arguments:
                         Path to a file containing a list of files to include
   -e EXCLUDE_FILE, --exclude EXCLUDE_FILE
                         Path to a file containing a list of files to exclude
-  -d DATACITE_FILE, --datacite-file DATACITE_FILE
-                        Path to a file containing DateCite metadata (only for register_doi, update_doi)
   -v VERSION, --version VERSION
                         version date override [default: today]
   --remote-dest REMOTE_DEST
-                        Remote destination to fetch files from, e.g. user@example.com
+                        Remote destination to fetch files from, e.g.
+                        user@example.com
   --remote-dir REMOTE_DIR
                         Remote directory to fetch files from
   --local-dir LOCAL_DIR
@@ -83,12 +85,17 @@ optional arguments:
                         Public directory
   --archive-dir ARCHIVE_DIR
                         Archive directory
-  --database DATABASE   Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname
-  --mock MOCK           If set to True no files are actually copied. Empty mock files are used instead
+  --datacite-dir DATACITE_DIR
+                        DataCite metadata directory
+  --database DATABASE   Database connection string, e.g. postgresql+psycopg2:/
+                        /username:password@host:port/dbname
+  --mock MOCK           If set to True no files are actually copied. Empty
+                        mock files are used instead
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --isimip-data-url ISIMIP_DATA_URL
-                        URL of the ISIMIP repository [default: https://data.isimip.org/]
+                        URL of the ISIMIP repository [default:
+                        https://data.isimip.org/]
   --log-level LOG_LEVEL
                         Log level (ERROR, WARN, INFO, or DEBUG)
   --log-file LOG_FILE   Path to the log file
@@ -96,7 +103,7 @@ optional arguments:
 subcommands:
   valid subcommands
 
-  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,write_thumbnails,ingest_datasets,publish_datasets,archive_datasets,register_doi,update_doi,check,clean,update_index,run}
+  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_thumbnails,write_jsons,write_checksums,ingest_datasets,publish_datasets,archive_datasets,ingest_resource,check,clean,update_index,run}
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -130,11 +137,8 @@ isimip-publisher <path> publish_datasets
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
 isimip-publisher <path> archive_datasets
 
-# register a new doi
-isimip-publisher -d <doi-template> <path> register_doi
-
-# update an existing doi
-isimip-publisher -d <doi-template> <path> update_doi
+# register a new doi resource
+isimip-publisher <path> ingest_resource
 ```
 
 `<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
