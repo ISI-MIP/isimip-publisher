@@ -44,10 +44,10 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
         file_abspath = line.decode()
         file_path = file_abspath.replace(base_path.as_posix() + os.sep, '')
 
-        if include and file_path not in include:
+        if include and not any(file_path.startswith(include_path) for include_path in include):
             continue
 
-        if exclude and file_path in exclude:
+        if exclude and any(file_path.startswith(exclude_path) for exclude_path in exclude):
             continue
 
         files.append(file_path)
