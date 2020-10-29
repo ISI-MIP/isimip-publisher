@@ -44,15 +44,23 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
         file_abspath = line.decode()
         file_path = file_abspath.replace(base_path.as_posix() + os.sep, '')
 
-        if include and not any(file_path.startswith(include_path) for include_path in include):
+        if include and not match_path(include, file_path):
             continue
 
-        if exclude and any(file_path.startswith(exclude_path) for exclude_path in exclude):
+        if exclude and match_path(exclude, file_path):
             continue
 
         files.append(file_path)
 
     return files
+
+
+def match_path(path_list, file_path):
+    for path in path_list:
+        if path and not path.startswith('#') and file_path.startswith(path):
+            return True
+
+    return False
 
 
 def copy_files(remote_dest, remote_path, local_path, path, files):
