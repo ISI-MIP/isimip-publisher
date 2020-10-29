@@ -1,5 +1,5 @@
 -r common.txt
 
-pytest~=5.2
+pytest==6.1.1
 pytest-console-scripts~=0.1
 pytest-cov~=2.8
