@@ -240,6 +240,16 @@ def ingest_resource(path):
     session.commit()
 
 
+def update_resource(path):
+    session = init_database_session(settings.DATABASE)
+
+    datasets = retrieve_datasets(session, path, public=True)
+
+    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets, update=True)
+
+    session.commit()
+
+
 def check(path):
     public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)

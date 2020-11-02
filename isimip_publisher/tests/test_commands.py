@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 from dotenv import load_dotenv
-
 from isimip_publisher.utils.database import Dataset, init_database_session
 
 
@@ -194,14 +193,34 @@ def test_ingest_resource(setup, script_runner):
     assert not response.stderr
 
 
-def test_register_resource_update(setup, script_runner):
+def test_ingest_resource_error(setup, script_runner):
     response = script_runner.run(
         'isimip-publisher',
         'round/product/sector/model',
         'ingest_resource')
+    assert not response.success
+    assert not response.stdout
+    assert response.stderr.strip().endswith('is already in the database.'), response.stderr
+
+
+def test_update_resource(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model',
+        'update_resource')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
+
+
+def test_update_resource_error(setup, script_runner):
+    response = script_runner.run(
+        'isimip-publisher',
+        'round/product/sector/model2',
+        'update_resource')
+    assert not response.success
+    assert not response.stdout
+    assert response.stderr.strip().endswith('was not found in the database.'), response.stderr
 
 
 def test_archive_datasets(setup, script_runner):

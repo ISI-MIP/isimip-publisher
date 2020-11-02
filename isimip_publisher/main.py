@@ -4,7 +4,8 @@ from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, ingest_resource, list_local,
                        list_public, list_remote, match_local, match_public,
                        match_remote, publish_datasets, update_index,
-                       write_checksums, write_jsons, write_thumbnails)
+                       update_resource, write_checksums, write_jsons,
+                       write_thumbnails)
 from .config import settings
 
 
@@ -67,6 +68,7 @@ def get_parser(add_path=False, add_subparsers=False):
         subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
         subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
         subparsers.add_parser('ingest_resource').set_defaults(func=ingest_resource)
+        subparsers.add_parser('update_resource').set_defaults(func=update_resource)
         subparsers.add_parser('check').set_defaults(func=check)
         subparsers.add_parser('clean').set_defaults(func=clean)
         subparsers.add_parser('update_index').set_defaults(func=update_index)

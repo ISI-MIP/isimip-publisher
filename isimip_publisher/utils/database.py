@@ -262,7 +262,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         session.add(file)
 
 
-def insert_resource(session, path, version, datacite, isimip_data_url, datasets):
+def insert_resource(session, path, version, datacite, isimip_data_url, datasets, update=False):
     # get the doi and the datacite version
     doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')
@@ -270,6 +270,8 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets)
     assert datacite_version is not None
 
     # add datasets to relatedIdentifiers
+    if 'relatedIdentifiers' not in datacite:
+        datacite['relatedIdentifiers'] = []
     datacite['relatedIdentifiers'] += gather_datasets(isimip_data_url, datasets)
 
     # look for the resource in the database
@@ -277,39 +279,47 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets)
         Resource.doi == doi
     ).one_or_none()
 
-    if resource:
-        if resource.path != path:
-            message = 'A resource with doi={} was found in the database, but for a different path={}.'.format(doi, path)
-            raise RuntimeError(message)
+    if update:
+        if resource is not None:
+            if resource.path != path:
+                message = 'A resource with doi={} was found in the database, but for a different path={}.'.format(doi, path)
+                raise RuntimeError(message)
 
-        # check that the datasets match
-        if sorted(resource.datasets, key=lambda d: d.id) != sorted(datasets, key=lambda d: d.id):
-            message = 'A resource with doi={} was found in the database, but the list of related public datasets changed. Please consider a new DOI.'.format(doi)
-            raise RuntimeError(message)
+            # check that the datasets match
+            if sorted(resource.datasets, key=lambda d: d.id) != sorted(datasets, key=lambda d: d.id):
+                message = 'A resource with doi={} was found in the database, but the list of related public datasets changed. Please consider a new DOI.'.format(doi)
+                raise RuntimeError(message)
 
-        if resource.datacite == datacite:
-            logger.debug('skip resource %s', path)
+            if resource.datacite == datacite:
+                logger.debug('skip resource %s', path)
+            else:
+                # check that the datacite version is not the same
+                if resource.datacite.get('version') == datacite_version:
+                    message = 'A resource with doi={} was found in the database, and the DataCite metadata has been updated, but the version={} is the same.'.format(doi, datacite_version)
+                    warnings.warn(RuntimeWarning(message))
+
+                # update the datecite metadata
+                resource.datacite = datacite
         else:
-            # check that the datacite version is not the same
-            if resource.datacite.get('version') == datacite_version:
-                message = 'A resource with doi={} was found in the database, and the DataCite metadata has been updated, but the version={} is the same.'.format(doi, datacite_version)
-                warnings.warn(RuntimeWarning(message))
-
-            # update the datecite metadata
-            resource.datacite = datacite
+            message = 'A resource with doi={} was not found in the database.'.format(doi)
+            raise AssertionError(message)
 
     else:
-        # insert a new resource
-        logger.debug('insert resource %s', path)
-        resource = Resource(
-            path=path,
-            version=str(version),
-            doi=doi,
-            datacite=datacite
-        )
-        for dataset in datasets:
-            resource.datasets.append(dataset)
-        session.add(resource)
+        if resource is None:
+            # insert a new resource
+            logger.debug('insert resource %s', path)
+            resource = Resource(
+                path=path,
+                version=str(version),
+                doi=doi,
+                datacite=datacite
+            )
+            for dataset in datasets:
+                resource.datasets.append(dataset)
+            session.add(resource)
+        else:
+            message = 'A resource with doi={} is already in the database.'.format(doi)
+            raise AssertionError(message)
 
 
 def update_tree(session):

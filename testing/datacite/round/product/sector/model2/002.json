@@ -1,0 +1,9 @@
+{
+  "identifiers": [
+    {
+      "identifier": "10.12345/ISIMIP.002",
+      "identifierType": "DOI"
+    }
+  ],
+  "version": "1.0.0"
+}
