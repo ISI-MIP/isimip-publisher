@@ -170,7 +170,7 @@ class Settings(object):
 
             self._tree = fetch_tree(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
-            assert self._tree is not None, 'No schema tree for {}'.format(self.PATH)
+            assert self._tree is not None, 'No tree for {}'.format(self.PATH)
 
         return self._tree
 
