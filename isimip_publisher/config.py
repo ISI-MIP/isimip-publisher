@@ -7,7 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .utils.fetch import fetch_pattern, fetch_schema
+from .utils.fetch import fetch_pattern, fetch_schema, fetch_tree
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +162,17 @@ class Settings(object):
             assert self._schema is not None, 'No schema found for {}'.format(self.PATH)
 
         return self._schema
+
+    @property
+    def TREE(self):
+        if not hasattr(self, '_tree'):
+            assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
+            self._tree = fetch_tree(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+
+            assert self._tree is not None, 'No schema tree for {}'.format(self.PATH)
+
+        return self._tree
 
     def parse_filelist(self, filelist_file):
         if filelist_file:

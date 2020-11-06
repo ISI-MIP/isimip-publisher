@@ -1,5 +1,6 @@
 import logging
 import warnings
+from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
@@ -7,9 +8,9 @@ from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm.attributes import flag_modified
 
 from .datacite import gather_datasets
-from .tree import build_tree_dict, build_tree_list
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class Dataset(Base):
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
+    tree_path = Column(Text, nullable=True, index=True)
 
     files = relationship('File', back_populates='dataset')
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
@@ -100,7 +102,6 @@ class Tree(Base):
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     tree_dict = Column(JSONB, nullable=False)
-    tree_list = Column(JSONB, nullable=False)
 
     def __repr__(self):
         return str(self.id)
@@ -322,35 +323,101 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets,
             raise AssertionError(message)
 
 
-def update_tree(session):
-    datasets = session.query(Dataset).filter(
-        Dataset.public == True
-    ).order_by(Dataset.path)
+def update_tree(session, path, tree):
+    # step 1: get the public datasets for this path
+    datasets = retrieve_datasets(session, path, public=True)
 
-    # step 1: recursively build tree_dict
-    tree_dict = {}
-    for dataset in datasets:
-        specifiers = [(identifier, dataset.specifiers[identifier]) for identifier in dataset.identifiers]
-        build_tree_dict(tree_dict, specifiers)
-
-    # step 2: recursively build tree_list
-    tree_list = build_tree_list(tree_dict)
-
-    tree = session.query(Tree).one_or_none()
-    if tree:
-        # insert a new tree
+    # step 2: get the tree
+    database_tree = session.query(Tree).one_or_none()
+    if database_tree is not None:
         logger.debug('update tree')
-        tree.tree_dict = tree_dict
-        tree.tree_list = tree_list
+    else:
+        logger.debug('insert tree')
+        database_tree = Tree(tree_dict={})
+        session.add(database_tree)
+
+    # step 3: recursively update tree_dict and set the tree_path for the dataset
+    for dataset in datasets:
+        tree_path = update_tree_dict(database_tree.tree_dict, Path(), tree['identifiers'], dataset.specifiers)
+        dataset.tree_path = tree_path.as_posix()
+
+    # for some reason we need to flag the field as modified
+    flag_modified(database_tree, 'tree_dict')
+
+
+def update_tree_dict(tree_dict, tree_path, identifiers, specifiers):
+    identifier = identifiers[0]
+    specifier = None
+
+    if '&' in identifier:
+        sub_identifiers, sub_specifiers = [], []
+        for sub_identifier in identifiers[0].split('&'):
+            if sub_identifier in specifiers:
+                sub_identifiers.append(sub_identifier)
+                sub_specifiers.append(specifiers.get(sub_identifier))
+        identifier = '-'.join(sub_identifiers)
+        specifier = '-'.join(sub_specifiers)
+
+    elif '|' in identifier:
+        for sub_identifier in identifiers[0].split('|'):
+            if sub_identifier in specifiers:
+                identifier = sub_identifier
+                specifier = specifiers.get(sub_identifier)
+                break
 
     else:
-        # insert a new tree
-        logger.debug('insert tree')
-        tree = Tree(
-            tree_dict=tree_dict,
-            tree_list=tree_list
-        )
-        session.add(tree)
+        specifier = specifiers.get(identifier)
+
+    if specifier is None:
+        return tree_path
+    else:
+        if specifier not in tree_dict:
+            # add a new node to the tree_dict
+            tree_dict[specifier] = {
+                'identifier': identifier,
+                'specifier': specifier,
+                'items': {}
+            }
+
+        # update tree_path
+        tree_path /= specifier
+
+        if len(identifiers) == 1:
+            # this is the last node
+            return tree_path
+        else:
+            return update_tree_dict(tree_dict[specifier]['items'], tree_path, identifiers[1:], specifiers)
+
+
+def clean_tree(session):
+    # step 1: get the tree
+    database_tree = session.query(Tree).one_or_none()
+
+    # walk the tree and create a new one with nodes which have no dataset anymore removed
+    clean_tree_dict(session, Path(), database_tree.tree_dict)
+
+    # for some reason we need to flag the field as modified
+    flag_modified(database_tree, 'tree_dict')
+
+
+def clean_tree_dict(session, tree_path, tree_dict):
+    keys = list(tree_dict.keys())
+
+    for key in keys:
+        sub_path = tree_path / key
+
+        like_path = '{}%'.format(sub_path)
+        dataset_exists = session.query(
+            session.query(Dataset).filter(
+                Dataset.tree_path.like(like_path),
+                Dataset.public == True
+            ).exists()
+        ).scalar()
+
+        if dataset_exists:
+            clean_tree_dict(session, sub_path, tree_dict[key]['items'])
+        else:
+            del tree_dict[key]
 
 
 def update_words_view(session):

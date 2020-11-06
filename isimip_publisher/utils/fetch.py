@@ -49,6 +49,18 @@ def fetch_schema(bases, path):
             return schema_json
 
 
+def fetch_tree(bases, path):
+    path_components = path.strip(os.sep).split(os.sep)
+    for i in range(len(path_components), 0, -1):
+        tree_path = Path('tree').joinpath(os.sep.join(path_components[:i+1])).with_suffix('.json')
+        tree_json = fetch_json(bases, tree_path)
+
+        if tree_json:
+            logger.info('tree_path = %s', tree_path)
+            logger.debug('tree_json = %s', tree_json)
+            return tree_json
+
+
 def fetch_json(bases, path):
     for base in bases:
         if urlparse(base).scheme:

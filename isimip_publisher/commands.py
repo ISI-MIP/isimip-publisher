@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from .config import settings, store
 from .utils.checksum import write_checksum_file
-from .utils.database import (init_database_session, insert_dataset,
+from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
                              update_attributes_view, update_tree,
@@ -184,8 +184,9 @@ def publish_datasets(path):
 
         session.commit()
 
-    update_tree(session)
-
+    update_tree(session, path, settings.TREE)
+    session.commit()
+    clean_tree(session)
     session.commit()
 
 
@@ -225,8 +226,9 @@ def archive_datasets(path):
 
         session.commit()
 
-    update_tree(session)
-
+    update_tree(session, path, settings.TREE)
+    session.commit()
+    clean_tree(session)
     session.commit()
 
 
@@ -298,8 +300,11 @@ def clean(path):
 def update_index(path):
     session = init_database_session(settings.DATABASE)
 
-    update_tree(session)
+    update_tree(session, path, settings.TREE)
+    session.commit()
+    clean_tree(session)
+    session.commit()
+
     update_words_view(session)
     update_attributes_view(session)
-
     session.commit()
