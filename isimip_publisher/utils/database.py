@@ -325,7 +325,11 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets,
 
 def update_tree(session, path, tree):
     # step 1: get the public datasets for this path
-    datasets = retrieve_datasets(session, path, public=True)
+    like_path = '{}%'.format(path)
+    datasets = session.query(Dataset).filter(
+        Dataset.path.like(like_path),
+        Dataset.public == True
+    ).all()
 
     # step 2: get the tree
     database_tree = session.query(Tree).one_or_none()
@@ -338,14 +342,14 @@ def update_tree(session, path, tree):
 
     # step 3: recursively update tree_dict and set the tree_path for the dataset
     for dataset in datasets:
-        tree_path = update_tree_dict(database_tree.tree_dict, Path(), tree['identifiers'], dataset.specifiers)
+        tree_path = build_tree_dict(database_tree.tree_dict, Path(), tree['identifiers'], dataset.specifiers)
         dataset.tree_path = tree_path.as_posix()
 
     # for some reason we need to flag the field as modified
     flag_modified(database_tree, 'tree_dict')
 
 
-def update_tree_dict(tree_dict, tree_path, identifiers, specifiers):
+def build_tree_dict(tree_dict, tree_path, identifiers, specifiers):
     identifier = identifiers[0]
     specifier = None
 
@@ -386,38 +390,46 @@ def update_tree_dict(tree_dict, tree_path, identifiers, specifiers):
             # this is the last node
             return tree_path
         else:
-            return update_tree_dict(tree_dict[specifier]['items'], tree_path, identifiers[1:], specifiers)
+            return build_tree_dict(tree_dict[specifier]['items'], tree_path, identifiers[1:], specifiers)
 
 
 def clean_tree(session):
     # step 1: get the tree
     database_tree = session.query(Tree).one_or_none()
 
-    # walk the tree and create a new one with nodes which have no dataset anymore removed
-    clean_tree_dict(session, Path(), database_tree.tree_dict)
+    # step 2: get all dataset tree_pathes as as set
+    tree_pathes = set([row[0] for row in session.query(Dataset).filter(
+        Dataset.public == True
+    ).values('tree_path')])
+
+    clean_tree_dict = {}
+    for tree_path in tree_pathes:
+        specifiers = Path(tree_path).parts
+        clean_tree_dict = build_clean_tree_dict(database_tree.tree_dict, clean_tree_dict, specifiers)
+
+    # replace database_tree.tree_dict
+    database_tree.tree_dict = clean_tree_dict
 
     # for some reason we need to flag the field as modified
     flag_modified(database_tree, 'tree_dict')
 
 
-def clean_tree_dict(session, tree_path, tree_dict):
-    keys = list(tree_dict.keys())
+def build_clean_tree_dict(tree_dict, clean_tree_dict, specifiers):
+    specifier = specifiers[0]
 
-    for key in keys:
-        sub_path = tree_path / key
+    if specifier not in clean_tree_dict:
+        clean_tree_dict[specifier] = {
+            'identifier': tree_dict[specifier]['identifier'],
+            'specifier': tree_dict[specifier]['specifier'],
+            'items': {}
+        }
 
-        like_path = '{}%'.format(sub_path)
-        dataset_exists = session.query(
-            session.query(Dataset).filter(
-                Dataset.tree_path.like(like_path),
-                Dataset.public == True
-            ).exists()
-        ).scalar()
+    if len(specifiers) > 1:
+        clean_tree_dict[specifier]['items'] = build_clean_tree_dict(tree_dict[specifier]['items'],
+                                                                    clean_tree_dict[specifier]['items'],
+                                                                    specifiers[1:])
 
-        if dataset_exists:
-            clean_tree_dict(session, sub_path, tree_dict[key]['items'])
-        else:
-            del tree_dict[key]
+    return clean_tree_dict
 
 
 def update_words_view(session):
