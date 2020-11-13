@@ -10,6 +10,18 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+def fetch_definitions(bases, path):
+    path_components = path.strip(os.sep).split(os.sep)
+    for i in range(len(path_components), 0, -1):
+        definitions_path = Path('definitions').joinpath(os.sep.join(path_components[:i+1])).with_suffix('.json')
+        definitions_json = fetch_json(bases, definitions_path)
+
+        if definitions_json:
+            logger.info('definitions_path = %s', definitions_path)
+            logger.debug('definitions_json = %s', definitions_json)
+            return definitions_json
+
+
 def fetch_pattern(bases, path):
     path_components = path.strip(os.sep).split(os.sep)
     for i in range(len(path_components), 0, -1):

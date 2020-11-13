@@ -7,7 +7,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .utils.fetch import fetch_pattern, fetch_schema, fetch_tree
+from .utils.fetch import (fetch_definitions, fetch_pattern, fetch_schema,
+                          fetch_tree)
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,17 @@ class Settings(object):
             self._datacite = json.loads(file_path.read_text())
 
         return self._datacite
+
+    @property
+    def DEFINITIONS(self):
+        if not hasattr(self, '_definitions'):
+            assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+
+            self._definitions = fetch_definitions(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+
+            assert self._definitions is not None, 'No pattern found for {}'.format(self.PATH)
+
+        return self._definitions
 
     @property
     def PATTERN(self):

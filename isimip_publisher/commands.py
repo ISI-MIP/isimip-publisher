@@ -13,6 +13,7 @@ from .utils.database import (clean_tree, init_database_session, insert_dataset,
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
+from .utils.region import get_region
 from .utils.thumbnails import write_thumbnail_file
 
 logger = logging.getLogger(__name__)
@@ -90,8 +91,10 @@ def write_thumbnails(path):
                 file.validate(settings.SCHEMA)
 
     for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
+        region = get_region(settings.DEFINITIONS, dataset.specifiers)
+
         for file in dataset.files:
-            write_thumbnail_file(file.abspath)
+            write_thumbnail_file(file.abspath, region)
 
 
 def write_jsons(path):
@@ -197,6 +200,7 @@ def archive_datasets(path):
     session = init_database_session(settings.DATABASE)
 
     if [path] == public_files:
+        # archive only one file
         db_path = Path(path).parent.as_posix()
     else:
         db_path = path
