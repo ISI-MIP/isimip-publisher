@@ -189,6 +189,10 @@ def unpublish_dataset(session, path):
 
 
 def retrieve_datasets(session, path, public=None):
+    # check if path is a file
+    if Path(path).suffix:
+        path = Path(path).parent.as_posix()
+
     like_path = '{}%'.format(path)
 
     if public is None:
@@ -324,6 +328,10 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets,
 
 
 def update_tree(session, path, tree):
+    # check if path is a file
+    if Path(path).suffix:
+        path = Path(path).parent.as_posix()
+
     # step 1: get the public datasets for this path
     like_path = '{}%'.format(path)
     datasets = session.query(Dataset).filter(

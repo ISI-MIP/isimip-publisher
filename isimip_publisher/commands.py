@@ -199,15 +199,9 @@ def archive_datasets(path):
 
     session = init_database_session(settings.DATABASE)
 
-    if [path] == public_files:
-        # archive only one file
-        db_path = Path(path).parent.as_posix()
-    else:
-        db_path = path
-
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, db_path, public=True):
+    for db_dataset in retrieve_datasets(session, path, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
