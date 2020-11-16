@@ -64,6 +64,11 @@ def match_path(path_list, file_path):
 
 
 def copy_files(remote_dest, remote_path, local_path, path, files):
+    # check if only one file needs to be fetched
+    if [path] == files:
+        # fetch only one file
+        path = Path(path).parent.as_posix()
+
     # create the local_dir
     abs_path = local_path / path
     if abs_path.is_dir():
