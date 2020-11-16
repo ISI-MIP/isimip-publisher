@@ -149,7 +149,7 @@ class Settings(object):
 
             self._definitions = fetch_definitions(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
-            assert self._definitions is not None, 'No pattern found for {}'.format(self.PATH)
+            assert self._definitions is not None, 'No definitions found for {}'.format(self.PATH)
 
         return self._definitions
 
