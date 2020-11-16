@@ -404,8 +404,9 @@ def clean_tree(session):
 
     clean_tree_dict = {}
     for tree_path in tree_pathes:
-        specifiers = Path(tree_path).parts
-        clean_tree_dict = build_clean_tree_dict(database_tree.tree_dict, clean_tree_dict, specifiers)
+        if tree_path:
+            specifiers = Path(tree_path).parts
+            clean_tree_dict = build_clean_tree_dict(database_tree.tree_dict, clean_tree_dict, specifiers)
 
     # replace database_tree.tree_dict
     database_tree.tree_dict = clean_tree_dict
