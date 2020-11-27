@@ -81,9 +81,7 @@ def write_contour_plot(dataset_abspath, output_abspath):
                                 var = variable[0, 0, 0, :, :]
                             else:
                                 var = variable[0, 0, 0, 0, :, :]
-                        except (IndexError, ValueError, TypeError) as e:
-                            logger.warn(e)
-                        else:
+
                             plt.clf()
 
                             ax = plt.axes(projection=ccrs.PlateCarree())
@@ -98,7 +96,8 @@ def write_contour_plot(dataset_abspath, output_abspath):
                             fig.set_size_inches(WIDTH/DPI, HEIGHT/DPI)
                             fig.savefig(output_abspath, dpi=DPI)
 
-                            return
+                        except (IndexError, ValueError, TypeError) as e:
+                            logger.warn(e)
 
         except OSError:
             pass
