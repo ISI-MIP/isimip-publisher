@@ -30,7 +30,8 @@ def setup():
 
 def test_empty(setup, script_runner):
     response = script_runner.run('isimip-publisher')
-    assert response.returncode == 2
+    assert not response.stderr
+    assert response.returncode == 0
 
 
 def test_help(setup, script_runner):
@@ -41,10 +42,7 @@ def test_help(setup, script_runner):
 
 
 def test_list_remote(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'list_remote')
+    response = script_runner.run('isimip-publisher', 'list_remote', 'round/product/sector/model')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -52,30 +50,21 @@ def test_list_remote(setup, script_runner):
 
 
 def test_match_remote(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'match_remote')
+    response = script_runner.run('isimip-publisher', 'match_remote', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_fetch_files(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'fetch_files')
+    response = script_runner.run('isimip-publisher', 'fetch_files', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('fetch_files')
 
 
 def test_list_local(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'list_local')
+    response = script_runner.run('isimip-publisher', 'list_local', 'round/product/sector/model')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -83,70 +72,49 @@ def test_list_local(setup, script_runner):
 
 
 def test_match_local(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'match_local')
+    response = script_runner.run('isimip-publisher', 'match_local', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_write_jsons(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'write_jsons')
+    response = script_runner.run('isimip-publisher', 'write_jsons', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_jsons')
 
 
 def test_write_checksums(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'write_checksums')
+    response = script_runner.run('isimip-publisher', 'write_checksums', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_checksums')
 
 
 def test_write_thumbnails(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'write_thumbnails')
+    response = script_runner.run('isimip-publisher', 'write_thumbnails', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_thumbnails')
 
 
 def test_ingest_datasets(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'ingest_datasets')
+    response = script_runner.run('isimip-publisher', 'ingest_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('ingest_datasets')
 
 
 def test_publish_datasets(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'publish_datasets')
+    response = script_runner.run('isimip-publisher', 'publish_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('publish_datasets')
 
 
 def test_list_public(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'list_public')
+    response = script_runner.run('isimip-publisher', 'list_public', 'round/product/sector/model')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -154,90 +122,49 @@ def test_list_public(setup, script_runner):
 
 
 def test_match_public(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'match_public')
+    response = script_runner.run('isimip-publisher', 'match_public', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_index(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'update_index')
+    response = script_runner.run('isimip-publisher', 'update_index', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_check(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'check')
+    response = script_runner.run('isimip-publisher', 'check', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
-
-
-def test_ingest_resource(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'ingest_resource')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
-def test_ingest_resource_error(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'ingest_resource')
-    assert not response.success
-    assert not response.stdout
-    assert response.stderr.strip().endswith('is already in the database.'), response.stderr
-
-
-def test_update_resource(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'update_resource')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
-def test_update_resource_error(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model2',
-        'update_resource')
-    assert not response.success
-    assert not response.stdout
-    assert response.stderr.strip().endswith('was not found in the database.'), response.stderr
 
 
 def test_archive_datasets(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'archive_datasets')
+    response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('archive_datasets')
 
 
 def test_clean(setup, script_runner):
-    response = script_runner.run(
-        'isimip-publisher',
-        'round/product/sector/model',
-        'clean')
+    response = script_runner.run('isimip-publisher', 'clean', 'round/product/sector/model')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
+def test_ingest_resource(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'ingest_resource', '10.12345/ISIMIP.001')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
+def test_update_resource(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'update_resource', '10.12345/ISIMIP.001')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
