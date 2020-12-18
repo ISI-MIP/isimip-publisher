@@ -10,6 +10,7 @@ from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              retrieve_datasets, unpublish_dataset,
                              update_attributes_view, update_tree,
                              update_words_view)
+from .utils.datacite import gather_related_identifiers
 from .utils.files import copy_files, delete_files, list_files, move_files
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
@@ -19,29 +20,29 @@ from .utils.thumbnails import write_thumbnail_file
 logger = logging.getLogger(__name__)
 
 
-def list_local(path):
-    local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+def list_local():
+    local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in local_files:
         print(file_path)
 
 
-def list_public(path):
-    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+def list_public():
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in public_files:
         print(file_path)
 
 
-def list_remote(path):
-    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+def list_remote():
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
                               remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in remote_files:
         print(file_path)
 
 
-def match_remote(path):
-    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+def match_remote():
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
                               remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files):
@@ -50,8 +51,8 @@ def match_remote(path):
             file.validate(settings.SCHEMA)
 
 
-def match_local(path):
-    local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+def match_local():
+    local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files):
@@ -60,8 +61,8 @@ def match_local(path):
             file.validate(settings.SCHEMA)
 
 
-def match_public(path):
-    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+def match_public():
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files):
@@ -70,18 +71,18 @@ def match_public(path):
             file.validate(settings.SCHEMA)
 
 
-def fetch_files(path):
-    remote_files = list_files(settings.REMOTE_PATH, path, settings.PATTERN,
+def fetch_files():
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
                               remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(18))
-    for n in copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, path, remote_files):
+    for n in copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, settings.PATH, remote_files):
         t.update(n)
 
 
-def write_thumbnails(path):
+def write_thumbnails():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
@@ -97,9 +98,9 @@ def write_thumbnails(path):
             write_thumbnail_file(file.abspath, region)
 
 
-def write_jsons(path):
+def write_jsons():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
@@ -113,9 +114,9 @@ def write_jsons(path):
             write_json_file(file.abspath, file.json)
 
 
-def write_checksums(path):
+def write_checksums():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
@@ -129,9 +130,9 @@ def write_checksums(path):
             write_checksum_file(file.abspath, file.checksum, file.path)
 
 
-def ingest_datasets(path):
+def ingest_datasets():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
@@ -157,9 +158,9 @@ def ingest_datasets(path):
     session.commit()
 
 
-def publish_datasets(path):
+def publish_datasets():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, path, settings.PATTERN,
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
@@ -187,21 +188,21 @@ def publish_datasets(path):
 
         session.commit()
 
-    update_tree(session, path, settings.TREE)
+    update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     clean_tree(session)
     session.commit()
 
 
-def archive_datasets(path):
-    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+def archive_datasets():
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     session = init_database_session(settings.DATABASE)
 
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, path, public=True):
+    for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
@@ -224,34 +225,14 @@ def archive_datasets(path):
 
         session.commit()
 
-    update_tree(session, path, settings.TREE)
+    update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     clean_tree(session)
     session.commit()
 
 
-def ingest_resource(path):
-    session = init_database_session(settings.DATABASE)
-
-    datasets = retrieve_datasets(session, path, public=True)
-
-    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
-
-    session.commit()
-
-
-def update_resource(path):
-    session = init_database_session(settings.DATABASE)
-
-    datasets = retrieve_datasets(session, path, public=True)
-
-    insert_resource(session, path, settings.VERSION, settings.DATACITE, settings.ISIMIP_DATA_URL, datasets, update=True)
-
-    session.commit()
-
-
-def check(path):
-    public_files = list_files(settings.PUBLIC_PATH, path, settings.PATTERN,
+def check():
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
     datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files)
 
@@ -264,7 +245,7 @@ def check(path):
 
     # remove datasets from db_datasets which have no files in public_files
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, path, public=True):
+    for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
@@ -291,18 +272,46 @@ def check(path):
             'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
 
 
-def clean(path):
-    delete_files(settings.LOCAL_PATH, path)
-
-
-def update_index(path):
+def update_index():
     session = init_database_session(settings.DATABASE)
 
-    update_tree(session, path, settings.TREE)
+    update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     clean_tree(session)
     session.commit()
 
     update_words_view(session)
     update_attributes_view(session)
+    session.commit()
+
+
+def clean():
+    delete_files(settings.LOCAL_PATH, settings.PATH)
+
+
+def ingest_resource():
+    session = init_database_session(settings.DATABASE)
+
+    datasets = []
+    for path in settings.DATACITE.get('path', []):
+        datasets += retrieve_datasets(session, path, public=True)
+
+    gather_related_identifiers(settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
+
+    insert_resource(session, settings.DOI, settings.DATACITE, datasets)
+
+    session.commit()
+
+
+def update_resource():
+    session = init_database_session(settings.DATABASE)
+
+    datasets = []
+    for path in settings.DATACITE.get('path', []):
+        datasets += retrieve_datasets(session, path, public=True)
+
+    gather_related_identifiers(settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
+
+    insert_resource(session, settings.DOI, settings.DATACITE, datasets, update=True)
+
     session.commit()

@@ -10,8 +10,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
-from .datacite import gather_datasets
-
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
@@ -84,9 +82,6 @@ class Resource(Base):
     __tablename__ = 'resources'
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
-    path = Column(Text, nullable=False, index=True)
-    version = Column(String(8), nullable=False, index=True)
-
     doi = Column(Text, nullable=False, index=True)
     datacite = Column(JSONB, nullable=False)
 
@@ -193,7 +188,7 @@ def retrieve_datasets(session, path, public=None):
     if Path(path).suffix:
         path = Path(path).parent.as_posix()
 
-    like_path = '{}%'.format(path)
+    like_path = '{}/%'.format(path)
 
     if public is None:
         datasets = session.query(Dataset).filter(
@@ -267,17 +262,12 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         session.add(file)
 
 
-def insert_resource(session, path, version, datacite, isimip_data_url, datasets, update=False):
+def insert_resource(session, doi, datacite, datasets, update=False):
     # get the doi and the datacite version
-    doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
+    datacite_doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
     datacite_version = datacite.get('version')
-    assert doi is not None
-    assert datacite_version is not None
-
-    # add datasets to relatedIdentifiers
-    if 'relatedIdentifiers' not in datacite:
-        datacite['relatedIdentifiers'] = []
-    datacite['relatedIdentifiers'] += gather_datasets(isimip_data_url, datasets)
+    assert datacite_doi == doi, 'The DOI in the metadata does not match the provided DOI.'
+    assert datacite_version is not None, 'No DataCite version was provided.'
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
@@ -286,17 +276,13 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets,
 
     if update:
         if resource is not None:
-            if resource.path != path:
-                message = 'A resource with doi={} was found in the database, but for a different path={}.'.format(doi, path)
-                raise RuntimeError(message)
-
             # check that the datasets match
             if sorted(resource.datasets, key=lambda d: d.id) != sorted(datasets, key=lambda d: d.id):
                 message = 'A resource with doi={} was found in the database, but the list of related public datasets changed. Please consider a new DOI.'.format(doi)
                 raise RuntimeError(message)
 
             if resource.datacite == datacite:
-                logger.debug('skip resource %s', path)
+                logger.debug('skip resource %s', doi)
             else:
                 # check that the datacite version is not the same
                 if resource.datacite.get('version') == datacite_version:
@@ -312,10 +298,8 @@ def insert_resource(session, path, version, datacite, isimip_data_url, datasets,
     else:
         if resource is None:
             # insert a new resource
-            logger.debug('insert resource %s', path)
+            logger.debug('insert resource %s', doi)
             resource = Resource(
-                path=path,
-                version=str(version),
                 doi=doi,
                 datacite=datacite
             )

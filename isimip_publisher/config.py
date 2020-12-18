@@ -135,10 +135,8 @@ class Settings(object):
     @property
     def DATACITE(self):
         if not hasattr(self, '_datacite'):
-            datacite_path = self.DATACITE_PATH / self.PATH
-            assert len(list(datacite_path.iterdir())) == 1, 'More than one DataCite file for {}'.format(self.PATH)
-            file_path = next(datacite_path.iterdir())
-            self._datacite = json.loads(file_path.read_text())
+            datacite_path = Path(str(self.DATACITE_PATH / self.DOI) + '.json')
+            self._datacite = json.loads(datacite_path.read_text())
 
         return self._datacite
 

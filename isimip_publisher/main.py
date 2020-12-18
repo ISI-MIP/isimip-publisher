@@ -12,9 +12,6 @@ from .config import settings
 def get_parser(add_path=False, add_subparsers=False):
     parser = argparse.ArgumentParser()
 
-    if add_path:
-        parser.add_argument('path', help='path of the files to publish')
-
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
 
@@ -54,25 +51,19 @@ def get_parser(add_path=False, add_subparsers=False):
         subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
         # add a subparser for each subcommand
-        subparsers.add_parser('list_remote').set_defaults(func=list_remote)
-        subparsers.add_parser('list_local').set_defaults(func=list_local)
-        subparsers.add_parser('list_public').set_defaults(func=list_public)
-        subparsers.add_parser('match_remote').set_defaults(func=match_remote)
-        subparsers.add_parser('match_local').set_defaults(func=match_local)
-        subparsers.add_parser('match_public').set_defaults(func=match_public)
-        subparsers.add_parser('fetch_files').set_defaults(func=fetch_files)
-        subparsers.add_parser('write_thumbnails').set_defaults(func=write_thumbnails)
-        subparsers.add_parser('write_jsons').set_defaults(func=write_jsons)
-        subparsers.add_parser('write_checksums').set_defaults(func=write_checksums)
-        subparsers.add_parser('ingest_datasets').set_defaults(func=ingest_datasets)
-        subparsers.add_parser('publish_datasets').set_defaults(func=publish_datasets)
-        subparsers.add_parser('archive_datasets').set_defaults(func=archive_datasets)
-        subparsers.add_parser('ingest_resource').set_defaults(func=ingest_resource)
-        subparsers.add_parser('update_resource').set_defaults(func=update_resource)
-        subparsers.add_parser('check').set_defaults(func=check)
-        subparsers.add_parser('clean').set_defaults(func=clean)
-        subparsers.add_parser('update_index').set_defaults(func=update_index)
-        subparsers.add_parser('run').set_defaults(func=run)
+        for func in [list_remote, list_local, list_public,
+                     match_remote, match_local, match_public,
+                     fetch_files, write_thumbnails, write_jsons, write_checksums,
+                     ingest_datasets, publish_datasets, archive_datasets,
+                     check, clean, update_index, run]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
+            subparser.add_argument('path', help='path of the files to process')
+
+        for func in [ingest_resource, update_resource]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
+            subparser.add_argument('doi', help='DOI to process')
 
     return parser
 
@@ -84,18 +75,18 @@ def main():
 
     if hasattr(args, 'func'):
         try:
-            args.func(args.path)
+            args.func()
         except AssertionError as e:
             parser.error(e)
     else:
         parser.print_help()
 
 
-def run(store=None):
-    match_remote(store)
-    fetch_files(store)
-    write_thumbnails(store)
-    write_checksums(store)
-    write_jsons(store)
-    ingest_datasets(store)
-    publish_datasets(store)
+def run():
+    match_remote()
+    fetch_files()
+    write_thumbnails()
+    write_checksums()
+    write_jsons()
+    ingest_datasets()
+    publish_datasets()
