@@ -84,7 +84,7 @@ def fetch_json(bases, path):
                 return response.json()
 
         else:
-            location = Path(base) / path
+            location = Path(base).expanduser() / path
             logger.debug('json_path = %s', location)
 
             if location.exists():
