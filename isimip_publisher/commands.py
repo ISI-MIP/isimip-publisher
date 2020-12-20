@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .config import settings, store
-from .utils.checksum import write_checksum_file
+from .utils.checksum import get_checksum_suffix, write_checksum_file
 from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
@@ -21,29 +21,27 @@ logger = logging.getLogger(__name__)
 
 
 def list_local():
-    local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                             include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in local_files:
         print(file_path)
 
 
 def list_public():
-    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
-                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
     for file_path in public_files:
         print(file_path)
 
 
 def list_remote():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
-                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
     for file_path in remote_files:
         print(file_path)
 
 
 def match_remote():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
-                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
     for dataset in match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files):
         dataset.validate(settings.SCHEMA)
@@ -52,8 +50,7 @@ def match_remote():
 
 
 def match_local():
-    local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                             include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files):
         dataset.validate(settings.SCHEMA)
@@ -62,8 +59,7 @@ def match_local():
 
 
 def match_public():
-    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
-                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files):
         dataset.validate(settings.SCHEMA)
@@ -72,8 +68,8 @@ def match_public():
 
 
 def fetch_files():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, settings.PATTERN,
-                              remote_dest=settings.REMOTE_DEST, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
     t = tqdm(total=len(remote_files), desc='fetch_files'.ljust(18))
     for n in copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, settings.PATH, remote_files):
@@ -82,8 +78,7 @@ def fetch_files():
 
 def write_thumbnails():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
@@ -100,8 +95,7 @@ def write_thumbnails():
 
 def write_jsons():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
@@ -116,8 +110,7 @@ def write_jsons():
 
 def write_checksums():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
@@ -132,8 +125,7 @@ def write_checksums():
 
 def ingest_datasets():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
         for dataset in store.datasets:
@@ -160,18 +152,17 @@ def ingest_datasets():
 
 def publish_datasets():
     if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, settings.PATTERN,
-                                 include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         store.datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
 
     for dataset in store.datasets:
         dataset.validate(settings.SCHEMA)
         for file in dataset.files:
             file.validate(settings.SCHEMA)
-
-            assert Path(file.abspath).is_file()
-            assert Path(file.abspath).with_suffix('.json').is_file()
-            assert Path(file.abspath).with_suffix('.png').is_file()
+            file_path = Path(file.abspath)
+            assert file_path.is_file(), '{} does not exist'.format(file_path)
+            for suffix in ['.json', '.png']:
+                assert file_path.with_suffix(suffix).is_file(), '{} does not exist'.format(file_path.with_suffix(suffix))
 
     session = init_database_session(settings.DATABASE)
 
@@ -181,8 +172,8 @@ def publish_datasets():
         for file in dataset.files:
             move_files(settings.LOCAL_PATH, settings.PUBLIC_PATH, [
                 Path(file.abspath),
+                Path(file.abspath).with_suffix(get_checksum_suffix()),
                 Path(file.abspath).with_suffix('.png'),
-                Path(file.abspath).with_suffix('.' + file.checksum_type),
                 Path(file.abspath).with_suffix('.json')
             ])
 
@@ -195,8 +186,7 @@ def publish_datasets():
 
 
 def archive_datasets():
-    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
-                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     session = init_database_session(settings.DATABASE)
 
@@ -217,7 +207,7 @@ def archive_datasets():
                 file_abspath = settings.PUBLIC_PATH / file.path
                 if file_abspath.is_file():
                     files.append(file_abspath)
-                for suffix in ['.png', '.' + file.checksum_type, '.json']:
+                for suffix in [get_checksum_suffix(), '.png', '.json']:
                     if file_abspath.with_suffix(suffix).is_file():
                         files.append(file_abspath.with_suffix(suffix))
 
@@ -232,8 +222,7 @@ def archive_datasets():
 
 
 def check():
-    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, settings.PATTERN,
-                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
     datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files)
 
     for dataset in datasets:

@@ -21,6 +21,10 @@ def get_checksum_type():
     return CHECKSUM_TYPE
 
 
+def get_checksum_suffix():
+    return '.' + CHECKSUM_TYPE
+
+
 def write_checksum_file(abspath, checksum, path):
     checksum_path = Path(abspath).with_suffix('.' + get_checksum_type())
 

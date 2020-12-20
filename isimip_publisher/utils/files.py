@@ -5,32 +5,19 @@ import subprocess
 from pathlib import Path
 
 from ..config import settings
-from .checksum import get_checksum
+from .checksum import get_checksum, get_checksum_suffix
 from .netcdf import update_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
 
 
-def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude=None):
+def list_files(base_path, path, include=None, exclude=None, remote_dest=None, suffix=None):
     abs_path = base_path / path
 
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', abs_path.as_posix()]
-
-        for suffix in pattern['suffix']:
-            args += ['-name', '\'*{}\''.format(suffix)]
-
-            if suffix != pattern['suffix'][-1]:
-                args += ['-or']
-
+        args = ['ssh', remote_dest, 'find', abs_path.as_posix(), '-type', 'f']
     else:
-        args = ['find', abs_path.as_posix()]
-
-        for suffix in pattern['suffix']:
-            args += ['-name', '*{}'.format(suffix)]
-
-            if suffix != pattern['suffix'][-1]:
-                args += ['-or']
+        args = ['find', abs_path.as_posix(), '-type', 'f']
 
     logger.debug('args = %s', args)
 
@@ -42,7 +29,13 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
     files = []
     for line in output.splitlines():
         file_abspath = line.decode()
-        file_path = file_abspath.replace(base_path.as_posix() + os.sep, '')
+        file_path = Path(file_abspath).relative_to(base_path)
+
+        if file_path.suffix in [get_checksum_suffix(), '.png', '.json']:
+            continue
+
+        if suffix and file_path.suffix not in suffix:
+            continue
 
         if include and not match_path(include, file_path):
             continue
@@ -50,7 +43,7 @@ def list_files(base_path, path, pattern, remote_dest=None, include=None, exclude
         if exclude and match_path(exclude, file_path):
             continue
 
-        files.append(file_path)
+        files.append(file_path.as_posix())
 
     return files
 
