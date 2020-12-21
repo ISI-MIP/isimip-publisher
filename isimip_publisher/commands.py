@@ -11,7 +11,7 @@ from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              update_attributes_view, update_tree,
                              update_words_view)
 from .utils.datacite import gather_related_identifiers
-from .utils.files import copy_files, delete_files, list_files, move_files
+from .utils.files import copy_files, delete_file, list_files, move_file
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
 from .utils.region import get_region
@@ -170,12 +170,12 @@ def publish_datasets():
         publish_dataset(session, settings.VERSION, dataset.path)
 
         for file in dataset.files:
-            move_files(settings.LOCAL_PATH, settings.PUBLIC_PATH, [
-                Path(file.abspath),
-                Path(file.abspath).with_suffix(get_checksum_suffix()),
-                Path(file.abspath).with_suffix('.png'),
-                Path(file.abspath).with_suffix('.json')
-            ])
+            source_path = Path(file.abspath)
+            target_path = Path(settings.PUBLIC_PATH) / Path(source_path).relative_to(settings.LOCAL_PATH)
+
+            move_file(source_path, target_path)
+            for suffix in [get_checksum_suffix(), '.png', '.json']:
+                move_file(source_path.with_suffix(suffix), target_path.with_suffix(suffix))
 
         session.commit()
 
@@ -203,15 +203,15 @@ def archive_datasets():
             archive_path = settings.ARCHIVE_PATH / dataset_version
 
             for file in db_dataset.files:
-                files = []
-                file_abspath = settings.PUBLIC_PATH / file.path
-                if file_abspath.is_file():
-                    files.append(file_abspath)
-                for suffix in [get_checksum_suffix(), '.png', '.json']:
-                    if file_abspath.with_suffix(suffix).is_file():
-                        files.append(file_abspath.with_suffix(suffix))
+                source_path = settings.PUBLIC_PATH / file.path
+                target_path = settings.ARCHIVE_PATH / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
-                move_files(settings.PUBLIC_PATH, archive_path, files)
+                if source_path.is_file():
+                    move_file(source_path, target_path)
+
+                for suffix in [get_checksum_suffix(), '.png', '.json']:
+                    if source_path.with_suffix(suffix).is_file():
+                        move_file(source_path.with_suffix(suffix), target_path.with_suffix(suffix))
 
         session.commit()
 
@@ -219,6 +219,10 @@ def archive_datasets():
     session.commit()
     clean_tree(session)
     session.commit()
+
+
+def move_datasets():
+    pass
 
 
 def check():

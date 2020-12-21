@@ -103,41 +103,32 @@ def copy_files(remote_dest, remote_path, local_path, path, files):
         os.remove(include_file)
 
 
-def move_files(source_dir, target_dir, files, keep=False):
-    moves = []
-    for source_path in files:
-        logger.info('move_files %s', source_path)
+def move_file(source_path, target_path, keep=False):
+    logger.info('move_file %s', source_path)
 
-        target_path = Path(target_dir) / Path(source_path).relative_to(source_dir)
+    # check if the file is already public
+    if target_path.exists():
+        # raise an error if it is a different file!
+        if get_checksum(source_path) != get_checksum(target_path):
+            raise RuntimeError('The file %s already exists and has a different checksum than %s' %
+                               (source_path, target_path))
 
-        # check if the file is already public
-        if target_path.exists():
-            # raise an error if it is a different file!
-            if get_checksum(source_path) != get_checksum(target_path):
-                raise RuntimeError('The file %s already exists and has a different checksum than %s' %
-                                   (source_path, target_path))
-        else:
-            moves.append((source_path, target_path))
+    # create the directories for the file
+    target_path.parent.mkdir(parents=True, exist_ok=True)
 
-    for source_path, target_path in moves:
-        # create the directories for the file
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # copy the file
-        if keep:
-            logger.debug('cp %s %s', source_path, target_path)
-            shutil.copy(source_path, target_path)
-        else:
-            logger.debug('mv %s %s', source_path, target_path)
-            shutil.move(source_path, target_path)
+    # copy the file
+    if keep:
+        logger.debug('cp %s %s', source_path, target_path)
+        shutil.copy(source_path, target_path)
+    else:
+        logger.debug('mv %s %s', source_path, target_path)
+        shutil.move(source_path, target_path)
 
 
-def delete_files(local_path, path):
-    abs_path = local_path / path
-
-    logger.debug('rm -r %s', abs_path)
+def delete_file(abs_path):
+    logger.debug('rm %s', abs_path)
     try:
-        shutil.rmtree(abs_path)
+        os.remove(abs_path)
     except FileNotFoundError:
         pass
 
