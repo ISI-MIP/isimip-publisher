@@ -260,9 +260,17 @@ def check():
             assert file.checksum == db_file.checksum, \
                 'Checksum mismatch {} != {} for file {}'.format(file.checksum, db_file.checksum, db_file.id)
 
+            # check if the specifiers match
+            assert file.specifiers == db_file.specifiers, \
+                'Specifier mismatch {} != {} for file {}'.format(file.specifiers, db_file.specifiers, db_file.id)
+
         # check dataset
         assert dataset.path == db_dataset.path, \
             'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
+
+        # check if the specifiers match
+        assert dataset.specifiers == db_dataset.specifiers, \
+            'Specifier mismatch {} != {} for dataset {}'.format(dataset.specifiers, db_dataset.specifiers, db_dataset.id)
 
 
 def update_index():
