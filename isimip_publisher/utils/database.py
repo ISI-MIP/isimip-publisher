@@ -113,8 +113,6 @@ def init_database_session(database_settings):
 
 
 def insert_dataset(session, version, name, path, size, specifiers):
-    logger.info('insert_dataset %s', path)
-
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -122,15 +120,11 @@ def insert_dataset(session, version, name, path, size, specifiers):
     ).one_or_none()
 
     if dataset:
-        # if the dataset already exists, update its specifiers
-        if dataset.specifiers != specifiers:
-            dataset.specifiers = specifiers
-            dataset.identifiers = list(specifiers.keys())
-            dataset.search_vector = get_search_vector(specifiers)
-            logger.debug('update dataset %s', path)
-        else:
-            logger.debug('skip dataset %s', path)
-
+        logger.debug('skip dataset %s', path)
+        assert dataset.name == name, \
+            'Dataset {} is already stored, but with different name'.format(path)
+        assert dataset.specifiers == specifiers, \
+            'Dataset {} is already stored, but with different specifiers'.format(path)
     else:
         # insert a new row for this dataset
         logger.debug('insert dataset %s', path)
@@ -148,27 +142,45 @@ def insert_dataset(session, version, name, path, size, specifiers):
 
 
 def publish_dataset(session, version, path):
-    # check that there is no public version of this dataset
+    # check that there is no public dataset with the same path
     public_dataset = session.query(Dataset).filter(
         Dataset.path == path,
         Dataset.public == True
     ).one_or_none()
 
-    if public_dataset and public_dataset.version != version:
-        raise RuntimeError('A public dataset with the path %s and the version %s was found' %
-                           (path, public_dataset.version))
+    assert public_dataset is None or public_dataset.version == version, \
+        'A public dataset with the path %s and the version %s was found' % (path, public_dataset.version)
 
-    # mark this dataset public
+    # get the dataset
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
         Dataset.version == version
     ).one_or_none()
 
-    if dataset is None:
-        raise RuntimeError('No dataset with the name %s and the version %s found' %
-                           (path, public_dataset.version))
+    assert dataset is not None, \
+        'No dataset with the name %s and the version %s found' % (path, public_dataset.version)
 
+    # mark this dataset public
+    logger.debug('publish dataset %s', path)
     dataset.public = True
+
+
+def update_dataset(session, name, path, specifiers):
+    # check if the dataset is already in the database
+    dataset = session.query(Dataset).filter(
+        Dataset.path == path,
+        Dataset.public == True
+    ).one_or_none()
+
+    assert dataset is not None, \
+        'No public dataset with the path {} found.'.format(path)
+
+    # update the dataset
+    logger.debug('update dataset %s', path)
+    dataset.name = name
+    dataset.specifiers = specifiers
+    dataset.identifiers = list(specifiers.keys())
+    dataset.search_vector = get_search_vector(specifiers)
 
 
 def unpublish_dataset(session, path):
@@ -179,6 +191,8 @@ def unpublish_dataset(session, path):
     ).one_or_none()
 
     if public_dataset:
+        # mark this dataset archived
+        logger.debug('unpublish dataset %s', path)
         public_dataset.public = False
         return public_dataset.version
 
@@ -209,16 +223,14 @@ def retrieve_datasets(session, path, public=None):
 
 
 def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers):
-    logger.info('insert_file %s', path)
-
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
         Dataset.version == version
     ).one_or_none()
 
-    if dataset is None:
-        raise RuntimeError('No dataset with the name %s and the version %s found' % (dataset_path, version))
+    assert dataset is not None, \
+        'No dataset with the path {} found'.format(dataset_path)
 
     # check if the file is already in the database
     file = session.query(File).filter(
@@ -227,22 +239,15 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
     ).one_or_none()
 
     if file:
-        if uuid is not None and file.id != uuid:
-            # the file is already stored with a different id
-            raise RuntimeError('%s is already stored with the same version but a different id' % path)
-
-        if file.checksum == checksum:
-            # the file itself has not changed, update the specifiers
-            if file.specifiers != specifiers:
-                file.specifiers = specifiers
-                file.identifiers = list(specifiers.keys())
-                file.search_vector = get_search_vector(specifiers)
-                logger.debug('update file %s', path)
-            else:
-                logger.debug('skip file %s', path)
-        else:
-            # the file has been changed, but the version is the same, this is not ok
-            raise RuntimeError('%s has been changed but the version is the same' % path)
+        logger.debug('skip file %s', path)
+        assert uuid is None or file.id == uuid, \
+            'File {} is already stored with the same version, but a different id'.format(path)
+        assert file.checksum == checksum, \
+            'File {} is already stored with the same version, but a different checksum'.format(path)
+        assert file.name == name, \
+            'File {} is already stored with the same version, but a different name'.format(path)
+        assert file.specifiers == specifiers, \
+            'File {} is already stored with the same version, but different specifiers'.format(path)
     else:
         # insert a new row for this file
         logger.debug('insert file %s', path)
@@ -260,6 +265,32 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
             dataset=dataset
         )
         session.add(file)
+
+
+def update_file(session, dataset_path, name, path, specifiers):
+    logger.info('update_file %s', path)
+
+    # get the dataset from the database
+    dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.public == True
+    ).one_or_none()
+
+    assert dataset is not None, \
+        'No public dataset with the path {} found'.format(dataset_path)
+
+    # check if the file is already in the database
+    file = session.query(File).filter(
+        File.path == path,
+        File.dataset == dataset
+    ).one_or_none()
+
+    if file:
+        logger.debug('update file %s', path)
+        file.name = name
+        file.specifiers = specifiers
+    else:
+        raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
 
 
 def insert_resource(session, doi, datacite, datasets, update=False):

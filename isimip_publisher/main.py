@@ -3,9 +3,10 @@ import argparse
 from .commands import (archive_datasets, check, clean, fetch_files,
                        ingest_datasets, ingest_resource, list_local,
                        list_public, list_remote, match_local, match_public,
-                       match_remote, move_datasets, publish_datasets,
-                       update_index, update_resource, write_checksums,
-                       write_jsons, write_thumbnails)
+                       match_remote, publish_datasets, update_datasets,
+                       update_index, update_jsons, update_resource,
+                       update_thumbnails, write_checksums, write_jsons,
+                       write_thumbnails)
 from .config import settings
 
 
@@ -53,18 +54,13 @@ def get_parser(add_path=False, add_subparsers=False):
         # add a subparser for each subcommand
         for func in [list_remote, list_local, list_public,
                      match_remote, match_local, match_public,
-                     fetch_files, write_thumbnails, write_jsons, write_checksums,
-                     ingest_datasets, publish_datasets, archive_datasets,
+                     fetch_files, write_thumbnails, update_thumbnails,
+                     write_jsons, update_jsons, write_checksums,
+                     ingest_datasets, update_datasets, publish_datasets, archive_datasets,
                      check, clean, update_index, run]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('path', help='path of the files to process')
-
-        for func in [move_datasets]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('path', help='path of the files to process')
-            subparser.add_argument('new_path', help='new path for the files')
 
         for func in [ingest_resource, update_resource]:
             subparser = subparsers.add_parser(func.__name__)
