@@ -268,7 +268,9 @@ def update_index():
 
 
 def clean():
-    delete_files(settings.LOCAL_PATH, settings.PATH)
+    local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    for file_path in local_files:
+        delete_file(settings.LOCAL_PATH / file_path)
 
 
 def ingest_resource():
