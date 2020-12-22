@@ -204,7 +204,7 @@ def archive_datasets():
 
             for file in db_dataset.files:
                 source_path = settings.PUBLIC_PATH / file.path
-                target_path = settings.ARCHIVE_PATH / Path(source_path).relative_to(settings.PUBLIC_PATH)
+                target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
                 if source_path.is_file():
                     move_file(source_path, target_path)
