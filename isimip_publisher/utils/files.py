@@ -50,7 +50,7 @@ def list_files(base_path, path, include=None, exclude=None, remote_dest=None, su
 
 def match_path(path_list, file_path):
     for path in path_list:
-        if path and not path.startswith('#') and file_path.startswith(path):
+        if path and not path.startswith('#') and str(file_path).startswith(path):
             return True
 
     return False

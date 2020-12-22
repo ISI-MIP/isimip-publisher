@@ -16,7 +16,7 @@ from .utils.json import write_json_file
 from .utils.patterns import match_datasets
 from .utils.region import get_region
 from .utils.thumbnails import write_thumbnail_file
-from .utils.validation import validate_datasets
+from .utils.validation import check_datasets, validate_datasets
 
 logger = logging.getLogger(__name__)
 
@@ -206,19 +206,20 @@ def archive_datasets():
 
     session = init_database_session(settings.DATABASE)
 
-    # remove datasets from db_datasets which have no files in public_files
+    # since we have only files, not datasets (patterns could have changed since publication),
+    # we retrieve all datasets for this path and remove datasets which have no files in public_files
     db_datasets = []
     for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
-    for db_dataset in tqdm(db_datasets, desc='archive_datasets'.ljust(18)):
-        dataset_version = unpublish_dataset(session, db_dataset.path)
+    for dataset in tqdm(db_datasets, desc='archive_datasets'.ljust(18)):
+        dataset_version = unpublish_dataset(session, dataset.path)
 
         if dataset_version:
             archive_path = settings.ARCHIVE_PATH / dataset_version
 
-            for file in db_dataset.files:
+            for file in dataset.files:
                 source_path = settings.PUBLIC_PATH / file.path
                 target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
@@ -244,41 +245,13 @@ def check():
 
     session = init_database_session(settings.DATABASE)
 
-    # remove datasets from db_datasets which have no files in public_files
+    # retrieve all datasets for this path and remove datasets which have no files in public_files
     db_datasets = []
     for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
-    assert len(datasets) == len(db_datasets), \
-        'Length mismatch {} != {}'.format(len(datasets), len(db_datasets))
-
-    for dataset, db_dataset in zip(datasets, db_datasets):
-        for file, db_file in zip(dataset.files, db_dataset.files):
-            # check file
-            assert file.path == db_file.path, \
-                'Path mismatch {} != {} for file {}'.format(file.path, db_file.path, db_file.id)
-
-            if file.uuid:
-                assert str(file.uuid) == db_file.id, \
-                    'UUID mismatch {} != {} for file {}'.format(file.uuid, db_file.id, db_file.id)
-
-            # patch checksum_type in order to compute checksum with a non default checksum_type
-            file.checksum_type = db_file.checksum_type
-            assert file.checksum == db_file.checksum, \
-                'Checksum mismatch {} != {} for file {}'.format(file.checksum, db_file.checksum, db_file.id)
-
-            # check if the specifiers match
-            assert file.specifiers == db_file.specifiers, \
-                'Specifier mismatch {} != {} for file {}'.format(file.specifiers, db_file.specifiers, db_file.id)
-
-        # check dataset
-        assert dataset.path == db_dataset.path, \
-            'Path mismatch {} != {} for dataset {}'.format(dataset.path, db_dataset.path, db_dataset.id)
-
-        # check if the specifiers match
-        assert dataset.specifiers == db_dataset.specifiers, \
-            'Specifier mismatch {} != {} for dataset {}'.format(dataset.specifiers, db_dataset.specifiers, db_dataset.id)
+    check_datasets(datasets, db_datasets)
 
 
 def update_index():
