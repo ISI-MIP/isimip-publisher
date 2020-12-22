@@ -9,7 +9,8 @@ from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
                              update_attributes_view, update_dataset,
-                             update_file, update_tree, update_words_view)
+                             update_file, update_resource, update_tree,
+                             update_words_view)
 from .utils.datacite import gather_related_identifiers
 from .utils.files import copy_files, delete_file, list_files, move_file
 from .utils.json import write_json_file
@@ -128,7 +129,7 @@ def write_checksums():
             write_checksum_file(file.abspath, file.checksum, file.path)
 
 
-def ingest_datasets():
+def insert_datasets():
     if not store.datasets:
         local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
@@ -137,7 +138,7 @@ def ingest_datasets():
 
     session = init_database_session(settings.DATABASE)
 
-    for dataset in tqdm(store.datasets, desc='ingest_datasets'.ljust(18)):
+    for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
         insert_dataset(session, settings.VERSION, dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:
@@ -273,29 +274,29 @@ def clean():
         delete_file(settings.LOCAL_PATH / file_path)
 
 
-def ingest_resource():
+def insert_doi():
     session = init_database_session(settings.DATABASE)
 
     datasets = []
-    for path in settings.DATACITE.get('path', []):
+    for path in settings.RESOURCE.get('path', []):
         datasets += retrieve_datasets(session, path, public=True)
 
-    gather_related_identifiers(settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
+    gather_related_identifiers(settings.RESOURCE, settings.ISIMIP_DATA_URL, datasets)
 
-    insert_resource(session, settings.DOI, settings.DATACITE, datasets)
+    insert_resource(session, settings.DOI, settings.RESOURCE.get('datacite'), datasets)
 
     session.commit()
 
 
-def update_resource():
+def update_doi():
     session = init_database_session(settings.DATABASE)
 
     datasets = []
-    for path in settings.DATACITE.get('path', []):
+    for path in settings.RESOURCE.get('path', []):
         datasets += retrieve_datasets(session, path, public=True)
 
-    gather_related_identifiers(settings.DATACITE, settings.ISIMIP_DATA_URL, datasets)
+    gather_related_identifiers(settings.RESOURCE, settings.ISIMIP_DATA_URL, datasets)
 
-    insert_resource(session, settings.DOI, settings.DATACITE, datasets, update=True)
+    update_resource(session, settings.DOI, settings.RESOURCE.get('datacite'), datasets)
 
     session.commit()

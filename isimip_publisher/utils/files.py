@@ -14,10 +14,9 @@ logger = logging.getLogger(__name__)
 def list_files(base_path, path, include=None, exclude=None, remote_dest=None, suffix=None):
     abs_path = base_path / path
 
+    args = ['find', abs_path.as_posix(), '-type', 'f', '-or', '-type', 'l']
     if remote_dest:
-        args = ['ssh', remote_dest, 'find', abs_path.as_posix(), '-type', 'f']
-    else:
-        args = ['find', abs_path.as_posix(), '-type', 'f']
+        args = ['ssh', remote_dest] + args
 
     logger.debug('args = %s', args)
 
@@ -25,6 +24,8 @@ def list_files(base_path, path, include=None, exclude=None, remote_dest=None, su
         output = subprocess.check_output(args)
     except subprocess.CalledProcessError:
         output = ''
+
+    logger.debug('output = %s', output)
 
     files = []
     for line in output.splitlines():

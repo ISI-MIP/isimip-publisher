@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 from dotenv import load_dotenv
-from isimip_publisher.utils.database import Dataset, init_database_session
+from isimip_publisher.utils.database import (Dataset, Resource,
+                                             init_database_session)
 
 
 @pytest.fixture(scope='session')
@@ -19,11 +20,13 @@ def setup():
     shutil.rmtree(test_dir / 'archive', ignore_errors=True)
 
     session = init_database_session(os.getenv('DATABASE'))
+    for resource in session.query(Resource):
+        session.delete(resource)
+    session.commit()
+
     for dataset in session.query(Dataset):
         for file in dataset.files:
             session.delete(file)
-        for resource in dataset.resources:
-            session.delete(resource)
         session.delete(dataset)
     session.commit()
 
@@ -99,11 +102,11 @@ def test_write_thumbnails(setup, script_runner):
     assert response.stderr.strip().startswith('write_thumbnails')
 
 
-def test_ingest_datasets(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'ingest_datasets', 'round/product/sector/model')
+def test_insert_datasets(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'insert_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('ingest_datasets')
+    assert response.stderr.strip().startswith('insert_datasets')
 
 
 def test_publish_datasets(setup, script_runner):
@@ -156,15 +159,15 @@ def test_clean(setup, script_runner):
     assert not response.stderr
 
 
-def test_ingest_resource(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'ingest_resource', '10.12345/ISIMIP.001')
+def test_insert_doi(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'insert_doi', '10.12345/ISIMIP.001')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_resource(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_resource', '10.12345/ISIMIP.001')
+def test_update_doi(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'update_doi', '10.12345/ISIMIP.001')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr

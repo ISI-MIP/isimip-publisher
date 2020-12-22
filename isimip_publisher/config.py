@@ -116,9 +116,9 @@ class Settings(object):
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @property
-    def DATACITE_PATH(self):
-        assert self.DATACITE_DIR is not None, 'DATACITE_PATH is not set'
-        return Path(self.DATACITE_DIR).expanduser()
+    def RESOURCE_PATH(self):
+        assert self.RESOURCE_DIR is not None, 'RESOURCE_DIR is not set'
+        return Path(self.RESOURCE_DIR).expanduser()
 
     @property
     def EXCLUDE(self):
@@ -133,12 +133,12 @@ class Settings(object):
         return self._include
 
     @property
-    def DATACITE(self):
-        if not hasattr(self, '_datacite'):
-            datacite_path = Path(str(self.DATACITE_PATH / self.DOI) + '.json')
-            self._datacite = json.loads(datacite_path.read_text())
+    def RESOURCE(self):
+        if not hasattr(self, '_resource'):
+            resource_path = Path(str(self.RESOURCE_PATH / self.DOI) + '.json')
+            self._resource = json.loads(resource_path.read_text())
 
-        return self._datacite
+        return self._resource
 
     @property
     def DEFINITIONS(self):
