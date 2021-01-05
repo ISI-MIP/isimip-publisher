@@ -300,3 +300,7 @@ def update_doi():
     update_resource(session, settings.DOI, settings.RESOURCE.get('datacite'), datasets)
 
     session.commit()
+
+
+def init():
+    init_database_session(settings.DATABASE)

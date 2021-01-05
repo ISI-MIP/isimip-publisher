@@ -1,6 +1,6 @@
 import argparse
 
-from .commands import (archive_datasets, check, clean, fetch_files,
+from .commands import (archive_datasets, check, clean, fetch_files, init,
                        insert_datasets, insert_doi, list_local, list_public,
                        list_remote, match_local, match_public, match_remote,
                        publish_datasets, update_datasets, update_doi,
@@ -65,6 +65,10 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('doi', help='DOI to process')
+
+        for func in [init]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
 
     return parser
 
