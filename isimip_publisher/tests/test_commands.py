@@ -131,6 +131,20 @@ def test_match_public(setup, script_runner):
     assert not response.stderr
 
 
+def test_insert_resources(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'insert_resources', 'testing/resources/ISIMIP.001.json')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr
+
+
+def test_update_resources(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'update_resources', 'testing/resources/ISIMIP.001.json')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr  # version warning
+
+
 def test_update_index(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'update_index', 'round/product/sector/model')
     assert response.success, response.stderr
@@ -154,20 +168,6 @@ def test_archive_datasets(setup, script_runner):
 
 def test_clean(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'clean', 'round/product/sector/model')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
-def test_insert_doi(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_doi', '10.12345/ISIMIP.001')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert not response.stderr
-
-
-def test_update_doi(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_doi', '10.12345/ISIMIP.001')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
