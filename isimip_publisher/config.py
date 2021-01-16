@@ -28,6 +28,8 @@ class Settings(object):
         'VERSION': date.today().strftime('%Y%m%d'),
         'PROTOCOL_LOCATIONS': 'https://protocol.isimip.org https://protocol2.isimip.org',
         'ISIMIP_DATA_URL': 'https://data.isimip.org/',
+        'DATACITE_METADATA_URL': 'https://mds.datacite.org/metadata',
+        'DATACITE_DOI_URL': 'https://mds.datacite.org/doi',
         'MOCK': 'false'
     }
 

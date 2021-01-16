@@ -10,6 +10,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
+from .datacite import add_datasets_to_related_identifiers, get_doi
+
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
@@ -298,7 +300,7 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     # get the datacite metadata and the doi
     datacite = resource_metadata.get('datacite')
     if resource_metadata.get('datacite'):
-        doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
+        doi = get_doi(datacite)
         assert doi is not None, 'The DOI in the metadata does not match the provided DOI.'
     else:
         doi = resource_metadata.get('external_doi')
@@ -323,15 +325,7 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     assert datasets, 'No datasets found for {}.'.format(doi)
 
     if datacite:
-        if 'relatedIdentifiers' not in datacite:
-            datacite['relatedIdentifiers'] = []
-
-        for dataset in datasets:
-            datacite['relatedIdentifiers'].append({
-                'relationType': 'HasPart',
-                'relatedIdentifier': isimip_data_url + '/datasets/' + dataset.id,
-                'relatedIdentifierType': 'URL'
-            })
+        datacite = add_datasets_to_related_identifiers(datasets, datacite, isimip_data_url)
 
     # insert a new resource
     logger.debug('insert resource %s', doi)
@@ -349,7 +343,7 @@ def update_resource(session, resource_metadata, isimip_data_url):
     # get the datacite metadata and the doi
     datacite = resource_metadata.get('datacite')
     if resource_metadata.get('datacite'):
-        doi = next(item.get('identifier') for item in datacite.get('identifiers', []) if item.get('identifierType') == 'DOI')
+        doi = get_doi(datacite)
         version = datacite.get('version')
         assert doi is not None, 'The DOI in the metadata does not match the provided DOI.'
     else:
@@ -367,15 +361,7 @@ def update_resource(session, resource_metadata, isimip_data_url):
 
     # gather datasets
     if datacite:
-        if 'relatedIdentifiers' not in datacite:
-            datacite['relatedIdentifiers'] = []
-
-        for dataset in resource.datasets:
-            datacite['relatedIdentifiers'].append({
-                'relationType': 'HasPart',
-                'relatedIdentifier': isimip_data_url + '/datasets/' + dataset.id,
-                'relatedIdentifierType': 'URL'
-            })
+        datacite = add_datasets_to_related_identifiers(resource.datasets, datacite, isimip_data_url)
 
     if resource.datacite == datacite:
         logger.debug('skip resource %s', doi)

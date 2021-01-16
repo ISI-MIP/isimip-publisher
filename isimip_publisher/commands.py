@@ -11,6 +11,7 @@ from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              update_attributes_view, update_dataset,
                              update_file, update_resource, update_tree,
                              update_words_view)
+from .utils.datacite import fetch_datacite_xml, upload_doi, upload_doi_metadata
 from .utils.files import copy_files, delete_file, list_files, move_file
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
@@ -273,7 +274,7 @@ def clean():
         delete_file(settings.LOCAL_PATH / file_path)
 
 
-def insert_resources():
+def insert_doi():
     session = init_database_session(settings.DATABASE)
 
     for resource in settings.RESOURCES:
@@ -282,7 +283,7 @@ def insert_resources():
     session.commit()
 
 
-def update_resources():
+def update_doi():
     session = init_database_session(settings.DATABASE)
 
     for resource in settings.RESOURCES:
@@ -292,11 +293,17 @@ def update_resources():
 
 
 def register_doi():
-    pass
+    print('Registering a DOI with DataCite is permanent. Please type the DOI again to confirm.')
+    string = input()
 
-
-def update_doi():
-    pass
+    if string == settings.DOI:
+        xml = fetch_datacite_xml(settings.ISIMIP_DATA_URL, settings.DOI)
+        upload_doi_metadata(settings.DOI, xml,
+                            settings.DATACITE_METADATA_URL, settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD)
+        upload_doi(settings.ISIMIP_DATA_URL, settings.DOI,
+                   settings.DATACITE_DOI_URL, settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD)
+    else:
+        print('DOI do not match. Exiting.')
 
 
 def init():
