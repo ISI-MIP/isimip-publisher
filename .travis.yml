@@ -18,7 +18,6 @@ env:
   - LOCAL_DIR=${PWD}/testing/work/
   - PUBLIC_DIR=${PWD}/testing/public/
   - ARCHIVE_DIR=${PWD}/testing/archive/
-  - RESOURCE_DIR=${PWD}/testing/resources/
   - DATABASE=postgresql+psycopg2://@/test_isimip_metadata
   - PROTOCOL_LOCATIONS=${PWD}/testing/protocol/
   - ISIMIP_DATA_URL=http://localhost:8000/

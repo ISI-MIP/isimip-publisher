@@ -28,6 +28,8 @@ class Settings(object):
         'VERSION': date.today().strftime('%Y%m%d'),
         'PROTOCOL_LOCATIONS': 'https://protocol.isimip.org https://protocol2.isimip.org',
         'ISIMIP_DATA_URL': 'https://data.isimip.org/',
+        'DATACITE_METADATA_URL': 'https://mds.datacite.org/metadata',
+        'DATACITE_DOI_URL': 'https://mds.datacite.org/doi',
         'MOCK': 'false'
     }
 
@@ -116,11 +118,6 @@ class Settings(object):
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @property
-    def RESOURCE_PATH(self):
-        assert self.RESOURCE_DIR is not None, 'RESOURCE_DIR is not set'
-        return Path(self.RESOURCE_DIR).expanduser()
-
-    @property
     def EXCLUDE(self):
         if not hasattr(self, '_exclude'):
             self._exclude = self.parse_filelist(self.EXCLUDE_FILE)
@@ -133,12 +130,14 @@ class Settings(object):
         return self._include
 
     @property
-    def RESOURCE(self):
-        if not hasattr(self, '_resource'):
-            resource_path = Path(str(self.RESOURCE_PATH / self.DOI) + '.json')
-            self._resource = json.loads(resource_path.read_text())
+    def RESOURCES(self):
+        if not hasattr(self, '_resources'):
+            self._resources = []
+            for resource_json in self.RESOURCE_JSON:
+                resource_path = Path(resource_json)
+                self._resources.append(json.loads(resource_path.read_text()))
 
-        return self._resource
+        return self._resources
 
     @property
     def DEFINITIONS(self):
