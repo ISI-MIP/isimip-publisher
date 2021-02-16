@@ -527,9 +527,15 @@ def update_attributes_view(session):
         logger.debug('update attributes view')
     else:
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW attributes AS SELECT DISTINCT jsonb_object_keys(specifiers) AS key FROM public.datasets
+            CREATE MATERIALIZED VIEW attributes AS
+            SELECT specifiers.key AS identifier,
+                   ARRAY_AGG(DISTINCT specifiers.value) AS specifiers
+            FROM public.datasets,
+                 jsonb_each(public.datasets.specifiers) AS specifiers
+            GROUP BY identifier
+            ORDER BY identifier
         ''')
         session.connection().execute('''
-            CREATE INDEX ON attributes(key)
+            CREATE INDEX ON attributes(identifier)
         ''')
         logger.debug('create attributes view')
