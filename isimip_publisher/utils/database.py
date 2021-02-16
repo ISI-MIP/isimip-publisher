@@ -46,6 +46,7 @@ class Dataset(Base):
     search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
     tree_path = Column(Text, nullable=True, index=True)
+    rights = Column(Text)
 
     files = relationship('File', back_populates='dataset')
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
@@ -72,6 +73,7 @@ class File(Base):
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
+    rights = Column(Text)
 
     dataset = relationship('Dataset', back_populates='files')
 
@@ -115,7 +117,7 @@ def init_database_session(database_settings):
     return session
 
 
-def insert_dataset(session, version, name, path, size, specifiers):
+def insert_dataset(session, version, rights, name, path, size, specifiers):
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -124,6 +126,8 @@ def insert_dataset(session, version, name, path, size, specifiers):
 
     if dataset:
         logger.debug('skip dataset %s', path)
+        assert dataset.rights == rights, \
+            'Dataset {} is already stored, but with different rights'.format(path)
         assert dataset.name == name, \
             'Dataset {} is already stored, but with different name'.format(path)
         assert dataset.specifiers == specifiers, \
@@ -136,6 +140,7 @@ def insert_dataset(session, version, name, path, size, specifiers):
             path=path,
             version=version,
             size=size,
+            rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),
@@ -168,7 +173,7 @@ def publish_dataset(session, version, path):
     dataset.public = True
 
 
-def update_dataset(session, name, path, specifiers):
+def update_dataset(session, rights, name, path, specifiers):
     # check if the dataset is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -181,6 +186,7 @@ def update_dataset(session, name, path, specifiers):
     # update the dataset
     logger.debug('update dataset %s', path)
     dataset.name = name
+    dataset.rights = rights
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
     dataset.search_vector = get_search_vector(specifiers)
@@ -225,7 +231,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers):
+def insert_file(session, version, rights, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers):
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -245,6 +251,8 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         logger.debug('skip file %s', path)
         assert uuid is None or file.id == uuid, \
             'File {} is already stored with the same version, but a different id'.format(path)
+        assert file.rights == rights, \
+            'File {} is already stored, but with different rights'.format(path)
         assert file.checksum == checksum, \
             'File {} is already stored with the same version, but a different checksum'.format(path)
         assert file.name == name, \
@@ -262,6 +270,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
             size=size,
             checksum=checksum,
             checksum_type=checksum_type,
+            rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),
@@ -270,7 +279,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
         session.add(file)
 
 
-def update_file(session, dataset_path, name, path, specifiers):
+def update_file(session, rights, dataset_path, name, path, specifiers):
     logger.info('update_file %s', path)
 
     # get the dataset from the database
@@ -291,7 +300,10 @@ def update_file(session, dataset_path, name, path, specifiers):
     if file:
         logger.debug('update file %s', path)
         file.name = name
+        file.rights = rights
         file.specifiers = specifiers
+        file.identifiers = list(specifiers.keys())
+        file.search_vector = get_search_vector(specifiers)
     else:
         raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
 

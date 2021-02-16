@@ -7,7 +7,7 @@ from .commands import (archive_datasets, check, clean, fetch_files, init,
                        update_doi, update_index, update_jsons,
                        update_thumbnails, write_checksums, write_jsons,
                        write_thumbnails)
-from .config import settings
+from .config import RIGHTS_CHOICES, settings
 
 
 def get_parser(add_path=False, add_subparsers=False):
@@ -51,6 +51,8 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Password the DataCite MDS API')
     parser.add_argument('--isimip-data-url', dest='isimip_data_url',
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
+    parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
+                        help='Rights/license for the files [default: None]')
     parser.add_argument('--log-level', dest='log_level',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',

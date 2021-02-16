@@ -12,6 +12,15 @@ from .utils.fetch import (fetch_definitions, fetch_pattern, fetch_schema,
 
 logger = logging.getLogger(__name__)
 
+RIGHTS_CHOICES = [
+    None,
+    'CC0',
+    'BY',
+    'BY-SA',
+    'BY-NC',
+    'BY-NC-SA'
+]
+
 
 class Settings(object):
 
@@ -30,7 +39,8 @@ class Settings(object):
         'ISIMIP_DATA_URL': 'https://data.isimip.org/',
         'DATACITE_METADATA_URL': 'https://mds.datacite.org/metadata',
         'DATACITE_DOI_URL': 'https://mds.datacite.org/doi',
-        'MOCK': 'false'
+        'MOCK': 'false',
+        'RIGHTS': None
     }
 
     def __init__(self):
@@ -55,6 +65,9 @@ class Settings(object):
 
         if self.ISIMIP_DATA_URL is not None:
             self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')
+
+        if self.RIGHTS not in RIGHTS_CHOICES:
+            raise AssertionError('Incorrect rights "%s": choose from %s', self.RIGHTS, RIGHTS_CHOICES)
 
         try:
             datetime.strptime(self.VERSION, '%Y%m%d')
