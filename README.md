@@ -7,9 +7,8 @@ ISIMIP publisher
 [![Coverage Status](https://coveralls.io/repos/github/ISI-MIP/isimip-publisher/badge.svg?branch=master)](https://coveralls.io/github/ISI-MIP/isimip-publisher?branch=master)
 [![pyup Status](https://pyup.io/repos/github/ISI-MIP/isimip-publisher/shield.svg)](https://pyup.io/repos/github/ISI-MIP/isimip-publisher/)
 
-A command line tool to publish climate impact data from the ISIMIP project.
+A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
 
-**This is still work in progress.**
 
 Setup
 -----
@@ -53,16 +52,17 @@ usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE]
                         [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
                         [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
                         [--archive-dir ARCHIVE_DIR]
-                        [--datacite-dir DATACITE_DIR] [--database DATABASE]
+                        [--resource-dir RESOURCE_DIR] [--database DATABASE]
                         [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
+                        [--datacite-metadata-url DATACITE_METADATA_URL]
+                        [--datacite-doi-url DATACITE_DOI_URL]
+                        [--datacite-username DATACITE_USERNAME]
+                        [--datacite-password DATACITE_PASSWORD]
                         [--isimip-data-url ISIMIP_DATA_URL]
+                        [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}]
                         [--log-level LOG_LEVEL] [--log-file LOG_FILE]
-                        path
-                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_thumbnails,write_jsons,write_checksums,ingest_datasets,publish_datasets,archive_datasets,ingest_resource,check,clean,update_index,run}
+                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,init}
                         ...
-
-positional arguments:
-  path                  path of the files to publish
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -85,17 +85,29 @@ optional arguments:
                         Public directory
   --archive-dir ARCHIVE_DIR
                         Archive directory
-  --datacite-dir DATACITE_DIR
-                        DataCite metadata directory
+  --resource-dir RESOURCE_DIR
+                        Resource metadata directory
   --database DATABASE   Database connection string, e.g. postgresql+psycopg2:/
                         /username:password@host:port/dbname
   --mock MOCK           If set to True no files are actually copied. Empty
                         mock files are used instead
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
+  --datacite-metadata-url DATACITE_METADATA_URL
+                        Metadata endpoint for the DataCite MDS API, default:
+                        https://mds.datacite.org/metadata
+  --datacite-doi-url DATACITE_DOI_URL
+                        DOI endpoint for the DataCite MDS API, default:
+                        https://mds.datacite.org/doi
+  --datacite-username DATACITE_USERNAME
+                        Username the DataCite MDS API
+  --datacite-password DATACITE_PASSWORD
+                        Password the DataCite MDS API
   --isimip-data-url ISIMIP_DATA_URL
                         URL of the ISIMIP repository [default:
                         https://data.isimip.org/]
+  --rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}
+                        Rights/license for the files [default: None]
   --log-level LOG_LEVEL
                         Log level (ERROR, WARN, INFO, or DEBUG)
   --log-file LOG_FILE   Path to the log file
@@ -103,7 +115,8 @@ optional arguments:
 subcommands:
   valid subcommands
 
-  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_thumbnails,write_jsons,write_checksums,ingest_datasets,publish_datasets,archive_datasets,ingest_resource,check,clean,update_index,run}
+  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,init}
+
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -114,36 +127,38 @@ The different steps of the publication process are covered by subcommands, which
 
 ```bash
 # list remote files
-isimip-publisher <path> list_remote
+isimip-publisher list_remote <path>
 
 # match remote datasets
-isimip-publisher <path> match_remote
+isimip-publisher match_remote <path>
 
 # copy remote files to LOCAL_DIR
-isimip-publisher <path> fetch_files
+isimip-publisher fetch_files <path>
 
 # create a JSON file with metadata for each dataset and file
-isimip-publisher <path> write_jsons
-
-# create a thumbnail file for each dataset and file
-isimip-publisher <path> write_thumbnails
+isimip-publisher write_jsons <path>
 
 # finds dataset and file and ingest their metadata into the database
-isimip-publisher <path> ingest_datasets
+isimip-publisher ingest_datasets <path>
 
 # copy files from LOCAL_DIR to PUPLIC_DIR
-isimip-publisher <path> publish_datasets
+isimip-publisher publish_datasets <path>
 
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
-isimip-publisher <path> archive_datasets
+isimip-publisher archive_datasets <path>
 
-# register a new doi resource
-isimip-publisher <path> ingest_resource
+# insert a new doi resource
+isimip-publisher ingest_doi <resource-path>
+
+# register a DOI resource with datacite
+isimip-publisher ingest_doi <DOI>
 ```
 
 `<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
 
-`match_remote`, `fetch_files`, `write_jsons`, `write_thumbnails`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
+`<resource-path>` is the path to a JSON file containing metadata on the local disk.
+
+`match_remote`, `fetch_files`, `write_jsons`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
 isimip-publisher <path> run
@@ -179,7 +194,7 @@ Default values for the optional arguments are set in the code, but can also be p
 Test
 ----
 
-Install test dependencies
+Install test dependencies:
 
 ```
 pip install -r requirements/dev.txt
