@@ -2,9 +2,9 @@ import os
 import shutil
 from pathlib import Path
 
+import pytest
 from dotenv import load_dotenv
 
-import pytest
 from isimip_publisher.utils.database import (Dataset, Resource,
                                              init_database_session)
 
@@ -89,20 +89,6 @@ def test_write_jsons(setup, script_runner):
     assert response.stderr.strip().startswith('write_jsons')
 
 
-def test_write_checksums(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_checksums', 'round/product/sector/model')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('write_checksums')
-
-
-def test_write_thumbnails(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_thumbnails', 'round/product/sector/model')
-    assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('write_thumbnails')
-
-
 def test_insert_datasets(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'insert_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
@@ -133,14 +119,14 @@ def test_match_public(setup, script_runner):
 
 
 def test_insert_doi(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/ISIMIP.001.json')
+    response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_doi(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_doi', 'testing/resources/ISIMIP.001.json')
+    response = script_runner.run('isimip-publisher', 'update_doi', 'testing/resources/test1.json')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
