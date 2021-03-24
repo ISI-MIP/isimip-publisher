@@ -4,7 +4,6 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .config import settings, store
-from .utils.checksum import get_checksum_suffix, write_checksum_file
 from .utils.database import (clean_tree, init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
                              retrieve_datasets, unpublish_dataset,
@@ -15,8 +14,6 @@ from .utils.datacite import fetch_datacite_xml, upload_doi, upload_doi_metadata
 from .utils.files import copy_files, delete_file, list_files, move_file
 from .utils.json import write_json_file
 from .utils.patterns import match_datasets
-from .utils.region import get_region
-from .utils.thumbnails import write_thumbnail_file
 from .utils.validation import check_datasets, validate_datasets
 
 logger = logging.getLogger(__name__)
@@ -69,32 +66,6 @@ def fetch_files():
         t.update(n)
 
 
-def write_thumbnails():
-    if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
-        datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
-        validate_datasets(settings.SCHEMA, datasets)
-        store.datasets = datasets
-
-    for dataset in tqdm(store.datasets, desc='write_thumbnails'.ljust(18)):
-        region = get_region(settings.DEFINITIONS, dataset.specifiers)
-
-        for file in dataset.files:
-            write_thumbnail_file(file.abspath, region)
-
-
-def update_thumbnails():
-    public_files = list_files(settings.PUBLIC_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
-    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files)
-    validate_datasets(settings.SCHEMA, datasets)
-
-    for dataset in tqdm(datasets, desc='write_thumbnails'.ljust(18)):
-        region = get_region(settings.DEFINITIONS, dataset.specifiers)
-
-        for file in dataset.files:
-            write_thumbnail_file(file.abspath, region)
-
-
 def write_jsons():
     if not store.datasets:
         local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
@@ -115,18 +86,6 @@ def update_jsons():
     for dataset in tqdm(datasets, desc='update_jsons'.ljust(18)):
         for file in dataset.files:
             write_json_file(file.abspath, file.json)
-
-
-def write_checksums():
-    if not store.datasets:
-        local_files = list_files(settings.LOCAL_PATH, settings.PATH, include=settings.INCLUDE, exclude=settings.EXCLUDE)
-        datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files)
-        validate_datasets(settings.SCHEMA, datasets)
-        store.datasets = datasets
-
-    for dataset in tqdm(store.datasets, desc='write_checksums'.ljust(18)):
-        for file in dataset.files:
-            write_checksum_file(file.abspath, file.checksum, file.path)
 
 
 def insert_datasets():
@@ -172,8 +131,7 @@ def publish_datasets():
             target_path = Path(settings.PUBLIC_PATH) / Path(source_path).relative_to(settings.LOCAL_PATH)
 
             move_file(source_path, target_path)
-            for suffix in [get_checksum_suffix(), '.png', '.json']:
-                move_file(source_path.with_suffix(suffix), target_path.with_suffix(suffix))
+            move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
         session.commit()
 
@@ -229,9 +187,8 @@ def archive_datasets():
                 if source_path.is_file():
                     move_file(source_path, target_path)
 
-                for suffix in [get_checksum_suffix(), '.png', '.json']:
-                    if source_path.with_suffix(suffix).is_file():
-                        move_file(source_path.with_suffix(suffix), target_path.with_suffix(suffix))
+                if source_path.with_suffix('.json').is_file():
+                    move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
         session.commit()
 

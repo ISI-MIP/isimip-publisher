@@ -4,9 +4,7 @@ from .commands import (archive_datasets, check, clean, fetch_files, init,
                        insert_datasets, insert_doi, list_local, list_public,
                        list_remote, match_local, match_public, match_remote,
                        publish_datasets, register_doi, update_datasets,
-                       update_doi, update_index, update_jsons,
-                       update_thumbnails, write_checksums, write_jsons,
-                       write_thumbnails)
+                       update_doi, update_index, update_jsons, write_jsons)
 from .config import RIGHTS_CHOICES, settings
 
 
@@ -64,8 +62,7 @@ def get_parser(add_path=False, add_subparsers=False):
         # add a subparser for each subcommand
         for func in [list_remote, list_local, list_public,
                      match_remote, match_local, match_public,
-                     fetch_files, write_thumbnails, update_thumbnails,
-                     write_jsons, update_jsons, write_checksums,
+                     fetch_files, write_jsons, update_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
                      check, clean, update_index, run]:
             subparser = subparsers.add_parser(func.__name__)
@@ -106,8 +103,6 @@ def main():
 def run():
     match_remote()
     fetch_files()
-    write_thumbnails()
-    write_checksums()
     write_jsons()
     insert_datasets()
     publish_datasets()
