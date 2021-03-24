@@ -1,5 +1,3 @@
--r common.txt
-
 pytest==6.1.1
-pytest-console-scripts~=0.1
-pytest-cov~=2.8
+pytest-console-scripts~=0.2.0
+pytest-cov~=2.11.1
