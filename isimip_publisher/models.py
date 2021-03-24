@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -74,9 +75,9 @@ class File(object):
     @property
     def checksum(self):
         if not self._checksum:
-            checksum_file = Path(self.abspath).with_suffix('.' + self.checksum_type)
-            if checksum_file.is_file():
-                self._checksum = checksum_file.read_text().split()[0]
+            json_file = Path(self.abspath).with_suffix('.json')
+            if json_file.is_file():
+                self._checksum = json.loads(json_file.read_text()).get('checksum')
             else:
                 self._checksum = get_checksum(self.abspath, self.checksum_type)
         return self._checksum

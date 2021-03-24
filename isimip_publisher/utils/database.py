@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.sql import column
 
 from .datacite import add_datasets_to_related_identifiers, get_doi
 
@@ -468,7 +469,7 @@ def clean_tree(session):
     # step 2: get all dataset tree_pathes as as set
     tree_pathes = set([row[0] for row in session.query(Dataset).filter(
         Dataset.public == True
-    ).values('tree_path')])
+    ).values(column('tree_path'))])
 
     clean_tree_dict = {}
     for tree_path in tree_pathes:
