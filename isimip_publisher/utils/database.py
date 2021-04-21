@@ -335,7 +335,10 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     datasets = []
     for path in paths:
         datasets += retrieve_datasets(session, path, public=True)
-    assert datasets, 'No datasets found for {}.'.format(doi)
+
+    if not datasets:
+        message = 'No datasets found for {}.'.format(doi)
+        warnings.warn(RuntimeWarning(message))
 
     if datacite:
         datacite = add_datasets_to_related_identifiers(datasets, datacite, isimip_data_url)
