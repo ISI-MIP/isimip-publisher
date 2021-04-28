@@ -41,7 +41,9 @@ def fetch_pattern(bases, path):
                 'path': re.compile(pattern_json['path']),
                 'file': re.compile(pattern_json['file']),
                 'dataset': re.compile(pattern_json['dataset']),
-                'suffix': pattern_json['suffix']
+                'suffix': pattern_json['suffix'],
+                'specifiers': pattern_json['specifiers'],
+                'specifiers_map': pattern_json['specifiers_map']
             }
 
             logger.debug('pattern = %s', pattern)

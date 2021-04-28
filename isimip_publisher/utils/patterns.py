@@ -72,9 +72,19 @@ def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
             assert d.lower().startswith(f.lower()), \
                 'dirname_specifier "{}" does not match filename_specifier "{}" in {}'.format(f, d, file_abspath)
 
-    dirname_specifiers.update(filename_specifiers)
+    # merge filename_specifiers and dirname_specifiers
+    specifiers = {**dirname_specifiers, **filename_specifiers}
 
-    return path, name, dirname_specifiers
+    # apply specifiers_map if it exists
+    if pattern['specifiers_map']:
+        for key, value in specifiers.items():
+            if value in pattern['specifiers_map']:
+                specifiers[key] = pattern['specifiers_map'][value]
+
+    # add fixed specifiers
+    specifiers.update(pattern['specifiers'])
+
+    return path, name, specifiers
 
 
 def match_string(pattern, string):
