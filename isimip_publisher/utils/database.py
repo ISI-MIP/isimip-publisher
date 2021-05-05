@@ -208,11 +208,7 @@ def unpublish_dataset(session, path):
 
 
 def retrieve_datasets(session, path, public=None):
-    # check if path is a file
-    if Path(path).suffix:
-        path = Path(path).parent.as_posix()
-
-    like_path = '{}/%'.format(path)
+    like_path = Path(path).as_posix() + '/%'
 
     if public is None:
         datasets = session.query(Dataset).filter(

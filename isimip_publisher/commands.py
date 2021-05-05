@@ -169,8 +169,10 @@ def archive_datasets():
 
     # since we have only files, not datasets (patterns could have changed since publication),
     # we retrieve all datasets for this path and remove datasets which have no files in public_files
+    path = Path(settings.PATH)
+    db_path = path.parent.as_posix() if path.suffix else path
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
+    for db_dataset in retrieve_datasets(session, db_path, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
@@ -206,8 +208,10 @@ def check():
     session = init_database_session(settings.DATABASE)
 
     # retrieve all datasets for this path and remove datasets which have no files in public_files
+    path = Path(settings.PATH)
+    db_path = path.parent.as_posix() if path.suffix else path
     db_datasets = []
-    for db_dataset in retrieve_datasets(session, settings.PATH, public=True):
+    for db_dataset in retrieve_datasets(session, db_path, public=True):
         if any([file.path in public_files for file in db_dataset.files]):
             db_datasets.append(db_dataset)
 
