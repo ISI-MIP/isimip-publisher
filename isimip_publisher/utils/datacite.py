@@ -7,6 +7,11 @@ def get_doi(datacite):
                 if item.get('identifierType') == 'DOI')
 
 
+def get_title(datacite):
+    return next(item.get('title')
+                for item in datacite.get('titles', []))
+
+
 def add_datasets_to_related_identifiers(datasets, datacite, isimip_data_url):
     if 'relatedIdentifiers' not in datacite:
         datacite['relatedIdentifiers'] = []

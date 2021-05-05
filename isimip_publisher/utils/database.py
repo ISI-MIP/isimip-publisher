@@ -11,7 +11,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import column
 
-from .datacite import add_datasets_to_related_identifiers, get_doi
+from .datacite import add_datasets_to_related_identifiers, get_doi, get_title
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,7 @@ class Resource(Base):
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     doi = Column(Text, nullable=False, index=True)
+    title = Column(Text, nullable=False)
     paths = Column(ARRAY(Text), nullable=False, index=True)
     datacite = Column(JSONB, nullable=False)
 
@@ -306,14 +307,17 @@ def update_file(session, rights, dataset_path, name, path, specifiers):
 
 
 def insert_resource(session, resource_metadata, isimip_data_url):
+    doi = resource_metadata.get('doi')
+    title = resource_metadata.get('title')
+
     # get the datacite metadata and the doi
     datacite = resource_metadata.get('datacite')
     if resource_metadata.get('datacite'):
         doi = get_doi(datacite)
-        assert doi is not None, 'The DOI in the metadata does not match the provided DOI.'
-    else:
-        doi = resource_metadata.get('external_doi')
-        assert doi is not None, 'No DataCite metadata or external DOI was provided.'
+        title = get_title(datacite)
+
+    assert doi is not None, 'No DOI was provided.'
+    assert title is not None, 'No title was provided.'
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
@@ -343,6 +347,7 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     logger.debug('insert resource %s', doi)
     resource = Resource(
         doi=doi,
+        title=title,
         paths=paths,
         datacite=datacite
     )
