@@ -70,7 +70,7 @@ def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
         if key in dirname_specifiers:
             f, d = filename_specifiers[key], dirname_specifiers[key]
             assert d.lower().startswith(f.lower()), \
-                'dirname_specifier "{}" does not match filename_specifier "{}" in {}'.format(f, d, file_abspath)
+                'dirname_specifier "{}" does not match filename_specifier "{}" in {}'.format(d, f, file_abspath)
 
     # merge filename_specifiers and dirname_specifiers
     specifiers = {**dirname_specifiers, **filename_specifiers}
