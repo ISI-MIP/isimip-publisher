@@ -4,12 +4,12 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .config import settings, store
-from .utils.database import (clean_tree, init_database_session, insert_dataset,
+from .utils.database import (archive_dataset, clean_tree,
+                             init_database_session, insert_dataset,
                              insert_file, insert_resource, publish_dataset,
-                             retrieve_datasets, unpublish_dataset,
-                             update_attributes_view, update_dataset,
-                             update_file, update_resource, update_tree,
-                             update_words_view)
+                             retrieve_datasets, update_attributes_view,
+                             update_dataset, update_file, update_resource,
+                             update_tree, update_words_view)
 from .utils.datacite import fetch_datacite_xml, upload_doi, upload_doi_metadata
 from .utils.files import copy_files, delete_file, list_files, move_file
 from .utils.json import write_json_file
@@ -184,7 +184,7 @@ def archive_datasets():
     datasets = filter_datasets(db_datasets, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-        dataset_version = unpublish_dataset(session, dataset.path)
+        dataset_version = archive_dataset(session, dataset.path)
 
         if dataset_version:
             archive_path = settings.ARCHIVE_PATH / dataset_version

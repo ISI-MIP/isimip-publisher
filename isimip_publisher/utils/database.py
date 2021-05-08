@@ -1,10 +1,12 @@
 import logging
 import warnings
+from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import (BigInteger, Boolean, Column, ForeignKey, Index, String,
-                        Table, Text, create_engine, func, inspect)
+from sqlalchemy import (BigInteger, Boolean, Column, DateTime, ForeignKey,
+                        Index, String, Table, Text, create_engine, func,
+                        inspect)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -52,6 +54,11 @@ class Dataset(Base):
     files = relationship('File', back_populates='dataset')
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
 
+    created = Column(DateTime)
+    updated = Column(DateTime)
+    published = Column(DateTime)
+    archived = Column(DateTime)
+
     def __repr__(self):
         return str(self.id)
 
@@ -76,6 +83,9 @@ class File(Base):
     search_vector = Column(TSVECTOR, nullable=False)
     rights = Column(Text)
 
+    created = Column(DateTime)
+    updated = Column(DateTime)
+
     dataset = relationship('Dataset', back_populates='files')
 
     def __repr__(self):
@@ -92,6 +102,9 @@ class Resource(Base):
     paths = Column(ARRAY(Text), nullable=False, index=True)
     datacite = Column(JSONB, nullable=False)
 
+    created = Column(DateTime)
+    updated = Column(DateTime)
+
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
 
     def __repr__(self):
@@ -104,6 +117,9 @@ class Tree(Base):
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     tree_dict = Column(JSONB, nullable=False)
+
+    created = Column(DateTime)
+    updated = Column(DateTime)
 
     def __repr__(self):
         return str(self.id)
@@ -146,7 +162,8 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),
-            public=False
+            public=False,
+            created=datetime.utcnow()
         )
         session.add(dataset)
 
@@ -173,6 +190,8 @@ def publish_dataset(session, version, path):
     # mark this dataset public
     logger.debug('publish dataset %s', path)
     dataset.public = True
+    dataset.updated = datetime.utcnow()
+    dataset.published = datetime.utcnow()
 
 
 def update_dataset(session, rights, name, path, specifiers):
@@ -192,9 +211,10 @@ def update_dataset(session, rights, name, path, specifiers):
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
     dataset.search_vector = get_search_vector(specifiers)
+    dataset.updated = datetime.utcnow()
 
 
-def unpublish_dataset(session, path):
+def archive_dataset(session, path):
     # find the public version of this dataset
     public_dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -205,6 +225,7 @@ def unpublish_dataset(session, path):
         # mark this dataset archived
         logger.debug('unpublish dataset %s', path)
         public_dataset.public = False
+        public_dataset.archived = datetime.utcnow()
         return public_dataset.version
 
 
@@ -272,7 +293,8 @@ def insert_file(session, version, rights, dataset_path, uuid, name, path, size, 
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),
-            dataset=dataset
+            dataset=dataset,
+            created=datetime.utcnow()
         )
         session.add(file)
 
@@ -302,6 +324,7 @@ def update_file(session, rights, dataset_path, name, path, specifiers):
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
         file.search_vector = get_search_vector(specifiers)
+        file.updated = datetime.utcnow()
     else:
         raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
 
@@ -349,7 +372,8 @@ def insert_resource(session, resource_metadata, isimip_data_url):
         doi=doi,
         title=title,
         paths=paths,
-        datacite=datacite
+        datacite=datacite,
+        created=datetime.utcnow()
     )
     for dataset in datasets:
         resource.datasets.append(dataset)
@@ -390,6 +414,7 @@ def update_resource(session, resource_metadata, isimip_data_url):
 
         # update the datecite metadata
         resource.datacite = datacite
+        resource.updated = datetime.utcnow()
 
 
 def update_tree(session, path, tree):

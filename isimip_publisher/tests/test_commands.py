@@ -56,8 +56,8 @@ def test_list_remote(setup, script_runner):
 def test_match_remote(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'match_remote', 'round/product/sector/model')
     assert response.success, response.stderr
-    assert not response.stdout
     assert not response.stderr
+    assert len(response.stdout.splitlines()) == 6
 
 
 def test_fetch_files(setup, script_runner):
@@ -78,8 +78,8 @@ def test_list_local(setup, script_runner):
 def test_match_local(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'match_local', 'round/product/sector/model')
     assert response.success, response.stderr
-    assert not response.stdout
     assert not response.stderr
+    assert len(response.stdout.splitlines()) == 6
 
 
 def test_write_jsons(setup, script_runner):
@@ -114,8 +114,8 @@ def test_list_public(setup, script_runner):
 def test_match_public(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'match_public', 'round/product/sector/model')
     assert response.success, response.stderr
-    assert not response.stdout
     assert not response.stderr
+    assert len(response.stdout.splitlines()) == 6
 
 
 def test_insert_doi(setup, script_runner):
