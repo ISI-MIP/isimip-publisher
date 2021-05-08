@@ -101,7 +101,6 @@ def main():
 
 
 def run():
-    match_remote()
     fetch_files()
     write_jsons()
     insert_datasets()

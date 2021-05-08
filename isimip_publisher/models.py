@@ -18,6 +18,7 @@ class Dataset(object):
         self.path = path
         self.specifiers = specifiers
         self.files = []
+        self.exclude = False
         self.clean = False
 
         self._size = None

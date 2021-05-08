@@ -5,13 +5,13 @@ import subprocess
 from pathlib import Path
 
 from ..config import settings
-from .checksum import get_checksum, get_checksum_suffix
+from .checksum import get_checksum
 from .netcdf import update_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
 
 
-def list_files(base_path, path, include=None, exclude=None, remote_dest=None, suffix=None):
+def list_files(base_path, path, remote_dest=None, suffix=None):
     abs_path = base_path / path
 
     args = ['find', abs_path.as_posix(), '-type', 'f', '-or', '-type', 'l']
@@ -32,32 +32,14 @@ def list_files(base_path, path, include=None, exclude=None, remote_dest=None, su
         file_abspath = line.decode()
         file_path = Path(file_abspath).relative_to(base_path)
 
-        if file_path.suffix in [get_checksum_suffix(), '.png', '.json']:
-            continue
-
-        if suffix and file_path.suffix not in suffix:
-            continue
-
-        if include and not match_path(include, file_path):
-            continue
-
-        if exclude and match_path(exclude, file_path):
-            continue
-
-        files.append(file_path.as_posix())
+        if not (file_path.suffix == '.json') and \
+           not (suffix and file_path.suffix not in suffix):
+            files.append(file_path.as_posix())
 
     return files
 
 
-def match_path(path_list, file_path):
-    for path in path_list:
-        if path and not path.startswith('#') and str(file_path).startswith(path):
-            return True
-
-    return False
-
-
-def copy_files(remote_dest, remote_path, local_path, path, files):
+def copy_files(remote_dest, remote_path, local_path, path, datasets):
     # check if path is a file
     if Path(path).suffix:
         path = Path(path).parent.as_posix()
@@ -70,19 +52,21 @@ def copy_files(remote_dest, remote_path, local_path, path, files):
         abs_path.parent.mkdir(parents=True, exist_ok=True)
 
     if settings.MOCK:
-        for file in files:
-            mock_path = local_path / file
-            mock_path.parent.mkdir(parents=True, exist_ok=True)
-            logger.info('mock_file %s', mock_path)
-            mock_file(mock_path)
-            yield 1  # yield increment for the progress bar
+        for dataset in datasets:
+            for file in dataset.files:
+                mock_path = local_path / file.path
+                mock_path.parent.mkdir(parents=True, exist_ok=True)
+                logger.info('mock_file %s', mock_path)
+                mock_file(mock_path)
+                yield 1  # yield increment for the progress bar
 
     else:
         # write file list in temporary file
         include_file = 'rsync-include.txt'
         with open(include_file, 'w') as f:
-            for file in files:
-                f.write(file.replace(path, '') + os.linesep)
+            for dataset in datasets:
+                for file in dataset.files:
+                    f.write(file.path.replace(path, '') + os.linesep)
 
         source = remote_dest + ':' + (remote_path / path).as_posix() + os.path.sep
         destination = (local_path / path).as_posix() + os.path.sep
