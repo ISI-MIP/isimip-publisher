@@ -20,7 +20,6 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
 
             # match dataset
             dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
-            logger.debug(dataset_specifiers)
 
             # add dataset to list of dataset, if it was not found before
             if dataset_path not in dataset_dict:
@@ -34,28 +33,35 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
     # the full list is used here to include also files for the dataset which are not explicitely included
     # datasets which
     for file in files:
-        for dataset_path, dataset in dataset_dict.items():
-            if file.startswith(dataset.path):
-                if not (exclude and match_path(exclude, file)):
-                    # construct absolute path
-                    file_abspath = base_path / file
-                    logger.info('match_files %s', file_abspath)
+        # construct absolute path
+        file_abspath = base_path / file
+        logger.info('match_files %s', file_abspath)
 
-                    # match file
+        # try to find a dataset for this file
+        try:
+            dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
+            if dataset_path in dataset_dict:
+                if not (exclude and match_path(exclude, file)):
+                    # if the file is not explicitely excluded, match the file pattern
                     file_path, file_name, file_specifiers = match_file(pattern, file_abspath)
+                    logger.debug(dataset_specifiers)
                     logger.debug(file_specifiers)
 
-                    # file to dataset
-                    dataset.files.append(File(
-                        dataset=dataset,
+                    # append file to dataset
+                    dataset_dict[dataset_path].files.append(File(
+                        dataset=dataset_dict[dataset_path],
                         name=file_name,
                         path=file_path.as_posix(),
                         abspath=file_abspath.as_posix(),
                         specifiers=file_specifiers
                     ))
+
                 else:
                     # remove datasets which have files which are excluded
-                    dataset.exclude = True
+                    dataset_dict[dataset_path].exclude = True
+        except AssertionError:
+            # skip the file if not dataset pattern matches
+            pass
 
     # sort datasets and files and return
     dataset_list = sorted([dataset for dataset in dataset_dict.values() if not dataset.exclude], key=lambda dataset: dataset.path)
