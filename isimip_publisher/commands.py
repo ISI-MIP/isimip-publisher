@@ -113,7 +113,8 @@ def insert_datasets():
         for file in dataset.files:
             insert_file(session, settings.VERSION, settings.RIGHTS,
                         file.dataset.path, file.uuid, file.name, file.path,
-                        file.size, file.checksum, file.checksum_type, file.specifiers)
+                        file.size, file.checksum, file.checksum_type,
+                        file.specifiers, file.netcdf_header)
 
         session.commit()
 

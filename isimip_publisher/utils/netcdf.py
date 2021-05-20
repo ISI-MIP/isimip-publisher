@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+import numpy as np
 from netCDF4 import Dataset
 
 logger = logging.getLogger(__name__)
@@ -8,12 +9,23 @@ logger = logging.getLogger(__name__)
 
 def get_netcdf_dimensions(file_path):
     with Dataset(file_path, 'r', format='NETCDF4') as rootgrp:
-        return rootgrp.dimensions
+        return {
+            dimension_name: dimension.size
+            for dimension_name, dimension in rootgrp.dimensions.items()
+        }
 
 
 def get_netcdf_variables(file_path):
     with Dataset(file_path, 'r', format='NETCDF4') as rootgrp:
-        return rootgrp.variables
+        variables = {}
+        for variable_name, variable in rootgrp.variables.items():
+            variables[variable_name] = {}
+            for key, value in variable.__dict__.items():
+                if type(value) in [np.float32]:
+                    value = float(value)
+                variables[variable_name][key] = value
+
+        return variables
 
 
 def get_netcdf_global_attributes(file_path):

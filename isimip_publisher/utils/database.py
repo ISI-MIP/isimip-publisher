@@ -82,6 +82,7 @@ class File(Base):
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
     rights = Column(Text)
+    netcdf_header = Column(JSONB, nullable=True)
 
     created = Column(DateTime)
     updated = Column(DateTime)
@@ -250,7 +251,7 @@ def retrieve_datasets(session, path, public=None):
     return datasets
 
 
-def insert_file(session, version, rights, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers):
+def insert_file(session, version, rights, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers, netcdf_header):
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -291,6 +292,7 @@ def insert_file(session, version, rights, dataset_path, uuid, name, path, size, 
             checksum_type=checksum_type,
             rights=rights,
             specifiers=specifiers,
+            netcdf_header=netcdf_header,
             identifiers=list(specifiers.keys()),
             search_vector=get_search_vector(specifiers),
             dataset=dataset,

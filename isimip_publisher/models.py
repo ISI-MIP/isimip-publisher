@@ -6,7 +6,8 @@ import jsonschema
 
 from .utils.checksum import get_checksum, get_checksum_type
 from .utils.files import get_size
-from .utils.netcdf import get_netcdf_global_attributes
+from .utils.netcdf import (get_netcdf_dimensions, get_netcdf_global_attributes,
+                           get_netcdf_variables)
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +61,23 @@ class File(object):
         self._uuid = None
         self._size = None
         self._checksum = None
+        self._netcdf_header = None
 
     @property
     def uuid(self):
-        if not self._uuid and Path(self.path).suffix.startswith('.nc'):
-            self._uuid = get_netcdf_global_attributes(self.abspath).get('isimip_id')
+        if not self._uuid and self.netcdf_header:
+            self._uuid = self.netcdf_header.get('global_attributes', {}).get('isimip_id')
         return self._uuid
+
+    @property
+    def netcdf_header(self):
+        if not self._netcdf_header and Path(self.path).suffix.startswith('.nc'):
+            self._netcdf_header = {
+                'dimensions': get_netcdf_dimensions(self.abspath),
+                'variables': get_netcdf_variables(self.abspath),
+                'global_attributes': get_netcdf_global_attributes(self.abspath)
+            }
+        return self._netcdf_header
 
     @property
     def size(self):
@@ -91,7 +103,8 @@ class File(object):
             'size': self.size,
             'checksum': self.checksum,
             'checksum_type': self.checksum_type,
-            'specifiers': dict(self.specifiers)
+            'specifiers': dict(self.specifiers),
+            'netcdf_header': self.netcdf_header
         }
 
     def validate(self, schema):
