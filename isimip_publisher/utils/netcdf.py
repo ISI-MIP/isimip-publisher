@@ -21,7 +21,7 @@ def get_netcdf_variables(file_path):
         for variable_name, variable in rootgrp.variables.items():
             variables[variable_name] = {}
             for key, value in variable.__dict__.items():
-                if type(value) in [np.float32]:
+                if type(value) in [np.float32, np.float64, np.int32, np.int64]:
                     value = float(value)
                 variables[variable_name][key] = value
 
