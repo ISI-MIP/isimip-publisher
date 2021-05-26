@@ -21,16 +21,24 @@ def get_netcdf_variables(file_path):
         for variable_name, variable in rootgrp.variables.items():
             variables[variable_name] = {}
             for key, value in variable.__dict__.items():
-                if type(value) in [np.float32, np.float64, np.int32, np.int64]:
+                if type(value) in [np.float32, np.float64]:
                     value = float(value)
+                elif type(value) in [np.int32, np.int64]:
+                    value = int(value)
                 variables[variable_name][key] = value
-
         return variables
 
 
 def get_netcdf_global_attributes(file_path):
     with Dataset(file_path, 'r', format='NETCDF4') as rootgrp:
-        return rootgrp.__dict__
+        global_attributes = {}
+        for key, value in rootgrp.__dict__.items():
+            if type(value) in [np.float32, np.float64]:
+                value = float(value)
+            elif type(value) in [np.int32, np.int64]:
+                value = int(value)
+            global_attributes[key] = value
+        return global_attributes
 
 
 def update_netcdf_global_attributes(file_path, set_attributes={}, delete_attributes=[]):
