@@ -110,6 +110,20 @@ def move_file(source_path, target_path, keep=False):
         shutil.move(source_path, target_path)
 
 
+def link_file(public_path, target_path, link_path, file_path):
+    file_abspath = public_path / file_path
+    link_abspath = public_path / link_path / Path(file_path).relative_to(target_path)
+    relative_path = os.path.relpath(file_abspath, link_abspath.parent)
+
+    link_abspath.parent.mkdir(parents=True, exist_ok=True)
+
+    logger.debug('ln -s %s %s', relative_path, link_abspath)
+    try:
+        os.symlink(relative_path, link_abspath)
+    except FileExistsError:
+        pass
+
+
 def delete_file(abs_path):
     logger.debug('rm %s', abs_path)
     try:

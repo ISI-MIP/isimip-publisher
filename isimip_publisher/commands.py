@@ -5,13 +5,14 @@ from tqdm import tqdm
 
 from .config import settings, store
 from .utils.database import (archive_dataset, clean_tree,
-                             init_database_session, insert_dataset,
-                             insert_file, insert_resource, publish_dataset,
-                             retrieve_datasets, update_attributes_view,
-                             update_dataset, update_file, update_resource,
-                             update_tree, update_words_view)
+                             init_database_session, insert_dataset, insert_dataset_link,
+                             insert_file, insert_file_link, insert_resource,
+                             publish_dataset, retrieve_datasets,
+                             update_attributes_view, update_dataset,
+                             update_file, update_resource, update_tree,
+                             update_words_view)
 from .utils.datacite import fetch_datacite_xml, upload_doi, upload_doi_metadata
-from .utils.files import copy_files, delete_file, list_files, move_file
+from .utils.files import copy_files, delete_file, link_file, list_files, move_file
 from .utils.json import write_json_file
 from .utils.patterns import filter_datasets, match_datasets
 from .utils.validation import check_datasets, validate_datasets
@@ -75,6 +76,16 @@ def fetch_files():
         t.update(n)
 
 
+def link_files():
+    target_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
+    target_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, target_files,
+                                     include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, target_datasets)
+
+    for file_path in tqdm(target_files, desc='link_files'.ljust(18)):
+        link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file_path)
+
+
 def write_jsons():
     if not store.datasets:
         local_files = list_files(settings.LOCAL_PATH, settings.PATH)
@@ -100,7 +111,8 @@ def update_jsons():
 def insert_datasets():
     if not store.datasets:
         local_files = list_files(settings.LOCAL_PATH, settings.PATH)
-        datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
+                                  include=settings.INCLUDE, exclude=settings.EXCLUDE)
         validate_datasets(settings.SCHEMA, datasets)
         store.datasets = datasets
 
@@ -111,16 +123,48 @@ def insert_datasets():
                        dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:
-            insert_file(session, settings.VERSION, settings.RIGHTS,
-                        file.dataset.path, file.uuid, file.name, file.path,
-                        file.size, file.checksum, file.checksum_type,
-                        file.specifiers, file.netcdf_header)
+            insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path, file.size,
+                        file.checksum, file.checksum_type, file.netcdf_header, file.specifiers)
 
         session.commit()
 
     update_words_view(session)
     update_attributes_view(session)
 
+    session.commit()
+
+
+def link_datasets():
+    # collect and validate the targets
+    target_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
+    target_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, target_files,
+                                     include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, target_datasets)
+
+    # collect and validate the links
+    files = list_files(settings.PUBLIC_PATH, settings.PATH)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, datasets)
+
+    session = init_database_session(settings.DATABASE)
+
+    total = len(target_datasets)
+    for target_dataset, dataset in tqdm(zip(target_datasets, datasets), desc='link_datasets'.ljust(18), total=total):
+        insert_dataset_link(session, settings.VERSION, settings.RIGHTS, target_dataset.path,
+                            dataset.name, dataset.path, dataset.size, dataset.specifiers)
+
+        for target_file, file in zip(target_dataset.files, dataset.files):
+            insert_file_link(session, settings.VERSION, target_file.path, file.dataset.path, file.name, file.path,
+                             file.size, file.checksum, file.checksum_type, file.netcdf_header, file.specifiers)
+
+    session.commit()
+    update_tree(session, settings.PATH, settings.TREE)
+    session.commit()
+    clean_tree(session)
+    session.commit()
+    update_words_view(session)
+    update_attributes_view(session)
     session.commit()
 
 
@@ -159,10 +203,10 @@ def update_datasets():
     session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(datasets, desc='update_datasets'.ljust(18)):
-        update_dataset(session, settings.RIGHTS, dataset.name, dataset.path, dataset.specifiers)
+        update_dataset(session, settings.RIGHTS, dataset.path, dataset.specifiers)
 
         for file in dataset.files:
-            update_file(session, settings.RIGHTS, file.dataset.path, file.name, file.path, file.specifiers)
+            update_file(session, file.dataset.path, file.path, file.specifiers)
 
         session.commit()
 
@@ -185,11 +229,23 @@ def archive_datasets():
     datasets = filter_datasets(db_datasets, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
     for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-        dataset_version = archive_dataset(session, dataset.path)
+        for link in dataset.links:
+            link_version = archive_dataset(session, link.path)
+            if link_version:
+                archive_path = settings.ARCHIVE_PATH / link_version
+                for file in link.files:
+                    source_path = settings.PUBLIC_PATH / file.path
+                    target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
+                    if source_path.is_file():
+                        move_file(source_path, target_path)
+
+                    if source_path.with_suffix('.json').is_file():
+                        move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
+
+        dataset_version = archive_dataset(session, dataset.path)
         if dataset_version:
             archive_path = settings.ARCHIVE_PATH / dataset_version
-
             for file in dataset.files:
                 source_path = settings.PUBLIC_PATH / file.path
                 target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
