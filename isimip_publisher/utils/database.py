@@ -19,13 +19,6 @@ logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
-
-def get_search_vector(specifiers):
-    values = [str(value) for value in specifiers.values()]
-    search_string = ' '.join(values)
-    return func.setweight(func.to_tsvector(search_string), 'A')
-
-
 # association table between resources and datasets
 resources_datasets = Table('resources_datasets', Base.metadata,
                            Column('resource_id', UUID, ForeignKey('resources.id')),
@@ -143,6 +136,35 @@ def init_database_session(database_settings):
     return session
 
 
+def get_search_vector(values):
+    search_string = ' '.join(set(values))
+    return func.setweight(func.to_tsvector(search_string), 'A')
+
+
+def create_search_vector(specifiers):
+    values = [str(value) for value in specifiers.values()]
+    return get_search_vector(values)
+
+
+def update_search_vector(obj, specifiers):
+    values = list(specifiers.values())
+
+    # update the target search vector, if any
+    if obj.target:
+        target_values = list(obj.target.specifiers.values())
+        for link in obj.target.links:
+            if link.id != obj.id:
+                target_values += list(link.specifiers.values())
+        target_values += values
+        obj.target.search_vector = get_search_vector(target_values)
+
+    # update the links, if any
+    for link in obj.links:
+        values += list(link.specifiers.values())
+
+    return get_search_vector(values)
+
+
 def insert_dataset(session, version, rights, name, path, size, specifiers):
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
@@ -171,7 +193,7 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
             rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             public=False,
             created=datetime.utcnow()
         )
@@ -228,7 +250,7 @@ def update_dataset(session, rights, path, specifiers):
 
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
-    dataset.search_vector = get_search_vector(specifiers)
+    dataset.search_vector = update_search_vector(dataset, specifiers)
     dataset.updated = datetime.utcnow()
 
 
@@ -275,12 +297,15 @@ def insert_dataset_link(session, version, rights, target_dataset_path, name, pat
             rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             public=True,
             target=target_dataset,
             created=datetime.utcnow()
         )
         session.add(dataset)
+
+        # update the search vector of the target dataset
+        target_dataset.search_vector = update_search_vector(target_dataset, target_dataset.specifiers)
 
 
 def archive_dataset(session, path):
@@ -362,7 +387,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
             netcdf_header=netcdf_header,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             dataset=dataset,
             created=datetime.utcnow()
         )
@@ -391,7 +416,7 @@ def update_file(session, dataset_path, path, specifiers):
         logger.debug('update file %s', path)
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
-        file.search_vector = get_search_vector(specifiers)
+        file.search_vector = update_search_vector(file, specifiers)
         file.updated = datetime.utcnow()
     else:
         raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
@@ -462,12 +487,15 @@ def insert_file_link(session, version, target_file_path, dataset_path,
             netcdf_header=netcdf_header,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             dataset=dataset,
             target=target_file,
             created=datetime.utcnow()
         )
         session.add(file)
+
+        # update the search vector of the file target
+        target_file.search_vector = update_search_vector(target_file, target_file.specifiers)
 
 
 def insert_resource(session, resource_metadata, isimip_data_url):
