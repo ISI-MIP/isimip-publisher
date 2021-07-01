@@ -143,6 +143,22 @@ class Settings(object):
         return self._include
 
     @property
+    def TARGET_EXCLUDE(self):
+        if not hasattr(self, '_target_exclude'):
+            self._target_exclude = [
+                file.replace(self.PATH, self.TARGET_PATH) for file in self.EXCLUDE
+            ] if self.EXCLUDE else None
+        return self._target_exclude
+
+    @property
+    def TARGET_INCLUDE(self):
+        if not hasattr(self, '_target_include'):
+            self._target_include = [
+                file.replace(self.PATH, self.TARGET_PATH) for file in self.INCLUDE
+            ] if self.INCLUDE else None
+        return self._target_include
+
+    @property
     def RESOURCES(self):
         if not hasattr(self, '_resources'):
             self._resources = []

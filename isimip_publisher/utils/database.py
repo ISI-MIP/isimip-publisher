@@ -137,13 +137,12 @@ def init_database_session(database_settings):
 
 
 def get_search_vector(values):
-    search_string = ' '.join(set(values))
+    search_string = ' '.join(set([str(value) for value in values]))
     return func.setweight(func.to_tsvector(search_string), 'A')
 
 
 def create_search_vector(specifiers):
-    values = [str(value) for value in specifiers.values()]
-    return get_search_vector(values)
+    return get_search_vector(specifiers.values())
 
 
 def update_search_vector(obj, specifiers):
