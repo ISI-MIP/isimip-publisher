@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "",
+  "type": "object",
+  "required": [
+    "specifiers"
+  ],
+  "properties": {
+    "specifiers": {
+      "type": "object",
+      "required": [
+        "modelname",
+        "alpha",
+        "beta",
+        "gamma",
+        "delta",
+        "variable",
+        "region",
+        "timestep"
+      ],
+      "properties": {
+        "modelname": {
+          "type": "string"
+        },
+        "alpha": {
+          "type": "string",
+          "enum": [
+            "lorem",
+            "ipsum"
+          ]
+        },
+        "beta": {
+          "type": "string",
+          "enum": [
+            "dolor"
+          ]
+        },
+        "gamma": {
+          "type": "string",
+          "enum": [
+            "sit"
+          ]
+        },
+        "delta": {
+          "type": "string",
+          "enum": [
+            "amet"
+          ]
+        },
+        "variable": {
+          "type": "string",
+          "enum": [
+            "var"
+          ]
+        },
+        "region": {
+          "type": "string",
+          "const": "global"
+        },
+        "timestep": {
+          "type": "string",
+          "enum": [
+            "monthly"
+          ]
+        },
+        "start_year": {
+          "type": "number",
+          "minimum": 2000,
+          "maximum": 2005
+        },
+        "end_year": {
+          "type": "number",
+          "minimum": 2000,
+          "maximum": 2005
+        }
+      }
+    }
+  }
+}

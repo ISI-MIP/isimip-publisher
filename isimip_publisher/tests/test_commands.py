@@ -118,6 +118,20 @@ def test_match_public(setup, script_runner):
     assert len(response.stdout.splitlines()) == 6
 
 
+def test_link_files(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr.strip().startswith('link_files')
+
+
+def test_link_datasets(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'link_datasets', 'round/product/sector/model', 'round/product/sector2/model')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr.strip().startswith('link_datasets')
+
+
 def test_insert_doi(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json')
     assert response.success, response.stderr
