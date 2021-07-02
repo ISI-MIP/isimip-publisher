@@ -1,8 +1,9 @@
 import argparse
 
 from .commands import (archive_datasets, check, clean, fetch_files, init,
-                       insert_datasets, insert_doi, list_local, list_public,
-                       list_remote, match_local, match_public, match_remote,
+                       insert_datasets, insert_doi, link_files, link_datasets,
+                       list_local, list_public, list_remote,
+                       match_local, match_public, match_remote,
                        publish_datasets, register_doi, update_datasets,
                        update_doi, update_index, update_jsons, write_jsons)
 from .config import RIGHTS_CHOICES, settings
@@ -79,6 +80,12 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser.set_defaults(func=func)
             subparser.add_argument('doi', help='DOI to process')
 
+        for func in [link_files, link_datasets, link]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
+            subparser.add_argument('target_path', help='path of the files to process')
+            subparser.add_argument('path', help='path for the links')
+
         for func in [init]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
@@ -105,3 +112,9 @@ def run():
     write_jsons()
     insert_datasets()
     publish_datasets()
+
+
+def link():
+    link_files()
+    update_jsons()
+    link_datasets()

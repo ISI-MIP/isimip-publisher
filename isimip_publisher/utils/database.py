@@ -9,7 +9,7 @@ from sqlalchemy import (BigInteger, Boolean, Column, DateTime, ForeignKey,
                         inspect)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import backref, relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import column
 
@@ -18,13 +18,6 @@ from .datacite import add_datasets_to_related_identifiers, get_doi, get_title
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
-
-
-def get_search_vector(specifiers):
-    values = [str(value) for value in specifiers.values()]
-    search_string = ' '.join(values)
-    return func.setweight(func.to_tsvector(search_string), 'A')
-
 
 # association table between resources and datasets
 resources_datasets = Table('resources_datasets', Base.metadata,
@@ -40,6 +33,8 @@ class Dataset(Base):
     )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
+    target_id = Column(UUID, ForeignKey('datasets.id'), nullable=True)
+
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
@@ -52,6 +47,7 @@ class Dataset(Base):
     rights = Column(Text)
 
     files = relationship('File', back_populates='dataset')
+    links = relationship('Dataset', backref=backref('target', remote_side=id))
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
 
     created = Column(DateTime)
@@ -72,22 +68,24 @@ class File(Base):
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
+    target_id = Column(UUID, ForeignKey('files.id'), nullable=True)
+
     name = Column(Text, nullable=False, index=True)
     path = Column(Text, nullable=False, index=True)
     version = Column(String(8), nullable=False, index=True)
     size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
+    netcdf_header = Column(JSONB, nullable=True)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     search_vector = Column(TSVECTOR, nullable=False)
-    rights = Column(Text)
-    netcdf_header = Column(JSONB, nullable=True)
 
     created = Column(DateTime)
     updated = Column(DateTime)
 
     dataset = relationship('Dataset', back_populates='files')
+    links = relationship('File', backref=backref('target', remote_side=id))
 
     def __repr__(self):
         return str(self.id)
@@ -98,6 +96,7 @@ class Resource(Base):
     __tablename__ = 'resources'
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
+
     doi = Column(Text, nullable=False, index=True)
     title = Column(Text, nullable=False)
     paths = Column(ARRAY(Text), nullable=False, index=True)
@@ -117,6 +116,7 @@ class Tree(Base):
     __tablename__ = 'trees'
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
+
     tree_dict = Column(JSONB, nullable=False)
 
     created = Column(DateTime)
@@ -136,6 +136,34 @@ def init_database_session(database_settings):
     return session
 
 
+def get_search_vector(values):
+    search_string = ' '.join(set([str(value) for value in values]))
+    return func.setweight(func.to_tsvector(search_string), 'A')
+
+
+def create_search_vector(specifiers):
+    return get_search_vector(specifiers.values())
+
+
+def update_search_vector(obj, specifiers):
+    values = list(specifiers.values())
+
+    # update the target search vector, if any
+    if obj.target:
+        target_values = list(obj.target.specifiers.values())
+        for link in obj.target.links:
+            if link.id != obj.id:
+                target_values += list(link.specifiers.values())
+        target_values += values
+        obj.target.search_vector = get_search_vector(target_values)
+
+    # update the links, if any
+    for link in obj.links:
+        values += list(link.specifiers.values())
+
+    return get_search_vector(values)
+
+
 def insert_dataset(session, version, rights, name, path, size, specifiers):
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
@@ -145,6 +173,8 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
 
     if dataset:
         logger.debug('skip dataset %s', path)
+        assert dataset.target is None, \
+            'Dataset {} is already stored, but with a target'.format(path)
         assert dataset.rights == rights, \
             'Dataset {} is already stored, but with different rights'.format(path)
         assert dataset.name == name, \
@@ -162,7 +192,7 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
             rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             public=False,
             created=datetime.utcnow()
         )
@@ -191,11 +221,10 @@ def publish_dataset(session, version, path):
     # mark this dataset public
     logger.debug('publish dataset %s', path)
     dataset.public = True
-    dataset.updated = datetime.utcnow()
     dataset.published = datetime.utcnow()
 
 
-def update_dataset(session, rights, name, path, specifiers):
+def update_dataset(session, rights, path, specifiers):
     # check if the dataset is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -205,14 +234,77 @@ def update_dataset(session, rights, name, path, specifiers):
     assert dataset is not None, \
         'No public dataset with the path {} found.'.format(path)
 
+    if dataset.target:
+        assert dataset.target.rights == rights,\
+            'Target dataset {} was found, but with different rights'.format(dataset.target.path)
+
     # update the dataset
     logger.debug('update dataset %s', path)
-    dataset.name = name
-    dataset.rights = rights
+
+    # update rights on all links
+    if dataset.rights != rights:
+        dataset.rights = rights
+        for link in dataset.links:
+            link.rights = rights
+
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
-    dataset.search_vector = get_search_vector(specifiers)
+    dataset.search_vector = update_search_vector(dataset, specifiers)
     dataset.updated = datetime.utcnow()
+
+
+def insert_dataset_link(session, version, rights, target_dataset_path, name, path, size, specifiers):
+    # get the target_dataset
+    target_dataset = session.query(Dataset).filter(
+        Dataset.path == target_dataset_path,
+        Dataset.version == version
+    ).one_or_none()
+
+    assert target_dataset is not None, \
+        'No target dataset for the path {} with version {} found'.format(target_dataset_path, version)
+    assert target_dataset.rights == rights, \
+        'Target dataset {}#{} was found, but with different rights'.format(target_dataset_path, version)
+    assert target_dataset.name == name, \
+        'Target dataset {}#{} was found, but with a different name'.format(target_dataset_path, version)
+    assert target_dataset.size == size, \
+        'Target dataset {}#{} was found, but with a different size'.format(target_dataset_path, version)
+
+    # check if the dataset with this version is already in the database
+    dataset = session.query(Dataset).filter(
+        Dataset.path == path,
+        Dataset.version == version
+    ).one_or_none()
+
+    if dataset:
+        logger.debug('skip dataset link %s', path)
+        assert dataset.target == target_dataset, \
+            'Dataset link {} is already stored, but with a different target'.format(path)
+        assert dataset.rights == rights, \
+            'Dataset link {} is already stored, but with different rights'.format(path)
+        assert dataset.name == name, \
+            'Dataset link {} is already stored, but with a different name'.format(path)
+        assert dataset.specifiers == specifiers, \
+            'Dataset link {} is already stored, but with different specifiers'.format(path)
+    else:
+        # insert a new row for this dataset
+        logger.debug('insert dataset %s', path)
+        dataset = Dataset(
+            name=name,
+            path=path,
+            version=version,
+            size=size,
+            rights=rights,
+            specifiers=specifiers,
+            identifiers=list(specifiers.keys()),
+            search_vector=create_search_vector(specifiers),
+            public=True,
+            target=target_dataset,
+            created=datetime.utcnow()
+        )
+        session.add(dataset)
+
+        # update the search vector of the target dataset
+        target_dataset.search_vector = update_search_vector(target_dataset, target_dataset.specifiers)
 
 
 def archive_dataset(session, path):
@@ -230,28 +322,25 @@ def archive_dataset(session, path):
         return public_dataset.version
 
 
-def retrieve_datasets(session, path, public=None):
+def retrieve_datasets(session, path, public=None, target=True):
     like_path = Path(path).as_posix() + '/%'
+    datasets = session.query(Dataset).filter(Dataset.path.like(like_path))
 
-    if public is None:
-        datasets = session.query(Dataset).filter(
-            Dataset.path.like(like_path),
-        ).all()
-    else:
-        datasets = session.query(Dataset).filter(
-            Dataset.path.like(like_path),
-            Dataset.public == public
-        ).all()
+    if public is not None:
+        datasets = datasets.filter(Dataset.public == public)
+
+    if target is None:
+        datasets = datasets.filter(Dataset.target == None)
 
     # sort datasets and files (using python to have a consistant order) and return
-    datasets = sorted(datasets, key=lambda d: d.path)
+    datasets = sorted(datasets.all(), key=lambda d: d.path)
     for dataset in datasets:
         dataset.files = sorted(dataset.files, key=lambda f: f.path)
 
     return datasets
 
 
-def insert_file(session, version, rights, dataset_path, uuid, name, path, size, checksum, checksum_type, specifiers, netcdf_header):
+def insert_file(session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, netcdf_header, specifiers):
     # get the dataset from the database
     dataset = session.query(Dataset).filter(
         Dataset.path == dataset_path,
@@ -271,12 +360,16 @@ def insert_file(session, version, rights, dataset_path, uuid, name, path, size, 
         logger.debug('skip file %s', path)
         assert uuid is None or file.id == uuid, \
             'File {} is already stored with the same version, but a different id'.format(path)
-        assert file.rights == rights, \
-            'File {} is already stored, but with different rights'.format(path)
-        assert file.checksum == checksum, \
-            'File {} is already stored with the same version, but a different checksum'.format(path)
         assert file.name == name, \
             'File {} is already stored with the same version, but a different name'.format(path)
+        assert file.size == size, \
+            'File {} is already stored with the same version, but a different size'.format(path)
+        assert file.checksum == checksum, \
+            'File {} is already stored with the same version, but a different checksum'.format(path)
+        assert file.checksum_type == checksum_type, \
+            'File {} is already stored with the same version, but a different checksum_type'.format(path)
+        assert file.netcdf_header == netcdf_header, \
+            'File {} is already stored with the same version, but a different netcdf_header'.format(path)
         assert file.specifiers == specifiers, \
             'File {} is already stored with the same version, but different specifiers'.format(path)
     else:
@@ -290,18 +383,17 @@ def insert_file(session, version, rights, dataset_path, uuid, name, path, size, 
             size=size,
             checksum=checksum,
             checksum_type=checksum_type,
-            rights=rights,
-            specifiers=specifiers,
             netcdf_header=netcdf_header,
+            specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=get_search_vector(specifiers),
+            search_vector=create_search_vector(specifiers),
             dataset=dataset,
             created=datetime.utcnow()
         )
         session.add(file)
 
 
-def update_file(session, rights, dataset_path, name, path, specifiers):
+def update_file(session, dataset_path, path, specifiers):
     logger.info('update_file %s', path)
 
     # get the dataset from the database
@@ -321,14 +413,88 @@ def update_file(session, rights, dataset_path, name, path, specifiers):
 
     if file:
         logger.debug('update file %s', path)
-        file.name = name
-        file.rights = rights
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
-        file.search_vector = get_search_vector(specifiers)
+        file.search_vector = update_search_vector(file, specifiers)
         file.updated = datetime.utcnow()
     else:
         raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
+
+
+def insert_file_link(session, version, target_file_path, dataset_path,
+                     name, path, size, checksum, checksum_type, netcdf_header, specifiers):
+    # get the target file
+    target_file = session.query(File).filter(
+        File.path == target_file_path,
+        File.version == version
+    ).one_or_none()
+
+    assert target_file is not None, \
+        'No target file for the path {} with version {} found'.format(target_file_path, version)
+    assert target_file.name == name, \
+        'Target file {}#{} was found, but with a different name'.format(target_file_path, version)
+    assert target_file.size == size, \
+        'Target file {}#{} was found, but with a different size'.format(target_file_path, version)
+    assert target_file.checksum == checksum, \
+        'Target file {}#{} was found, but with a different checksum'.format(target_file_path, version)
+    assert target_file.checksum_type == checksum_type, \
+        'Target file {}#{} was found, but with a different checksum_type'.format(target_file_path, version)
+    assert target_file.netcdf_header == netcdf_header, \
+        'Target file {}#{} was found, but with a different netcdf_header'.format(target_file_path, version)
+
+    # get the linked dataset for this file from the database
+    dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.version == version
+    ).one_or_none()
+
+    assert dataset is not None, \
+        'No dataset with the path {} found'.format(dataset_path)
+    assert dataset.target == target_file.dataset, \
+        'Dataset for file link does not match dataset for {}'.format(path)
+
+    # check if the file is already in the database
+    file = session.query(File).filter(
+        File.path == path,
+        File.version == version
+    ).one_or_none()
+
+    if file:
+        logger.debug('skip file %s', path)
+        assert file.name == name, \
+            'File link {} is already stored with the same version, but a different name'.format(path)
+        assert file.size == size, \
+            'File link {} is already stored with the same version, but a different size'.format(path)
+        assert file.checksum == checksum, \
+            'File link {} is already stored with the same version, but a different checksum'.format(path)
+        assert file.checksum_type == checksum_type, \
+            'File link {} is already stored with the same version, but a different checksum_type'.format(path)
+        assert file.netcdf_header == netcdf_header, \
+            'File link {} is already stored with the same version, but a different netcdf_header'.format(path)
+        assert file.specifiers == specifiers, \
+            'File link {} is already stored with the same version, but different specifiers'.format(path)
+    else:
+        # insert a new row for this file
+        logger.debug('insert file %s', path)
+        file = File(
+            name=name,
+            path=path,
+            version=version,
+            size=size,
+            checksum=checksum,
+            checksum_type=checksum_type,
+            netcdf_header=netcdf_header,
+            specifiers=specifiers,
+            identifiers=list(specifiers.keys()),
+            search_vector=create_search_vector(specifiers),
+            dataset=dataset,
+            target=target_file,
+            created=datetime.utcnow()
+        )
+        session.add(file)
+
+        # update the search vector of the file target
+        target_file.search_vector = update_search_vector(target_file, target_file.specifiers)
 
 
 def insert_resource(session, resource_metadata, isimip_data_url):
@@ -359,7 +525,7 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     # gather datasets
     datasets = []
     for path in paths:
-        datasets += retrieve_datasets(session, path, public=True)
+        datasets += retrieve_datasets(session, path, public=True, target=None)
 
     if not datasets:
         message = 'No datasets found for {}.'.format(doi)
