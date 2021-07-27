@@ -222,8 +222,8 @@ def archive_datasets():
     # # since we have only files, not datasets (patterns could have changed since publication),
     # # we retrieve all datasets for this path and remove datasets which have no files in public_files
     path = Path(settings.PATH)
-    db_path = path.parent.as_posix() if path.suffix else path
-    db_datasets = retrieve_datasets(session, db_path, public=True)
+    like = not bool(path.suffix)
+    db_datasets = retrieve_datasets(session, path, public=True, like=like)
 
     # apply include and exclude lists on the datasets from the database
     datasets = filter_datasets(db_datasets, include=settings.INCLUDE, exclude=settings.EXCLUDE)
@@ -273,8 +273,7 @@ def check():
 
     # retrieve all datasets for this path and remove datasets which have no files in public_files
     path = Path(settings.PATH)
-    db_path = path.parent.as_posix() if path.suffix else path
-    db_datasets = retrieve_datasets(session, db_path, public=True)
+    db_datasets = retrieve_datasets(session, (path.parent if path.suffix else path), public=True)
 
     check_datasets(datasets, db_datasets)
 

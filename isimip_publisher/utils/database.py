@@ -322,9 +322,15 @@ def archive_dataset(session, path):
         return public_dataset.version
 
 
-def retrieve_datasets(session, path, public=None, target=True):
-    like_path = Path(path).as_posix() + '/%'
-    datasets = session.query(Dataset).filter(Dataset.path.like(like_path))
+def retrieve_datasets(session, path, public=None, target=True, like=True):
+    path = Path(path)
+    datasets = session.query(Dataset)
+
+    if like:
+        like_path = path.as_posix() + '/%'
+        datasets = datasets.filter(Dataset.path.like(like_path))
+    else:
+        datasets = datasets.join(Dataset.files).filter(File.path == path.as_posix())
 
     if public is not None:
         datasets = datasets.filter(Dataset.public == public)
