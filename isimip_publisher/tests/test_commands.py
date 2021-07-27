@@ -46,76 +46,76 @@ def test_help(setup, script_runner):
 
 
 def test_list_remote(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_remote', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'list_remote', 'round/product/sector')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_match_remote(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_remote', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'match_remote', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_fetch_files(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'fetch_files', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'fetch_files', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('fetch_files')
 
 
 def test_list_local(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_local', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'list_local', 'round/product/sector')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_match_local(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_local', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'match_local', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_write_jsons(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_jsons', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'write_jsons', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_jsons')
 
 
 def test_insert_datasets(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_datasets', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'insert_datasets', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('insert_datasets')
 
 
 def test_publish_datasets(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'publish_datasets', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'publish_datasets', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('publish_datasets')
 
 
 def test_list_public(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_public', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'list_public', 'round/product/sector')
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_match_public(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_public', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'match_public', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stderr
-    assert len(response.stdout.splitlines()) == 6
+    assert len(response.stdout.splitlines()) == 12
 
 
 def test_link_files(setup, script_runner):
@@ -161,7 +161,7 @@ def test_check(setup, script_runner):
 
 
 def test_archive_datasets(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model')
+    response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model2')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('archive_datasets')

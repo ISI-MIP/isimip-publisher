@@ -12,14 +12,14 @@
     "version": "1.0.1",
     "creators": [
       {
-        "creatorName": "Mustermann, E.",
+        "name": "Mustermann, E.",
         "givenName": "Erika",
         "familyName": "Mustermann",
-        "nameIdentifier": "https://orcid.org/0000-0000-0000-0000",
-        "affiliation": [
+        "nameIdentifier": "0000-0000-0000-0000",
+        "affiliations": [
           {
             "affiliation": "Potsdam Institute for Climate Impact Research",
-            "affiliationIdentifier": "https://ror.org/03e8s1d88"
+            "affiliationIdentifier": "03e8s1d88"
           }
         ]
       }
@@ -45,24 +45,29 @@
     ],
     "contributors": [
       {
-        "contributorName": "Mustermann, E.",
+        "name": "Mustermann, E.",
         "contributorType": "DataCurator",
         "givenName": "Erika",
         "familyName": "Mustermann",
-        "nameIdentifier": "https://orcid.org/0000-0000-0000-0000",
-        "affiliation": [
+        "nameIdentifier": "0000-0000-0000-0000",
+        "affiliations": [
           {
             "affiliation": "Potsdam Institute for Climate Impact Research",
-            "affiliationIdentifier": "https://ror.org/03e8s1d88"
+            "affiliationIdentifier": "03e8s1d88"
           }
         ]
       }
     ],
-    "dates": {
-      "collected": "2000/2020",
-      "created": "2020",
-      "issued": "2020-01-01"
-    },
+    "dates": [
+      {
+        "date": "2020",
+        "dateType": "Created"
+      },
+      {
+        "date": "2020-07-01",
+        "dateType": "Issued"
+      }
+    ],
     "language": "eng",
     "resourceType": "Category",
     "resourceTypeGeneral": "Dataset",
@@ -86,7 +91,7 @@
     "rightsList": [
       {
         "rights": "CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
-        "rightsURI": "https://creativecommons.org/publicdomain/zero/1.0/deed"
+        "rightsURI": "https://creativecommons.org/publicdomain/zero/1.0/"
       }
     ],
     "descriptions": [
@@ -108,7 +113,6 @@
           "westBoundLongitude": -179.5
         }
       }
-    ],
-    "fundingReferences": null
+    ]
   }
 }
