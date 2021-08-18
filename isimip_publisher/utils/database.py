@@ -99,6 +99,7 @@ class Resource(Base):
 
     doi = Column(Text, nullable=False, index=True)
     title = Column(Text, nullable=False)
+    version = Column(Text)
     paths = Column(ARRAY(Text), nullable=False, index=True)
     datacite = Column(JSONB, nullable=False)
 
@@ -506,12 +507,14 @@ def insert_file_link(session, version, target_file_path, dataset_path,
 def insert_resource(session, resource_metadata, isimip_data_url):
     doi = resource_metadata.get('doi')
     title = resource_metadata.get('title')
+    version = resource_metadata.get('version')
 
     # get the datacite metadata and the doi
     datacite = resource_metadata.get('datacite')
-    if resource_metadata.get('datacite'):
+    if datacite:
         doi = get_doi(datacite)
         title = get_title(datacite)
+        version = datacite.get('version')
 
     assert doi is not None, 'No DOI was provided.'
     assert title is not None, 'No title was provided.'
@@ -545,6 +548,7 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     resource = Resource(
         doi=doi,
         title=title,
+        version=version,
         paths=paths,
         datacite=datacite,
         created=datetime.utcnow()
@@ -555,16 +559,19 @@ def insert_resource(session, resource_metadata, isimip_data_url):
 
 
 def update_resource(session, resource_metadata, isimip_data_url):
+    doi = resource_metadata.get('doi')
+    title = resource_metadata.get('title')
+    version = resource_metadata.get('version')
+
     # get the datacite metadata and the doi
     datacite = resource_metadata.get('datacite')
-    if resource_metadata.get('datacite'):
+    if datacite:
         doi = get_doi(datacite)
+        title = get_title(datacite)
         version = datacite.get('version')
-        assert doi is not None, 'The DOI in the metadata does not match the provided DOI.'
-    else:
-        doi = resource_metadata.get('external_doi')
-        version = None
-        assert doi is not None, 'No DataCite metadata or external DOI was provided.'
+
+    assert doi is not None, 'No DOI was provided.'
+    assert title is not None, 'No title was provided.'
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
@@ -578,17 +585,11 @@ def update_resource(session, resource_metadata, isimip_data_url):
     if datacite:
         datacite = add_datasets_to_related_identifiers(resource.datasets, datacite, isimip_data_url)
 
-    if resource.datacite == datacite:
-        logger.debug('skip resource %s', doi)
-    else:
-        # check that the datacite version is not the same
-        if version and resource.datacite and resource.datacite.get('version') == version:
-            message = 'A resource with doi={} was found in the database, and the DataCite metadata has been updated, but the version={} is the same.'.format(doi, version)
-            warnings.warn(RuntimeWarning(message))
-
-        # update the datecite metadata
-        resource.datacite = datacite
-        resource.updated = datetime.utcnow()
+    # update the datecite metadata
+    resource.title = title
+    resource.version = version
+    resource.datacite = datacite
+    resource.updated = datetime.utcnow()
 
 
 def update_tree(session, path, tree):
