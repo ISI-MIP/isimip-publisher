@@ -734,7 +734,7 @@ def update_attributes_view(session):
         session.connection().execute('''
             CREATE MATERIALIZED VIEW attributes AS
             SELECT specifiers.key AS identifier,
-                   ARRAY_AGG(DISTINCT specifiers.value) AS specifiers
+                   JSON_AGG(DISTINCT specifiers.value) AS specifiers
             FROM public.datasets,
                  jsonb_each(public.datasets.specifiers) AS specifiers
             GROUP BY identifier
