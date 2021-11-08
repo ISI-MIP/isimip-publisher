@@ -25,7 +25,7 @@ def fetch_definitions(bases, path):
 def fetch_pattern(bases, path):
     path_components = path.strip(os.sep).split(os.sep)
     for i in range(len(path_components), 0, -1):
-        pattern_path = Path('pattern').joinpath(os.sep.join(path_components[:i+1])).with_suffix('.json')
+        pattern_path = Path('pattern').joinpath(os.sep.join(path_components[:i+1]) + '.json')
         pattern_json = fetch_json(bases, pattern_path)
 
         if pattern_json:
