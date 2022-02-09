@@ -316,17 +316,15 @@ def update_doi():
 
 
 def register_doi():
-    print('Registering a DOI with DataCite is permanent. Please type the DOI again to confirm.')
+    print('Registering a DOI with DataCite is permanent. Please type "yes" to confirm.')
     string = input()
 
-    if string == settings.DOI:
+    if string.lower() == 'yes':
         xml = fetch_datacite_xml(settings.ISIMIP_DATA_URL, settings.DOI)
         upload_doi_metadata(settings.DOI, xml,
                             settings.DATACITE_METADATA_URL, settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD)
         upload_doi(settings.ISIMIP_DATA_URL, settings.DOI,
                    settings.DATACITE_DOI_URL, settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD)
-    else:
-        print('DOI do not match. Exiting.')
 
 
 def init():
