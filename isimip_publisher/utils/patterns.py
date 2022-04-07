@@ -1,10 +1,14 @@
 import logging
+import re
+
 from collections import OrderedDict
 from pathlib import Path
 
 from ..models import Dataset, File
 
 logger = logging.getLogger(__name__)
+
+year_pattern = re.compile(r'\d{4}')
 
 
 def match_datasets(pattern, base_path, files, include=None, exclude=None):
@@ -150,7 +154,8 @@ def match_string(pattern, string):
     specifiers = OrderedDict()
     for key, value in match.groupdict().items():
         if value is not None:
-            if value.isdigit():
+            year_match = year_pattern.search(value)
+            if year_match:
                 specifiers[key] = int(value)
             else:
                 specifiers[key] = value

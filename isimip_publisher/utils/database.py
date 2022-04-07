@@ -631,7 +631,7 @@ def build_tree_dict(tree_dict, tree_path, identifiers, specifiers):
         for sub_identifier in identifiers[0].split('&'):
             if sub_identifier in specifiers:
                 sub_identifiers.append(sub_identifier)
-                sub_specifiers.append(specifiers.get(sub_identifier))
+                sub_specifiers.append(str(specifiers.get(sub_identifier)))
         identifier = '-'.join(sub_identifiers)
         specifier = '-'.join(sub_specifiers)
 
