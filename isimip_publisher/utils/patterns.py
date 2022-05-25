@@ -8,7 +8,7 @@ from ..models import Dataset, File
 
 logger = logging.getLogger(__name__)
 
-year_pattern = re.compile(r'\d{4}')
+year_pattern = re.compile(r'^\d{4}$')
 
 
 def match_datasets(pattern, base_path, files, include=None, exclude=None):
