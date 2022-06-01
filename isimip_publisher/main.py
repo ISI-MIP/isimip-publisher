@@ -32,8 +32,6 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Public directory')
     parser.add_argument('--archive-dir', dest='archive_dir',
                         help='Archive directory')
-    parser.add_argument('--resource-dir', dest='resource_dir',
-                        help='Resource metadata directory')
     parser.add_argument('--database', dest='database',
                         help='Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname')
     parser.add_argument('--mock', dest='mock',
@@ -70,10 +68,16 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser.set_defaults(func=func)
             subparser.add_argument('path', help='path of the files to process')
 
-        for func in [insert_doi, update_doi]:
+        for func in [insert_doi]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
-            subparser.add_argument('resource_json', nargs='+', help='JSON file(s) with DataCite metadata')
+            subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
+            subparser.add_argument('paths', nargs='+', help='paths of the files to process')
+
+        for func in [update_doi]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
+            subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
 
         for func in [register_doi]:
             subparser = subparsers.add_parser(func.__name__)

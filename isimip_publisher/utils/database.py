@@ -504,17 +504,10 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         target_file.search_vector = update_search_vector(target_file, target_file.specifiers)
 
 
-def insert_resource(session, resource_metadata, isimip_data_url):
-    doi = resource_metadata.get('doi')
-    title = resource_metadata.get('title')
-    version = resource_metadata.get('version')
-
-    # get the datacite metadata and the doi
-    datacite = resource_metadata.get('datacite')
-    if datacite:
-        doi = get_doi(datacite)
-        title = get_title(datacite)
-        version = datacite.get('version')
+def insert_resource(session, datacite, paths, isimip_data_url):
+    doi = get_doi(datacite)
+    title = get_title(datacite)
+    version = datacite.get('version')
 
     assert doi is not None, 'No DOI was provided.'
     assert title is not None, 'No title was provided.'
@@ -528,7 +521,6 @@ def insert_resource(session, resource_metadata, isimip_data_url):
         'A resource with doi={} is already in the database.'.format(doi)
 
     # get the path
-    paths = resource_metadata.get('paths', [])
     assert paths, 'No paths were provided for {}.'.format(doi)
 
     # gather datasets
@@ -558,17 +550,10 @@ def insert_resource(session, resource_metadata, isimip_data_url):
     session.add(resource)
 
 
-def update_resource(session, resource_metadata, isimip_data_url):
-    doi = resource_metadata.get('doi')
-    title = resource_metadata.get('title')
-    version = resource_metadata.get('version')
-
-    # get the datacite metadata and the doi
-    datacite = resource_metadata.get('datacite')
-    if datacite:
-        doi = get_doi(datacite)
-        title = get_title(datacite)
-        version = datacite.get('version')
+def update_resource(session, datacite, isimip_data_url):
+    doi = get_doi(datacite)
+    title = get_title(datacite)
+    version = datacite.get('version')
 
     assert doi is not None, 'No DOI was provided.'
     assert title is not None, 'No title was provided.'

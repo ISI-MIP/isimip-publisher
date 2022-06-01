@@ -75,10 +75,18 @@ def fetch_tree(bases, path):
             return tree_json
 
 
-def fetch_json(bases, path):
+def fetch_resource(location):
+    return fetch_json([location])
+
+
+def fetch_json(bases, path=None):
     for base in bases:
         if urlparse(base).scheme:
-            location = base.rstrip('/') + '/' + path.as_posix()
+            if path is not None:
+                location = base.rstrip('/') + '/' + path.as_posix()
+            else:
+                location = base.rstrip('/')
+
             logger.debug('json_url = %s', location)
             response = requests.get(location)
 
@@ -86,7 +94,10 @@ def fetch_json(bases, path):
                 return response.json()
 
         else:
-            location = Path(base).expanduser() / path
+            location = Path(base).expanduser()
+            if path is not None:
+                location /= path
+
             logger.debug('json_path = %s', location)
 
             if location.exists():

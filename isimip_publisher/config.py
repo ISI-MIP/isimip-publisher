@@ -1,5 +1,4 @@
 import configparser
-import json
 import logging
 import os
 from datetime import date, datetime
@@ -8,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from .utils.fetch import (fetch_definitions, fetch_pattern, fetch_schema,
-                          fetch_tree)
+                          fetch_tree, fetch_resource)
 
 logger = logging.getLogger(__name__)
 
@@ -159,14 +158,13 @@ class Settings(object):
         return self._target_include
 
     @property
-    def RESOURCES(self):
+    def RESOURCE(self):
         if not hasattr(self, '_resources'):
-            self._resources = []
-            for resource_json in self.RESOURCE_JSON:
-                resource_path = Path(resource_json)
-                self._resources.append(json.loads(resource_path.read_text()))
+            assert self.RESOURCE_LOCATION is not None, 'RESOURCE_LOCATION is not set'
 
-        return self._resources
+            self._resource = fetch_resource(self.RESOURCE_LOCATION)
+
+        return self._resource
 
     @property
     def DEFINITIONS(self):
