@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 logger = logging.getLogger(__name__)
 
 FLOAT_TYPES = [np.float32, np.float64]
-INT_TYPES = [np.int16, np.uint16, np.int32, np.uint32, np.int64, np.uint64]
+INT_TYPES = [np.int8, np.uint8, np.int16, np.uint16, np.int32, np.uint32, np.int64, np.uint64]
 
 
 def get_netcdf_dimensions(file_path):
