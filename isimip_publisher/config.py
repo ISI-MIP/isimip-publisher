@@ -6,8 +6,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from .utils.fetch import (fetch_definitions, fetch_pattern, fetch_schema,
-                          fetch_tree, fetch_resource)
+from .utils.fetch import (fetch_definitions, fetch_pattern, fetch_resource,
+                          fetch_schema, fetch_tree)
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ class Settings(object):
         'VERSION': date.today().strftime('%Y%m%d'),
         'PROTOCOL_LOCATIONS': 'https://protocol.isimip.org https://protocol2.isimip.org',
         'ISIMIP_DATA_URL': 'https://data.isimip.org/',
-        'DATACITE_METADATA_URL': 'https://mds.datacite.org/metadata',
-        'DATACITE_DOI_URL': 'https://mds.datacite.org/doi',
+        'DATACITE_PREFIX': '10.48364',
+        'DATACITE_TEST_MODE': 'false',
         'MOCK': 'false',
         'RIGHTS': None
     }
@@ -60,7 +60,8 @@ class Settings(object):
 
         self.LOG_LEVEL = self.LOG_LEVEL.upper()
         self.LOG_FILE = Path(self.LOG_FILE).expanduser() if self.LOG_FILE else None
-        self.MOCK = self.MOCK in [True, 1] or self.MOCK.lower() in ['true', 't', '1']
+        self.MOCK = self.MOCK.lower() in ['true', 't', '1']
+        self.DATACITE_TEST_MODE = self.DATACITE_TEST_MODE.lower() in ['true', 't', '1']
 
         if self.ISIMIP_DATA_URL is not None:
             self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')

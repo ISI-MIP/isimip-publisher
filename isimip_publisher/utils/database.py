@@ -13,7 +13,7 @@ from sqlalchemy.orm import backref, relationship, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import column
 
-from .datacite import add_datasets_to_related_identifiers, get_doi, get_title
+from .dois import get_doi, get_title
 
 logger = logging.getLogger(__name__)
 
@@ -504,7 +504,7 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         target_file.search_vector = update_search_vector(target_file, target_file.specifiers)
 
 
-def insert_resource(session, datacite, paths, isimip_data_url):
+def insert_resource(session, datacite, paths):
     doi = get_doi(datacite)
     title = get_title(datacite)
     version = datacite.get('version')
@@ -532,9 +532,6 @@ def insert_resource(session, datacite, paths, isimip_data_url):
         message = 'No datasets found for {}.'.format(doi)
         warnings.warn(RuntimeWarning(message))
 
-    if datacite:
-        datacite = add_datasets_to_related_identifiers(datasets, datacite, isimip_data_url)
-
     # insert a new resource
     logger.debug('insert resource %s', doi)
     resource = Resource(
@@ -550,7 +547,7 @@ def insert_resource(session, datacite, paths, isimip_data_url):
     session.add(resource)
 
 
-def update_resource(session, datacite, isimip_data_url):
+def update_resource(session, datacite):
     doi = get_doi(datacite)
     title = get_title(datacite)
     version = datacite.get('version')
@@ -566,15 +563,23 @@ def update_resource(session, datacite, isimip_data_url):
     assert resource is not None, \
         'A resource with doi={} was not found.'.format(doi)
 
-    # gather datasets
-    if datacite:
-        datacite = add_datasets_to_related_identifiers(resource.datasets, datacite, isimip_data_url)
-
     # update the datecite metadata
     resource.title = title
     resource.version = version
     resource.datacite = datacite
     resource.updated = datetime.utcnow()
+
+
+def fetch_resource(session, doi):
+    # look for the resource in the database
+    resource = session.query(Resource).filter(
+        Resource.doi == doi
+    ).one_or_none()
+
+    assert resource is not None, \
+        'A resource with doi={} was not found.'.format(doi)
+
+    return resource
 
 
 def update_tree(session, path, tree):

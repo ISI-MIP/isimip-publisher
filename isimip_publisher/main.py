@@ -1,11 +1,11 @@
 import argparse
 
 from .commands import (archive_datasets, check, clean, fetch_files, init,
-                       insert_datasets, insert_doi, link_files, link_datasets,
-                       list_local, list_public, list_remote,
-                       match_local, match_public, match_remote,
-                       publish_datasets, register_doi, update_datasets,
-                       update_doi, update_index, update_jsons, write_jsons)
+                       insert_datasets, insert_doi, link_datasets, link_files,
+                       list_local, list_public, list_remote, match_local,
+                       match_public, match_remote, publish_datasets,
+                       register_doi, update_datasets, update_doi, update_index,
+                       update_jsons, write_jsons)
 from .config import RIGHTS_CHOICES, settings
 
 
@@ -35,17 +35,17 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('--database', dest='database',
                         help='Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname')
     parser.add_argument('--mock', dest='mock',
-                        help='If set to True no files are actually copied. Empty mock files are used instead')
+                        help='If set to True, no files are actually copied. Empty mock files are used instead')
     parser.add_argument('--protocol-location', dest='protocol_locations',
                         help='URL or file path to the protocol')
-    parser.add_argument('--datacite-metadata-url', dest='datacite_metadata_url',
-                        help='Metadata endpoint for the DataCite MDS API, default: https://mds.datacite.org/metadata')
-    parser.add_argument('--datacite-doi-url', dest='datacite_doi_url',
-                        help='DOI endpoint for the DataCite MDS API, default: https://mds.datacite.org/doi')
     parser.add_argument('--datacite-username', dest='datacite_username',
-                        help='Username the DataCite MDS API')
+                        help='Username for DataCite')
     parser.add_argument('--datacite-password', dest='datacite_password',
-                        help='Password the DataCite MDS API')
+                        help='Password for DataCite')
+    parser.add_argument('--datacite-prefix', dest='datacite_prefix',
+                        help='Prefix for DataCite')
+    parser.add_argument('--datacite-test-mode', dest='datacite_test_mode',
+                        help='If set to True, the test version of DataCite is used')
     parser.add_argument('--isimip-data-url', dest='isimip_data_url',
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
     parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
