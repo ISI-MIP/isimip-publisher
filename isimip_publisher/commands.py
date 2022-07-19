@@ -10,8 +10,8 @@ from .utils.database import (archive_dataset, clean_tree, fetch_resource,
                              insert_file_link, insert_resource,
                              publish_dataset, retrieve_datasets,
                              update_attributes_view, update_dataset,
-                             update_file, update_resource, update_tree,
-                             update_words_view)
+                             update_file, update_resource, update_search,
+                             update_tree, update_words_view)
 from .utils.dois import upload_doi
 from .utils.files import (copy_files, delete_file, link_file, list_files,
                           move_file)
@@ -131,6 +131,7 @@ def insert_datasets():
 
         session.commit()
 
+    update_search(session, settings.PATH)
     update_words_view(session)
     update_attributes_view(session)
 
@@ -166,6 +167,9 @@ def link_datasets():
     session.commit()
     clean_tree(session)
     session.commit()
+
+    update_search(session, settings.PUBLIC_PATH)
+    update_search(session, settings.TARGET_PATH)
     update_words_view(session)
     update_attributes_view(session)
     session.commit()
@@ -213,6 +217,8 @@ def update_datasets():
 
         session.commit()
 
+    update_search(session, settings.PATH)
+    session.commit()
     update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     clean_tree(session)
@@ -289,6 +295,7 @@ def update_index():
     clean_tree(session)
     session.commit()
 
+    update_search(session, settings.PATH)
     update_words_view(session)
     update_attributes_view(session)
     session.commit()
@@ -307,11 +314,19 @@ def insert_doi():
 
     session.commit()
 
+    for path in settings.PATHS:
+        update_search(session, path)
+
+    session.commit()
+
 
 def update_doi():
     session = init_database_session(settings.DATABASE)
 
     update_resource(session, settings.RESOURCE)
+
+    for path in settings.PATHS:
+        update_search(session, path)
 
     session.commit()
 

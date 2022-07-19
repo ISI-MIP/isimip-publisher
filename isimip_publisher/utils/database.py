@@ -28,9 +28,6 @@ resources_datasets = Table('resources_datasets', Base.metadata,
 class Dataset(Base):
 
     __tablename__ = 'datasets'
-    __table_args__ = (
-        Index('datasets_search_vector_idx', 'search_vector', postgresql_using='gin'),
-    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     target_id = Column(UUID, ForeignKey('datasets.id'), nullable=True)
@@ -41,7 +38,6 @@ class Dataset(Base):
     size = Column(BigInteger, nullable=False)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
-    search_vector = Column(TSVECTOR, nullable=False)
     public = Column(Boolean, nullable=False)
     tree_path = Column(Text, nullable=True, index=True)
     rights = Column(Text)
@@ -49,6 +45,7 @@ class Dataset(Base):
     files = relationship('File', back_populates='dataset')
     links = relationship('Dataset', backref=backref('target', remote_side=id))
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
+    search = relationship('Search', back_populates='dataset', uselist=False)
 
     created = Column(DateTime)
     updated = Column(DateTime)
@@ -62,9 +59,6 @@ class Dataset(Base):
 class File(Base):
 
     __tablename__ = 'files'
-    __table_args__ = (
-        Index('files_search_vector_idx', 'search_vector', postgresql_using='gin'),
-    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
@@ -79,7 +73,6 @@ class File(Base):
     netcdf_header = Column(JSONB, nullable=True)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
-    search_vector = Column(TSVECTOR, nullable=False)
 
     created = Column(DateTime)
     updated = Column(DateTime)
@@ -127,6 +120,25 @@ class Tree(Base):
         return str(self.id)
 
 
+class Search(Base):
+
+    __tablename__ = 'search'
+    __table_args__ = (
+        Index('search_vector_idx', 'vector', postgresql_using='gin'),
+    )
+
+    dataset_id = Column(UUID, ForeignKey('datasets.id'), primary_key=True)
+    vector = Column(TSVECTOR, nullable=False)
+
+    created = Column(DateTime)
+    updated = Column(DateTime)
+
+    dataset = relationship('Dataset', back_populates='search')
+
+    def __repr__(self):
+        return str(self.dataset_id)
+
+
 def init_database_session(database_settings):
     engine = create_engine(database_settings)
 
@@ -137,32 +149,36 @@ def init_database_session(database_settings):
     return session
 
 
-def get_search_vector(values):
-    search_string = ' '.join(set([str(value) for value in values]))
+def get_search_terms(dataset):
+    terms = list(dataset.specifiers.values())
+
+    # loop over resources to get title, doi, and creators
+    for resource in dataset.resources:
+        terms += [resource.title, resource.doi]
+        if resource.datacite is not None:
+            terms += [creator.get('name') for creator in resource.datacite.get('creators', [])]
+
+    return terms
+
+
+def get_search_vector(dataset):
+    terms = get_search_terms(dataset)
+
+    # if the dataset has a target (is a link), get the terms of the target
+    if dataset.target is not None:
+        terms += get_search_terms(dataset.target)
+
+        # loop over the links of the target, but not this dataset
+        for link in dataset.target.links:
+            if link.id != dataset.id:
+                terms += get_search_terms(link)
+
+    # loop over links, if any
+    for link in dataset.links:
+        terms += get_search_terms(link)
+
+    search_string = ' '.join(set([str(value) for value in set(terms)]))
     return func.setweight(func.to_tsvector(search_string), 'A')
-
-
-def create_search_vector(specifiers):
-    return get_search_vector(specifiers.values())
-
-
-def update_search_vector(obj, specifiers):
-    values = list(specifiers.values())
-
-    # update the target search vector, if any
-    if obj.target:
-        target_values = list(obj.target.specifiers.values())
-        for link in obj.target.links:
-            if link.id != obj.id:
-                target_values += list(link.specifiers.values())
-        target_values += values
-        obj.target.search_vector = get_search_vector(target_values)
-
-    # update the links, if any
-    for link in obj.links:
-        values += list(link.specifiers.values())
-
-    return get_search_vector(values)
 
 
 def insert_dataset(session, version, rights, name, path, size, specifiers):
@@ -193,7 +209,6 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
             rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=create_search_vector(specifiers),
             public=False,
             created=datetime.utcnow()
         )
@@ -250,7 +265,6 @@ def update_dataset(session, rights, path, specifiers):
 
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
-    dataset.search_vector = update_search_vector(dataset, specifiers)
     dataset.updated = datetime.utcnow()
 
 
@@ -297,15 +311,11 @@ def insert_dataset_link(session, version, rights, target_dataset_path, name, pat
             rights=rights,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=create_search_vector(specifiers),
             public=True,
             target=target_dataset,
             created=datetime.utcnow()
         )
         session.add(dataset)
-
-        # update the search vector of the target dataset
-        target_dataset.search_vector = update_search_vector(target_dataset, target_dataset.specifiers)
 
 
 def archive_dataset(session, path):
@@ -393,7 +403,6 @@ def insert_file(session, version, dataset_path, uuid, name, path, size, checksum
             netcdf_header=netcdf_header,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=create_search_vector(specifiers),
             dataset=dataset,
             created=datetime.utcnow()
         )
@@ -422,7 +431,6 @@ def update_file(session, dataset_path, path, specifiers):
         logger.debug('update file %s', path)
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
-        file.search_vector = update_search_vector(file, specifiers)
         file.updated = datetime.utcnow()
     else:
         raise AssertionError('No file with the path {} found in dataset {}'.format(path, dataset_path))
@@ -493,15 +501,11 @@ def insert_file_link(session, version, target_file_path, dataset_path,
             netcdf_header=netcdf_header,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            search_vector=create_search_vector(specifiers),
             dataset=dataset,
             target=target_file,
             created=datetime.utcnow()
         )
         session.add(file)
-
-        # update the search vector of the file target
-        target_file.search_vector = update_search_vector(target_file, target_file.specifiers)
 
 
 def insert_resource(session, datacite, paths):
@@ -694,6 +698,29 @@ def build_clean_tree_dict(tree_dict, clean_tree_dict, specifiers):
                                                                     specifiers[1:])
 
     return clean_tree_dict
+
+
+def update_search(session, path):
+    # check if path is a file
+    if Path(path).suffix:
+        path = Path(path).parent.as_posix()
+
+    # step 1: get the all datasets for this path
+    like_path = '{}%'.format(path)
+    datasets = session.query(Dataset).filter(
+        Dataset.path.like(like_path)
+    ).all()
+
+    for dataset in datasets:
+        if dataset.search is None:
+            dataset.search = Search(
+                dataset=dataset,
+                vector=get_search_vector(dataset),
+                created=datetime.utcnow()
+            )
+        else:
+            dataset.search.vector = get_search_vector(dataset)
+            dataset.search.updated = datetime.utcnow()
 
 
 def update_words_view(session):

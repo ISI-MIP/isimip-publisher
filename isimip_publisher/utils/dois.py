@@ -1,4 +1,4 @@
-from datacite import DataCiteMDSClient, DataCiteRESTClient, schema43
+from datacite import DataCiteMDSClient, schema43
 
 
 def get_doi(datacite):
@@ -10,18 +10,6 @@ def get_doi(datacite):
 def get_title(datacite):
     return next(item.get('title')
                 for item in datacite.get('titles', []))
-
-
-def get_related_identifiers(datasets, isimip_data_url):
-    return [
-        {
-            'relatedIdentifier': '{base}/datasets/{id}/'.format(base=isimip_data_url, id=dataset.id),
-            'relatedIdentifierType': 'URL',
-            'relationType': 'HasPart',
-            'resourceTypeGeneral': 'Dataset'
-        }
-        for dataset in datasets
-    ]
 
 
 def upload_doi(resource, isimip_data_url,
