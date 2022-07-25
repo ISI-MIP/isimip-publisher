@@ -732,7 +732,7 @@ def update_words_view(session):
         logger.debug('update words view')
     else:
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT search_vector FROM public.datasets')
+            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT vector FROM public.search')
         ''')
         session.connection().execute('''
             CREATE INDEX ON words USING gin(word gin_trgm_ops)
