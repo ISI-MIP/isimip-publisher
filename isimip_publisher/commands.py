@@ -326,4 +326,7 @@ def register_doi():
 
 
 def init():
-    init_database_session(settings.DATABASE)
+    session = init_database_session(settings.DATABASE)
+    update_words_view(session)
+    update_attributes_view(session)
+    session.commit()
