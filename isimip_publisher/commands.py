@@ -77,11 +77,12 @@ def fetch_files():
 
 
 def link_files():
-    target_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
-    target_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, target_files,
+    public_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
+    public_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
                                      include=settings.TARGET_INCLUDE, exclude=settings.TARGET_EXCLUDE)
-    validate_datasets(settings.SCHEMA, target_datasets)
+    validate_datasets(settings.SCHEMA, public_datasets)
 
+    target_files = [file.path for dataset in public_datasets for file in dataset.files]
     for file_path in tqdm(target_files, desc='link_files'.ljust(18)):
         link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file_path)
 
