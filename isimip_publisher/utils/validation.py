@@ -59,7 +59,7 @@ def check_datasets(datasets, db_datasets):
                 'Path mismatch {} != {} for file {}'.format(metadata.get('path'), db_file.path, db_file.id)
 
             # check json uuid consitency
-            if file.uuid:
+            if metadata.get('id'):
                 assert metadata.get('id') == db_file.id, \
                     'UUID mismatch {} != {} for file {}'.format(metadata.get('id'), db_file.id, db_file.id)
 
