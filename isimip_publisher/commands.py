@@ -310,11 +310,11 @@ def clean():
 def insert_doi():
     session = init_database_session(settings.DATABASE)
 
-    insert_resource(session, settings.RESOURCE, settings.PATHS)
+    resource = insert_resource(session, settings.RESOURCE, settings.PATHS)
 
     session.commit()
 
-    for path in settings.PATHS:
+    for path in resource.paths:
         update_search(session, path)
 
     session.commit()
@@ -323,9 +323,9 @@ def insert_doi():
 def update_doi():
     session = init_database_session(settings.DATABASE)
 
-    update_resource(session, settings.RESOURCE)
+    resource = update_resource(session, settings.RESOURCE)
 
-    for path in settings.PATHS:
+    for path in resource.paths:
         update_search(session, path)
 
     session.commit()

@@ -548,6 +548,8 @@ def insert_resource(session, datacite, paths):
         resource.datasets.append(dataset)
     session.add(resource)
 
+    return resource
+
 
 def update_resource(session, datacite):
     doi = get_doi(datacite)
@@ -570,6 +572,8 @@ def update_resource(session, datacite):
     resource.version = version
     resource.datacite = datacite
     resource.updated = datetime.utcnow()
+
+    return resource
 
 
 def fetch_resource(session, doi):
