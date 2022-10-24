@@ -506,7 +506,7 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         session.add(file)
 
 
-def insert_resource(session, datacite, paths):
+def insert_resource(session, datacite, paths, datacite_prefix):
     doi = get_doi(datacite)
     title = get_title(datacite)
     version = datacite.get('version')
@@ -541,11 +541,19 @@ def insert_resource(session, datacite, paths):
         title=title,
         version=version,
         paths=paths,
-        datacite=datacite,
         created=datetime.utcnow()
     )
+
+    # only add the metadata if this is a "native" DOI, not an external one
+    if doi.startswith(datacite_prefix):
+        resource.datacite = datacite
+    else:
+        resource.datacite = {}
+
+    # add the datasets as many to many relation
     for dataset in datasets:
         resource.datasets.append(dataset)
+
     session.add(resource)
 
     return resource

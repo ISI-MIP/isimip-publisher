@@ -310,7 +310,7 @@ def clean():
 def insert_doi():
     session = init_database_session(settings.DATABASE)
 
-    resource = insert_resource(session, settings.RESOURCE, settings.PATHS)
+    resource = insert_resource(session, settings.RESOURCE, settings.PATHS, settings.DATACITE_PREFIX)
 
     session.commit()
 
