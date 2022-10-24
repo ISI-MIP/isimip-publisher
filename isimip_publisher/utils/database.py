@@ -454,8 +454,6 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         'Target file {}#{} was found, but with a different checksum'.format(target_file_path, version)
     assert target_file.checksum_type == checksum_type, \
         'Target file {}#{} was found, but with a different checksum_type'.format(target_file_path, version)
-    assert target_file.netcdf_header == netcdf_header, \
-        'Target file {}#{} was found, but with a different netcdf_header'.format(target_file_path, version)
 
     # get the linked dataset for this file from the database
     dataset = session.query(Dataset).filter(
