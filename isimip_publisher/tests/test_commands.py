@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from isimip_publisher.utils.database import (Dataset, Resource,
+from isimip_publisher.utils.database import (Dataset, Resource, Search,
                                              init_database_session)
 
 
@@ -23,6 +23,8 @@ def setup():
     session = init_database_session(os.getenv('DATABASE'))
     for resource in session.query(Resource):
         session.delete(resource)
+    for search in session.query(Search):
+        session.delete(search)
     session.commit()
 
     for dataset in session.query(Dataset):
@@ -133,7 +135,7 @@ def test_link_datasets(setup, script_runner):
 
 
 def test_insert_doi(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json')
+    response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
