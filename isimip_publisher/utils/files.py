@@ -4,10 +4,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from isimip_utils.checksum import get_checksum
 from isimip_utils.netcdf import open_dataset_write, update_global_attributes
 
 from ..config import settings
-from .checksum import get_checksum
 
 logger = logging.getLogger(__name__)
 

@@ -5,10 +5,10 @@ from pathlib import Path
 
 import jsonschema
 
+from isimip_utils.checksum import get_checksum, get_checksum_type
 from isimip_utils.netcdf import (open_dataset_read, get_dimensions,
                                  get_global_attributes, get_variables)
 
-from .utils.checksum import get_checksum, get_checksum_type
 from .utils.files import get_size
 
 logger = logging.getLogger(__name__)
