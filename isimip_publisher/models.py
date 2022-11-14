@@ -73,8 +73,8 @@ class File(object):
             with open_dataset_read(self.abspath) as dataset:
                 return {
                     'dimensions': get_dimensions(dataset),
-                    'variables': get_variables(dataset),
-                    'global_attributes': get_global_attributes(dataset)
+                    'variables': get_variables(dataset, convert=True),
+                    'global_attributes': get_global_attributes(dataset, convert=True)
                 }
 
     @cached_property
