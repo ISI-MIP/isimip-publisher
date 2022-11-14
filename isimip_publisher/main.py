@@ -12,7 +12,7 @@ from .config import RIGHTS_CHOICES, settings
 
 
 def get_parser(add_path=False, add_subparsers=False):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='isimip-publisher')
 
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
