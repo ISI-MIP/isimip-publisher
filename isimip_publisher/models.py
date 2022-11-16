@@ -1,4 +1,3 @@
-from functools import cached_property
 import json
 import logging
 from pathlib import Path
@@ -6,6 +5,7 @@ from pathlib import Path
 import jsonschema
 
 from isimip_utils.checksum import get_checksum, get_checksum_type
+from isimip_utils.decorators import cached_property
 from isimip_utils.netcdf import (open_dataset_read, get_dimensions,
                                  get_global_attributes, get_variables)
 

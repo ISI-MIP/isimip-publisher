@@ -1,10 +1,10 @@
 import logging
 
 from datetime import datetime
-from functools import cached_property
 from pathlib import Path
 
 from isimip_utils.config import ISIMIPSettings
+from isimip_utils.decorators import cached_property
 from isimip_utils.fetch import (fetch_definitions, fetch_pattern, fetch_resource,
                                 fetch_schema, fetch_tree)
 from isimip_utils.utils import parse_filelist
