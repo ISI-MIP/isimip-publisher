@@ -1,7 +1,7 @@
 ISIMIP publisher
 ================
 
-[![Python Version](https://img.shields.io/badge/python-3.6-3.7-3.8-3.9-3.10-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.6|3.7|3.8|3.9|3.10-blue)](https://www.python.org/)
 [![pytest Workflow Status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/ISI-MIP/isimip-publisher/blob/master/LICENSE)
 
