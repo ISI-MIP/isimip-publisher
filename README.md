@@ -1,8 +1,9 @@
 ISIMIP publisher
 ================
 
-[![Python Version: 3.6|3.7|3.8|3.9|3.10](https://img.shields.io/badge/Python-3.6|3.7|3.8|3.9|3.10-blue)](https://www.python.org/)
-[![License: MIT](http://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ISI-MIP/isimip-publisher/blob/master/LICENSE)
+[![Latest release](https://shields.io/github/v/release/ISI-MIP/isimip-publisher)](https://github.com/ISI-MIP/isimip-publisher/releases)
+[![Python Version: 3.6|3.7|3.8|3.9|3.10](https://img.shields.io/badge/python-3.6|3.7|3.8|3.9|3.10-blue)](https://www.python.org/)
+[![License: MIT](http://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/ISI-MIP/isimip-publisher/blob/master/LICENSE)
 [![pytest Workflow Status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml)
 
 A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
