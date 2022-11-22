@@ -1,9 +1,9 @@
 ISIMIP publisher
 ================
 
-[![Python Version](https://img.shields.io/badge/python-3.6|3.7|3.8|3.9|3.10-blue)](https://www.python.org/)
+[![Python Version: 3.6|3.7|3.8|3.9|3.10](https://img.shields.io/badge/Python-3.6|3.7|3.8|3.9|3.10-blue)](https://www.python.org/)
+[![License: MIT](http://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ISI-MIP/isimip-publisher/blob/master/LICENSE)
 [![pytest Workflow Status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml)
-[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/ISI-MIP/isimip-publisher/blob/master/LICENSE)
 
 A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
 
@@ -49,17 +49,16 @@ usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE]
                         [-e EXCLUDE_FILE] [-v VERSION]
                         [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
                         [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
-                        [--archive-dir ARCHIVE_DIR]
-                        [--resource-dir RESOURCE_DIR] [--database DATABASE]
+                        [--archive-dir ARCHIVE_DIR] [--database DATABASE]
                         [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
-                        [--datacite-metadata-url DATACITE_METADATA_URL]
-                        [--datacite-doi-url DATACITE_DOI_URL]
                         [--datacite-username DATACITE_USERNAME]
                         [--datacite-password DATACITE_PASSWORD]
+                        [--datacite-prefix DATACITE_PREFIX]
+                        [--datacite-test-mode DATACITE_TEST_MODE]
                         [--isimip-data-url ISIMIP_DATA_URL]
                         [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}]
                         [--log-level LOG_LEVEL] [--log-file LOG_FILE]
-                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,init}
+                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
                         ...
 
 optional arguments:
@@ -83,24 +82,20 @@ optional arguments:
                         Public directory
   --archive-dir ARCHIVE_DIR
                         Archive directory
-  --resource-dir RESOURCE_DIR
-                        Resource metadata directory
   --database DATABASE   Database connection string, e.g. postgresql+psycopg2:/
                         /username:password@host:port/dbname
-  --mock MOCK           If set to True no files are actually copied. Empty
+  --mock MOCK           If set to True, no files are actually copied. Empty
                         mock files are used instead
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
-  --datacite-metadata-url DATACITE_METADATA_URL
-                        Metadata endpoint for the DataCite MDS API, default:
-                        https://mds.datacite.org/metadata
-  --datacite-doi-url DATACITE_DOI_URL
-                        DOI endpoint for the DataCite MDS API, default:
-                        https://mds.datacite.org/doi
   --datacite-username DATACITE_USERNAME
-                        Username the DataCite MDS API
+                        Username for DataCite
   --datacite-password DATACITE_PASSWORD
-                        Password the DataCite MDS API
+                        Password for DataCite
+  --datacite-prefix DATACITE_PREFIX
+                        Prefix for DataCite
+  --datacite-test-mode DATACITE_TEST_MODE
+                        If set to True, the test version of DataCite is used
   --isimip-data-url ISIMIP_DATA_URL
                         URL of the ISIMIP repository [default:
                         https://data.isimip.org/]
@@ -113,8 +108,7 @@ optional arguments:
 subcommands:
   valid subcommands
 
-  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,init}
-
+  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -149,7 +143,7 @@ isimip-publisher archive_datasets <path>
 isimip-publisher ingest_doi <resource-path>
 
 # register a DOI resource with datacite
-isimip-publisher ingest_doi <DOI>
+isimip-publisher register_doi <DOI>
 ```
 
 `<path>` starts from `REMOTE_DIR`, `LOCAL_DIR`, etc., and *must* start with `<simulation_round>/<product>/<sector>`. After that more levels can follow to restrict the files to be processed further.
@@ -159,18 +153,18 @@ isimip-publisher ingest_doi <DOI>
 `match_remote`, `fetch_files`, `write_jsons`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
-isimip-publisher <path> run
+isimip-publisher run <path>
 ```
 
 For all commands a list of files with absolute pathes (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
-isimip-publisher -f /path/to/files.txt <path> run
+isimip-publisher -e exclude.txt -i include.txt run <path> 
 ```
 
 Default values for the optional arguments are set in the code, but can also be provided via:
 
-* a config file given by `--config-file`, or located at `isimip-qc.conf`, `~/.isimip-qc.conf`, or `/etc/isimip-qc.conf`. The config file needs to have a section `isimip-publisher` and uses lower case variables and underscores, e.g.:
+* a config file given by `--config-file`, or located at `isimip.conf`, `~/.isimip.conf`, or `/etc/isimip.conf`. The config file needs to have a section `isimip-publisher` and uses lower case variables and underscores, e.g.:
     ```
     [isimip-publisher]
     log_level = ERROR
@@ -195,7 +189,7 @@ Test
 Install test dependencies:
 
 ```
-pip install -r requirements/dev.txt
+pip install -r requirements/pytest.txt
 ```
 
 Copy `.env.pytest` to `.env`. This sets the environment variables to the directories in `testing`.
