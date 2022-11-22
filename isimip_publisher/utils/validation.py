@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from .checksum import get_checksum
+from isimip_utils.checksum import get_checksum
 
 
 def validate_datasets(schema, datasets):

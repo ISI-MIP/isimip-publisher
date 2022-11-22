@@ -4,10 +4,12 @@ from pathlib import Path
 
 import jsonschema
 
-from .utils.checksum import get_checksum, get_checksum_type
+from isimip_utils.checksum import get_checksum, get_checksum_type
+from isimip_utils.decorators import cached_property
+from isimip_utils.netcdf import (open_dataset_read, get_dimensions,
+                                 get_global_attributes, get_variables)
+
 from .utils.files import get_size
-from .utils.netcdf import (get_netcdf_dimensions, get_netcdf_global_attributes,
-                           get_netcdf_variables)
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +27,9 @@ class Dataset(object):
         self._size = None
         self._checksum = None
 
-    @property
+    @cached_property
     def size(self):
-        if not self._size:
-            self._size = sum([file.size for file in self.files])
-        return self._size
+        return sum([file.size for file in self.files])
 
     def validate(self, schema):
         # validate if self.clean is not true yet
@@ -63,39 +63,33 @@ class File(object):
         self._checksum = None
         self._netcdf_header = None
 
-    @property
+    @cached_property
     def uuid(self):
-        if not self._uuid and self.netcdf_header:
-            self._uuid = self.netcdf_header.get('global_attributes', {}).get('isimip_id')
-        return self._uuid
+        return self.netcdf_header.get('global_attributes', {}).get('isimip_id')
 
-    @property
+    @cached_property
     def netcdf_header(self):
-        if not self._netcdf_header and Path(self.path).suffix.startswith('.nc'):
-            self._netcdf_header = {
-                'dimensions': get_netcdf_dimensions(self.abspath),
-                'variables': get_netcdf_variables(self.abspath),
-                'global_attributes': get_netcdf_global_attributes(self.abspath)
-            }
-        return self._netcdf_header
+        if Path(self.path).suffix.startswith('.nc'):
+            with open_dataset_read(self.abspath) as dataset:
+                return {
+                    'dimensions': get_dimensions(dataset),
+                    'variables': get_variables(dataset, convert=True),
+                    'global_attributes': get_global_attributes(dataset, convert=True)
+                }
 
-    @property
+    @cached_property
     def size(self):
-        if not self._size:
-            self._size = get_size(self.abspath)
-        return self._size
+        return get_size(self.abspath)
 
-    @property
+    @cached_property
     def checksum(self):
-        if not self._checksum:
-            json_file = Path(self.abspath).with_suffix('.json')
-            if json_file.is_file():
-                self._checksum = json.loads(json_file.read_text()).get('checksum')
-            else:
-                self._checksum = get_checksum(self.abspath, self.checksum_type)
-        return self._checksum
+        json_file = Path(self.abspath).with_suffix('.json')
+        if json_file.is_file():
+            return json.loads(json_file.read_text()).get('checksum')
+        else:
+            return get_checksum(self.abspath, self.checksum_type)
 
-    @property
+    @cached_property
     def json(self):
         return {
             'id': self._uuid,

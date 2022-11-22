@@ -1,4 +1,5 @@
 import argparse
+from datetime import date
 
 from .commands import (archive_datasets, check, clean, fetch_files, init,
                        insert_datasets, insert_doi, link_datasets, link_files,
@@ -6,11 +7,12 @@ from .commands import (archive_datasets, check, clean, fetch_files, init,
                        match_public, match_remote, publish_datasets,
                        register_doi, update_datasets, update_doi, update_index,
                        update_jsons, write_jsons)
+
 from .config import RIGHTS_CHOICES, settings
 
 
 def get_parser(add_path=False, add_subparsers=False):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='isimip-publisher')
 
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
@@ -20,6 +22,7 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('-e', '--exclude', dest='exclude_file',
                         help='Path to a file containing a list of files to exclude')
     parser.add_argument('-v', '--version', dest='version',
+                        default=date.today().strftime('%Y%m%d'),
                         help='version date override [default: today]')
 
     parser.add_argument('--remote-dest', dest='remote_dest',
@@ -35,22 +38,27 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('--database', dest='database',
                         help='Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname')
     parser.add_argument('--mock', dest='mock',
+                        default='false',
                         help='If set to True, no files are actually copied. Empty mock files are used instead')
     parser.add_argument('--protocol-location', dest='protocol_locations',
+                        default='https://protocol.isimip.org https://protocol2.isimip.org',
                         help='URL or file path to the protocol')
     parser.add_argument('--datacite-username', dest='datacite_username',
                         help='Username for DataCite')
     parser.add_argument('--datacite-password', dest='datacite_password',
                         help='Password for DataCite')
     parser.add_argument('--datacite-prefix', dest='datacite_prefix',
+                        default='10.48364',
                         help='Prefix for DataCite')
     parser.add_argument('--datacite-test-mode', dest='datacite_test_mode',
+                        default='false',
                         help='If set to True, the test version of DataCite is used')
     parser.add_argument('--isimip-data-url', dest='isimip_data_url',
+                        default='https://data.isimip.org/',
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
     parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
                         help='Rights/license for the files [default: None]')
-    parser.add_argument('--log-level', dest='log_level',
+    parser.add_argument('--log-level', dest='log_level', default='WARN',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',
                         help='Path to the log file')
@@ -99,12 +107,11 @@ def get_parser(add_path=False, add_subparsers=False):
 
 def main():
     parser = get_parser(add_path=True, add_subparsers=True)
-    args = parser.parse_args()
-    settings.setup(args)
+    settings.setup(parser)
 
-    if hasattr(args, 'func'):
+    if hasattr(settings, 'FUNC'):
         try:
-            args.func()
+            settings.FUNC()
         except AssertionError as e:
             parser.error(e)
     else:

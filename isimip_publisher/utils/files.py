@@ -4,9 +4,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from isimip_utils.checksum import get_checksum
+from isimip_utils.netcdf import open_dataset_write, update_global_attributes
+
 from ..config import settings
-from .checksum import get_checksum
-from .netcdf import update_netcdf_global_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +147,10 @@ def mock_file(mock_path):
     shutil.copyfile(empty_file, mock_path)
 
     if mock_path.suffix.startswith('.nc'):
-        update_netcdf_global_attributes(mock_path, {
-            'path': mock_path
-        })
+        with open_dataset_write(mock_path) as dataset:
+            update_global_attributes(dataset, {
+                'path': mock_path
+            })
     else:
         mock_path.write_text('path: ' + mock_path.as_posix() + os.linesep)
 

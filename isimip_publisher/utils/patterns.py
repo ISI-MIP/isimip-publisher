@@ -1,14 +1,12 @@
 import logging
-import re
 
-from collections import OrderedDict
-from pathlib import Path
+from isimip_utils.patterns import match_dataset_path, match_file_path
+from isimip_utils.exceptions import DidNotMatch
+from isimip_utils.utils import exclude_path, include_path
 
 from ..models import Dataset, File
 
 logger = logging.getLogger(__name__)
-
-year_pattern = re.compile(r'^\d{4}$')
 
 
 def match_datasets(pattern, base_path, files, include=None, exclude=None):
@@ -16,19 +14,18 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
 
     # first pass: find datasets
     for file in files:
-        if not (exclude and match_path(exclude, file)) and \
-           not (include and not match_path(include, file)):
+        if include_path(include, file) and not exclude_path(exclude, file):
             # construct absolute path
             file_abspath = base_path / file
             logger.info('match_datasets %s', file_abspath)
 
             # match dataset
-            dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
+            dataset_path, dataset_specifiers = match_dataset_path(pattern, file_abspath)
 
             # add dataset to list of dataset, if it was not found before
             if dataset_path not in dataset_dict:
                 dataset_dict[dataset_path] = Dataset(
-                    name=dataset_name,
+                    name=dataset_path.name,
                     path=dataset_path.as_posix(),
                     specifiers=dataset_specifiers
                 )
@@ -43,22 +40,22 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
 
         # try to find a dataset for this file
         try:
-            dataset_path, dataset_name, dataset_specifiers = match_dataset(pattern, file_abspath)
-        except AssertionError:
+            dataset_path, dataset_specifiers = match_dataset_path(pattern, file_abspath)
+        except DidNotMatch:
             # skip the file if not dataset pattern matches
             continue
 
         if dataset_path in dataset_dict:
-            if not (exclude and match_path(exclude, file)):
+            if not exclude_path(exclude, file):
                 # if the file is not explicitely excluded, match the file pattern
-                file_path, file_name, file_specifiers = match_file(pattern, file_abspath)
+                file_path, file_specifiers = match_file_path(pattern, file_abspath)
                 logger.debug(dataset_specifiers)
                 logger.debug(file_specifiers)
 
                 # append file to dataset
                 dataset_dict[dataset_path].files.append(File(
                     dataset=dataset_dict[dataset_path],
-                    name=file_name,
+                    name=file_path.name,
                     path=file_path.as_posix(),
                     abspath=file_abspath.as_posix(),
                     specifiers=file_specifiers
@@ -80,84 +77,8 @@ def filter_datasets(db_datasets, include=None, exclude=None):
     datasets = []
     for db_dataset in db_datasets:
         db_files = [file.path for file in db_dataset.files]
-        if not (exclude and match_paths(exclude, db_files)) and \
-           not (include and not match_paths(include, db_files)):
+        if any([include_path(include, file) for file in db_files]) \
+                and not any([exclude_path(exclude, file) for file in db_files]):
             datasets.append(db_dataset)
 
     return datasets
-
-
-def match_paths(path_set, file_paths):
-    return any(match_path(path_set, file_path) for file_path in file_paths)
-
-
-def match_path(path_set, file_path):
-    if path_set:
-        for path in path_set:
-            if str(file_path).startswith(path):
-                return True
-
-    return False
-
-
-def match_dataset(pattern, file_abspath):
-    return match(pattern, file_abspath, 'path', 'dataset')
-
-
-def match_file(pattern, file_abspath):
-    return match(pattern, file_abspath, 'path', 'file')
-
-
-def match(pattern, file_abspath, dirname_pattern_key, filename_pattern_key):
-    dirname_pattern = pattern[dirname_pattern_key]
-    filename_pattern = pattern[filename_pattern_key]
-
-    # match the dirname and the filename
-    dirname_match, dirname_specifiers = match_string(dirname_pattern, file_abspath.parent.as_posix())
-    filename_match, filename_specifiers = match_string(filename_pattern, file_abspath.name)
-
-    path = Path(dirname_match) / filename_match
-    name = filename_match
-
-    # assert that any value in dirname_specifiers at least starts with
-    # its corresponding value (same key) in filename_specifiers
-    # e.g. 'ewe' and 'ewe_north-sea'
-    for key, value in filename_specifiers.items():
-        if key in dirname_specifiers:
-            f, d = filename_specifiers[key], dirname_specifiers[key]
-            assert d.lower().startswith(f.lower()), \
-                'dirname_specifier "{}" does not match filename_specifier "{}" in {}'.format(d, f, file_abspath)
-
-    # merge filename_specifiers and dirname_specifiers
-    specifiers = {**dirname_specifiers, **filename_specifiers}
-
-    # apply specifiers_map if it exists
-    if pattern['specifiers_map']:
-        for key, value in specifiers.items():
-            if value in pattern['specifiers_map']:
-                specifiers[key] = pattern['specifiers_map'][value]
-
-    # add fixed specifiers
-    specifiers.update(pattern['specifiers'])
-
-    return path, name, specifiers
-
-
-def match_string(pattern, string):
-    logger.debug(pattern.pattern)
-    logger.debug(string)
-
-    # try to match the string
-    match = pattern.search(string)
-    assert match is not None, 'No match for {} ("{}")'.format(string, pattern.pattern)
-
-    specifiers = OrderedDict()
-    for key, value in match.groupdict().items():
-        if value is not None:
-            year_match = year_pattern.search(value)
-            if year_match:
-                specifiers[key] = int(value)
-            else:
-                specifiers[key] = value
-
-    return match.group(0), specifiers
