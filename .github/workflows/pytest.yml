@@ -40,6 +40,7 @@ jobs:
     - name: Install package
       run: |
         python3 -m pip install --upgrade pip setuptools
+        python3 -m pip install coveralls
         python3 -m pip install -e .
         python3 -m pip install -r requirements/pytest.txt
     - name: Prepare database
@@ -62,3 +63,20 @@ jobs:
     - name: Run pytest
       run: |
         pytest
+        coveralls --service=github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+        COVERALLS_PARALLEL: true
+
+  coveralls:
+    needs: pytest
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Run coveralls finish
+      run: |
+        pip install coveralls
+        coveralls --service=github --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
