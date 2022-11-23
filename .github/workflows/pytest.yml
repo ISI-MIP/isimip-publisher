@@ -62,7 +62,7 @@ jobs:
         echo "MOCK=${{ matrix.mock }}" >> $GITHUB_ENV
     - name: Run pytest
       run: |
-        pytest
+        pytest --cov=isimip_publisher
         coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
