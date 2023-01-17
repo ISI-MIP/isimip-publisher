@@ -3,11 +3,12 @@ from datetime import date
 
 from .commands import (archive_datasets, check, clean, fetch_files, init,
                        insert_datasets, insert_doi, link_datasets, link_files,
-                       list_local, list_public, list_remote, match_local,
-                       match_public, match_remote, publish_datasets,
-                       register_doi, update_datasets, update_doi, update_index,
-                       update_jsons, write_jsons)
-
+                       list_local, list_public, list_public_links, list_remote,
+                       list_remote_links, match_local, match_public,
+                       match_public_links, match_remote, match_remote_links,
+                       publish_datasets, register_doi, update_datasets,
+                       update_doi, update_index, write_link_jsons,
+                       write_local_jsons, write_public_jsons)
 from .config import RIGHTS_CHOICES, settings
 
 
@@ -23,7 +24,7 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Path to a file containing a list of files to exclude')
     parser.add_argument('-v', '--version', dest='version',
                         default=date.today().strftime('%Y%m%d'),
-                        help='version date override [default: today]')
+                        help='Version date override [default: today]')
 
     parser.add_argument('--remote-dest', dest='remote_dest',
                         help='Remote destination to fetch files from, e.g. user@example.com')
@@ -67,9 +68,9 @@ def get_parser(add_path=False, add_subparsers=False):
         subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
         # add a subparser for each subcommand
-        for func in [list_remote, list_local, list_public,
-                     match_remote, match_local, match_public,
-                     fetch_files, write_jsons, update_jsons,
+        for func in [list_remote, list_remote_links, list_local, list_public, list_public_links,
+                     match_remote, match_remote_links, match_local, match_public, match_public_links,
+                     fetch_files, write_local_jsons, write_public_jsons, write_link_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
                      check, clean, update_index, run]:
             subparser = subparsers.add_parser(func.__name__)
@@ -120,12 +121,12 @@ def main():
 
 def run():
     fetch_files()
-    write_jsons()
+    write_local_jsons()
     insert_datasets()
     publish_datasets()
 
 
 def link():
     link_files()
-    update_jsons()
+    write_link_jsons()
     link_datasets()

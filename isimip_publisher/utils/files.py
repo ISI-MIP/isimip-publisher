@@ -12,10 +12,18 @@ from ..config import settings
 logger = logging.getLogger(__name__)
 
 
-def list_files(base_path, path, remote_dest=None, suffix=None):
+def list_files(base_path, path, remote_dest=None, suffix=None, find_type='f'):
     abs_path = base_path / path
 
-    args = ['find', abs_path.as_posix(), '-type', 'f', '-or', '-type', 'l']
+    args = ['find', abs_path.as_posix()]
+
+    if find_type == 'l':
+        args += ['-type', 'l']
+    elif find_type == 'f':
+        args += ['-type', 'f']
+    else:
+        args += ['-type', 'f', '-or', '-type', 'l']
+
     if remote_dest:
         args = ['ssh', remote_dest] + args
 
@@ -38,6 +46,10 @@ def list_files(base_path, path, remote_dest=None, suffix=None):
             files.append(file_path.as_posix())
 
     return files
+
+
+def list_links(base_path, path, remote_dest=None, suffix=None):
+    return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type='l')
 
 
 def copy_files(remote_dest, remote_path, local_path, path, datasets):
@@ -112,9 +124,9 @@ def move_file(source_path, target_path, keep=False):
 
 
 def link_file(public_path, target_path, link_path, file_path):
-    file_abspath = public_path / file_path
-    link_abspath = public_path / link_path / Path(file_path).relative_to(target_path)
-    relative_path = os.path.relpath(file_abspath, link_abspath.parent)
+    link_abspath = public_path / file_path
+    target_abspath = public_path / target_path / Path(file_path).relative_to(link_path)
+    relative_path = os.path.relpath(target_abspath, link_abspath.parent)
 
     link_abspath.parent.mkdir(parents=True, exist_ok=True)
 

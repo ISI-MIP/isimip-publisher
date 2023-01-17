@@ -14,12 +14,26 @@ from .utils.database import (archive_dataset, clean_tree, fetch_resource,
                              update_tree, update_words_view)
 from .utils.dois import upload_doi
 from .utils.files import (copy_files, delete_file, link_file, list_files,
-                          move_file)
+                          list_links, move_file)
 from .utils.json import write_json_file
 from .utils.patterns import filter_datasets, match_datasets
 from .utils.validation import check_datasets, validate_datasets
 
 logger = logging.getLogger(__name__)
+
+
+def list_remote():
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    for file_path in remote_files:
+        print(file_path)
+
+
+def list_remote_links():
+    remote_links = list_links(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    for link_path in remote_links:
+        print(link_path)
 
 
 def list_local():
@@ -34,15 +48,27 @@ def list_public():
         print(file_path)
 
 
-def list_remote():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    for file_path in remote_files:
+def list_public_links():
+    public_files = list_links(settings.PUBLIC_PATH, settings.PATH)
+    for file_path in public_files:
         print(file_path)
 
 
 def match_remote():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
     datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, datasets)
+    for dataset in datasets:
+        for file in dataset.files:
+            print(file.path)
+
+
+def match_remote_links():
+    remote_links = list_links(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
     for dataset in datasets:
         for file in dataset.files:
@@ -51,7 +77,8 @@ def match_remote():
 
 def match_local():
     local_files = list_files(settings.LOCAL_PATH, settings.PATH)
-    datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
     for dataset in datasets:
         for file in dataset.files:
@@ -60,7 +87,18 @@ def match_local():
 
 def match_public():
     public_files = list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, datasets)
+    for dataset in datasets:
+        for file in dataset.files:
+            print(file.path)
+
+
+def match_public_links():
+    public_links = list_links(settings.PUBLIC_PATH, settings.PATH)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
     for dataset in datasets:
         for file in dataset.files:
@@ -68,8 +106,10 @@ def match_public():
 
 
 def fetch_files():
-    remote_files = list_files(settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
 
     c = sum([len(dataset.files) for dataset in datasets])
@@ -78,35 +118,36 @@ def fetch_files():
         t.update(n)
 
 
-def link_files():
-    public_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
-    public_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                     include=settings.TARGET_INCLUDE, exclude=settings.TARGET_EXCLUDE)
-    validate_datasets(settings.SCHEMA, public_datasets)
-
-    target_files = [file.path for dataset in public_datasets for file in dataset.files]
-    for file_path in tqdm(target_files, desc='link_files'.ljust(18)):
-        link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file_path)
-
-
-def write_jsons():
+def write_local_jsons():
     if not store.datasets:
         local_files = list_files(settings.LOCAL_PATH, settings.PATH)
         datasets = match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
         validate_datasets(settings.SCHEMA, datasets)
         store.datasets = datasets
 
-    for dataset in tqdm(store.datasets, desc='write_jsons'.ljust(18)):
+    for dataset in tqdm(store.datasets, desc='write_local_jsons'.ljust(18)):
         for file in dataset.files:
             write_json_file(file.abspath, file.json)
 
 
-def update_jsons():
+def write_public_jsons():
     public_files = list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
 
-    for dataset in tqdm(datasets, desc='update_jsons'.ljust(18)):
+    for dataset in tqdm(datasets, desc='write_public_jsons'.ljust(18)):
+        for file in dataset.files:
+            write_json_file(file.abspath, file.json)
+
+
+def write_link_jsons():
+    public_links = list_links(settings.PUBLIC_PATH, settings.PATH)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, datasets)
+
+    for dataset in tqdm(datasets, desc='write_link_jsons'.ljust(18)):
         for file in dataset.files:
             write_json_file(file.abspath, file.json)
 
@@ -138,28 +179,35 @@ def insert_datasets():
     session.commit()
 
 
-def link_datasets():
-    # collect and validate the targets
-    target_files = list_files(settings.PUBLIC_PATH, settings.TARGET_PATH)
-    target_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, target_files,
-                                     include=settings.TARGET_INCLUDE, exclude=settings.TARGET_EXCLUDE)
-    validate_datasets(settings.SCHEMA, target_datasets)
+def link_files():
+    remote_links = list_links(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, datasets)
 
+    for dataset in tqdm(datasets, desc='link_files'.ljust(18)):
+        for file in dataset.files:
+            link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
+
+
+def link_datasets():
     # collect and validate the links
-    files = list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, files,
+    public_links = list_links(settings.PUBLIC_PATH, settings.PATH)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
 
     session = init_database_session(settings.DATABASE)
 
-    total = len(target_datasets)
-    for target_dataset, dataset in tqdm(zip(target_datasets, datasets), desc='link_datasets'.ljust(18), total=total):
-        insert_dataset_link(session, settings.VERSION, settings.RIGHTS, target_dataset.path,
+    for dataset in tqdm(datasets, desc='link_datasets'.ljust(18)):
+        target_dataset_path = str(settings.TARGET_PATH / Path(dataset.path).relative_to(settings.PATH))
+        insert_dataset_link(session, settings.VERSION, settings.RIGHTS, target_dataset_path,
                             dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
-        for target_file, file in zip(target_dataset.files, dataset.files):
-            insert_file_link(session, settings.VERSION, target_file.path, file.dataset.path, file.name, file.path,
+        for file in dataset.files:
+            target_file_path = str(settings.TARGET_PATH / Path(file.path).relative_to(settings.PATH))
+            insert_file_link(session, settings.VERSION, target_file_path, file.dataset.path, file.name, file.path,
                              file.size, file.checksum, file.checksum_type, file.netcdf_header, file.specifiers)
 
     session.commit()
@@ -275,8 +323,14 @@ def archive_datasets():
 
 def check():
     public_files = list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, datasets)
+
+    public_links = list_links(settings.PUBLIC_PATH, settings.PATH)
+    link_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+                                   include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, link_datasets)
 
     session = init_database_session(settings.DATABASE)
 
