@@ -65,7 +65,8 @@ class File(object):
 
     @cached_property
     def uuid(self):
-        return self.netcdf_header.get('global_attributes', {}).get('isimip_id')
+        if self.netcdf_header:
+            return self.netcdf_header.get('global_attributes', {}).get('isimip_id')
 
     @cached_property
     def netcdf_header(self):
