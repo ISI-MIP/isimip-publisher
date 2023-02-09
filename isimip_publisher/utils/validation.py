@@ -5,9 +5,12 @@ from isimip_utils.checksum import get_checksum
 
 
 def validate_datasets(schema, datasets):
+    assert datasets, 'no datasets found'
+
     for dataset in datasets:
         dataset.validate(schema)
 
+        assert dataset.files, f'no files found for dataset {dataset.path}'
         for file in dataset.files:
             file.validate(schema)
 
