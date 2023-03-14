@@ -4,8 +4,8 @@ from pathlib import Path
 from isimip_utils.checksum import get_checksum
 
 
-def validate_datasets(schema, datasets):
-    assert datasets, 'no datasets found'
+def validate_datasets(schema, path, datasets):
+    assert datasets, f'no dataset found for {path}'
 
     for dataset in datasets:
         dataset.validate(schema)
