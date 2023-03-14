@@ -84,11 +84,11 @@ def test_match_local(setup, script_runner):
     assert len(response.stdout.splitlines()) == 12
 
 
-def test_write_jsons(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_jsons', 'round/product/sector')
+def test_write_local_jsons(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'write_local_jsons', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
-    assert response.stderr.strip().startswith('write_jsons')
+    assert response.stderr.strip().startswith('write_local_jsons')
 
 
 def test_insert_datasets(setup, script_runner):
@@ -120,11 +120,25 @@ def test_match_public(setup, script_runner):
     assert len(response.stdout.splitlines()) == 12
 
 
+def test_write_public_jsons(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'write_public_jsons', 'round/product/sector')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr.strip().startswith('write_public_jsons')
+
+
 def test_link_files(setup, script_runner):
     response = script_runner.run('isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_files')
+
+
+def test_write_link_jsons(setup, script_runner):
+    response = script_runner.run('isimip-publisher', 'write_link_jsons', 'round/product/sector2/model')
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert response.stderr.strip().startswith('write_link_jsons')
 
 
 def test_link_datasets(setup, script_runner):
