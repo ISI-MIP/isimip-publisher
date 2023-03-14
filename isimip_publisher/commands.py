@@ -323,12 +323,12 @@ def check():
     public_files = list_files(settings.PUBLIC_PATH, settings.PATH)
     datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
-    validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     public_links = list_links(settings.PUBLIC_PATH, settings.PATH)
-    link_datasets = match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
-                                   include=settings.INCLUDE, exclude=settings.EXCLUDE)
-    validate_datasets(settings.SCHEMA, settings.PATH, link_datasets)
+    datasets += match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
+
+    validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     session = init_database_session(settings.DATABASE)
 
