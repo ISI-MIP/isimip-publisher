@@ -733,6 +733,11 @@ def update_search(session, path):
             dataset.search.updated = datetime.utcnow()
 
 
+def update_views(session):
+    update_words_view(session)
+    update_identifiers_view(session)
+
+
 def update_words_view(session):
     engine = session.get_bind()
     if 'words' in inspect(engine).get_view_names():
@@ -750,16 +755,16 @@ def update_words_view(session):
         logger.debug('create words view')
 
 
-def update_attributes_view(session):
+def update_identifiers_view(session):
     engine = session.get_bind()
-    if 'attributes' in inspect(engine).get_view_names():
+    if 'identifiers' in inspect(engine).get_view_names():
         session.connection().execute('''
-            REFRESH MATERIALIZED VIEW attributes
+            REFRESH MATERIALIZED VIEW identifiers
         ''')
-        logger.debug('update attributes view')
+        logger.debug('update identifiers view')
     else:
         session.connection().execute('''
-            CREATE MATERIALIZED VIEW attributes AS
+            CREATE MATERIALIZED VIEW identifiers AS
             SELECT specifiers.key AS identifier,
                    JSON_AGG(DISTINCT specifiers.value) AS specifiers
             FROM public.datasets,
@@ -768,6 +773,6 @@ def update_attributes_view(session):
             ORDER BY identifier
         ''')
         session.connection().execute('''
-            CREATE INDEX ON attributes(identifier)
+            CREATE INDEX ON identifiers(identifier)
         ''')
-        logger.debug('create attributes view')
+        logger.debug('create identifiers view')
