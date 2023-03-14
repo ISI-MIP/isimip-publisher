@@ -47,20 +47,19 @@ Usage
 The publisher has several options which can be inspected using the help option `-h, --help`:
 
 ```
-usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE]
-                        [-e EXCLUDE_FILE] [-v VERSION]
-                        [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
+usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e EXCLUDE_FILE]
+                        [-v VERSION] [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
                         [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
-                        [--archive-dir ARCHIVE_DIR] [--database DATABASE]
-                        [--mock MOCK] [--protocol-location PROTOCOL_LOCATIONS]
+                        [--archive-dir ARCHIVE_DIR] [--database DATABASE] [--mock MOCK]
+                        [--protocol-location PROTOCOL_LOCATIONS]
                         [--datacite-username DATACITE_USERNAME]
                         [--datacite-password DATACITE_PASSWORD]
                         [--datacite-prefix DATACITE_PREFIX]
                         [--datacite-test-mode DATACITE_TEST_MODE]
                         [--isimip-data-url ISIMIP_DATA_URL]
-                        [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}]
-                        [--log-level LOG_LEVEL] [--log-file LOG_FILE]
-                        {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
+                        [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}] [--log-level LOG_LEVEL]
+                        [--log-file LOG_FILE]
+                        {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
                         ...
 
 optional arguments:
@@ -72,10 +71,9 @@ optional arguments:
   -e EXCLUDE_FILE, --exclude EXCLUDE_FILE
                         Path to a file containing a list of files to exclude
   -v VERSION, --version VERSION
-                        version date override [default: today]
+                        Version date override [default: today]
   --remote-dest REMOTE_DEST
-                        Remote destination to fetch files from, e.g.
-                        user@example.com
+                        Remote destination to fetch files from, e.g. user@example.com
   --remote-dir REMOTE_DIR
                         Remote directory to fetch files from
   --local-dir LOCAL_DIR
@@ -84,10 +82,10 @@ optional arguments:
                         Public directory
   --archive-dir ARCHIVE_DIR
                         Archive directory
-  --database DATABASE   Database connection string, e.g. postgresql+psycopg2:/
-                        /username:password@host:port/dbname
-  --mock MOCK           If set to True, no files are actually copied. Empty
-                        mock files are used instead
+  --database DATABASE   Database connection string, e.g.
+                        postgresql+psycopg2://username:password@host:port/dbname
+  --mock MOCK           If set to True, no files are actually copied. Empty mock files are used
+                        instead
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --datacite-username DATACITE_USERNAME
@@ -99,8 +97,7 @@ optional arguments:
   --datacite-test-mode DATACITE_TEST_MODE
                         If set to True, the test version of DataCite is used
   --isimip-data-url ISIMIP_DATA_URL
-                        URL of the ISIMIP repository [default:
-                        https://data.isimip.org/]
+                        URL of the ISIMIP repository [default: https://data.isimip.org/]
   --rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}
                         Rights/license for the files [default: None]
   --log-level LOG_LEVEL
@@ -110,7 +107,7 @@ optional arguments:
 subcommands:
   valid subcommands
 
-  {list_remote,list_local,list_public,match_remote,match_local,match_public,fetch_files,write_jsons,update_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
+  {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -130,7 +127,7 @@ isimip-publisher match_remote <path>
 isimip-publisher fetch_files <path>
 
 # create a JSON file with metadata for each dataset and file
-isimip-publisher write_jsons <path>
+isimip-publisher write_local_jsons <path>
 
 # finds dataset and file and ingest their metadata into the database
 isimip-publisher ingest_datasets <path>
