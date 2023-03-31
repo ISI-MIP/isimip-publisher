@@ -215,7 +215,7 @@ pytest --cov=isimip_publisher
 Database schema
 ---------------
 
-The database schema is automatically created when `insert_datasets` or `init` is used the first time. The tool creates 3 main tables:
+The database schema is automatically created when `insert_datasets` or `init` is used the first time. The tool creates 3 main tables, one for the `datasets`, one for the `files` (in each dataset), and one for the `resources`, for which DOI are created.:
 
 ```
                           Table "public.datasets"
@@ -236,8 +236,9 @@ The database schema is automatically created when `insert_datasets` or `init` is
  updated     | timestamp without time zone |           |          | 
  published   | timestamp without time zone |           |          | 
  archived    | timestamp without time zone |           |          |
+```
 
-
+```
                              Table "public.files"
     Column     |            Type             | Collation | Nullable | Default 
 ---------------+-----------------------------+-----------+----------+---------
@@ -255,8 +256,9 @@ The database schema is automatically created when `insert_datasets` or `init` is
  identifiers   | text[]                      |           | not null | 
  created       | timestamp without time zone |           |          | 
  updated       | timestamp without time zone |           |          | 
+```
 
-
+```
                         Table "public.resources"
   Column  |            Type             | Collation | Nullable | Default 
 ----------+-----------------------------+-----------+----------+---------
