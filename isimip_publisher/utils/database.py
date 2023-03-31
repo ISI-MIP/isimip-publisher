@@ -6,10 +6,10 @@ from uuid import uuid4
 
 from sqlalchemy import (BigInteger, Boolean, Column, DateTime, ForeignKey,
                         Index, String, Table, Text, create_engine, func,
-                        inspect)
+                        inspect, text)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relationship, sessionmaker
+from sqlalchemy.orm import (backref, declarative_base, relationship,
+                            sessionmaker)
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import column
 
@@ -728,6 +728,7 @@ def update_search(session, path):
                 vector=get_search_vector(dataset),
                 created=datetime.utcnow()
             )
+            session.add(dataset.search)
         else:
             dataset.search.vector = get_search_vector(dataset)
             dataset.search.updated = datetime.utcnow()
@@ -740,30 +741,30 @@ def update_views(session):
 
 def update_words_view(session):
     engine = session.get_bind()
-    if 'words' in inspect(engine).get_view_names():
-        session.connection().execute('''
+    if 'words' in inspect(engine).get_materialized_view_names():
+        session.connection().execute(text('''
             REFRESH MATERIALIZED VIEW words
-        ''')
+        '''))
         logger.debug('update words view')
     else:
-        session.connection().execute('''
+        session.connection().execute(text('''
             CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT vector FROM public.search')
-        ''')
-        session.connection().execute('''
+        '''))
+        session.connection().execute(text('''
             CREATE INDEX ON words USING gin(word gin_trgm_ops)
-        ''')
+        '''))
         logger.debug('create words view')
 
 
 def update_identifiers_view(session):
     engine = session.get_bind()
-    if 'identifiers' in inspect(engine).get_view_names():
-        session.connection().execute('''
+    if 'identifiers' in inspect(engine).get_materialized_view_names():
+        session.connection().execute(text('''
             REFRESH MATERIALIZED VIEW identifiers
-        ''')
+        '''))
         logger.debug('update identifiers view')
     else:
-        session.connection().execute('''
+        session.connection().execute(text('''
             CREATE MATERIALIZED VIEW identifiers AS
             SELECT specifiers.key AS identifier,
                    JSON_AGG(DISTINCT specifiers.value) AS specifiers
@@ -771,8 +772,8 @@ def update_identifiers_view(session):
                  jsonb_each(public.datasets.specifiers) AS specifiers
             GROUP BY identifier
             ORDER BY identifier
-        ''')
-        session.connection().execute('''
+        '''))
+        session.connection().execute(text('''
             CREATE INDEX ON identifiers(identifier)
-        ''')
+        '''))
         logger.debug('create identifiers view')
