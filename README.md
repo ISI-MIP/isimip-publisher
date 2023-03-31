@@ -210,3 +210,111 @@ Run tests with `coverage`:
 ```bash
 pytest --cov=isimip_publisher
 ```
+
+
+Database schema
+---------------
+
+The database schema is automatically created when `insert_datasets` or `init` is used the first time. The tool creates 3 main tables:
+
+```
+                          Table "public.datasets"
+   Column    |            Type             | Collation | Nullable | Default 
+-------------+-----------------------------+-----------+----------+---------
+ id          | uuid                        |           | not null | 
+ target_id   | uuid                        |           |          | 
+ name        | text                        |           | not null | 
+ path        | text                        |           | not null | 
+ version     | character varying(8)        |           | not null | 
+ size        | bigint                      |           | not null | 
+ specifiers  | jsonb                       |           | not null | 
+ identifiers | text[]                      |           | not null | 
+ public      | boolean                     |           | not null | 
+ tree_path   | text                        |           |          | 
+ rights      | text                        |           |          | 
+ created     | timestamp without time zone |           |          | 
+ updated     | timestamp without time zone |           |          | 
+ published   | timestamp without time zone |           |          | 
+ archived    | timestamp without time zone |           |          |
+
+
+                             Table "public.files"
+    Column     |            Type             | Collation | Nullable | Default 
+---------------+-----------------------------+-----------+----------+---------
+ id            | uuid                        |           | not null | 
+ dataset_id    | uuid                        |           |          | 
+ target_id     | uuid                        |           |          | 
+ name          | text                        |           | not null | 
+ path          | text                        |           | not null | 
+ version       | character varying(8)        |           | not null | 
+ size          | bigint                      |           | not null | 
+ checksum      | text                        |           | not null | 
+ checksum_type | text                        |           | not null | 
+ netcdf_header | jsonb                       |           |          | 
+ specifiers    | jsonb                       |           | not null | 
+ identifiers   | text[]                      |           | not null | 
+ created       | timestamp without time zone |           |          | 
+ updated       | timestamp without time zone |           |          | 
+
+
+                        Table "public.resources"
+  Column  |            Type             | Collation | Nullable | Default 
+----------+-----------------------------+-----------+----------+---------
+ id       | uuid                        |           | not null | 
+ doi      | text                        |           | not null | 
+ title    | text                        |           | not null | 
+ version  | text                        |           |          | 
+ paths    | text[]                      |           | not null | 
+ datacite | jsonb                       |           | not null | 
+ created  | timestamp without time zone |           |          | 
+ updated  | timestamp without time zone |           |          | 
+```
+
+The many-to-many relation between `datasets` and `resources` is implemented using a seperate table:
+
+```
+          Table "public.resources_datasets"
+   Column    | Type | Collation | Nullable | Default 
+-------------+------+-----------+----------+---------
+ resource_id | uuid |           |          | 
+ dataset_id  | uuid |           |          | 
+```
+
+Additional tables are created for the search and tree functionality of the repository.
+
+```
+                           Table "public.search"
+   Column   |            Type             | Collation | Nullable | Default 
+------------+-----------------------------+-----------+----------+---------
+ dataset_id | uuid                        |           | not null | 
+ vector     | tsvector                    |           | not null | 
+ created    | timestamp without time zone |           |          | 
+ updated    | timestamp without time zone |           |          | 
+```
+
+```
+                           Table "public.trees"
+  Column   |            Type             | Collation | Nullable | Default 
+-----------+-----------------------------+-----------+----------+---------
+ id        | uuid                        |           | not null | 
+ tree_dict | jsonb                       |           | not null | 
+ created   | timestamp without time zone |           |          | 
+ updated   | timestamp without time zone |           |          |
+```
+
+Two materialized views are used to allow a fast lookup to all `identifiers` (with the list of corresponding specifiers), as well as all `words` (the list of tokens for the search):
+
+```
+       Materialized view "public.identifiers"
+   Column   | Type | Collation | Nullable | Default 
+------------+------+-----------+----------+---------
+ identifier | text |           |          | 
+ specifiers | json |           |          | 
+```
+
+```
+        Materialized view "public.words"
+ Column | Type | Collation | Nullable | Default 
+--------+------+-----------+----------+---------
+ word   | text |           |          | 
+```
