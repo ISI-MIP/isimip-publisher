@@ -740,8 +740,7 @@ def update_views(session):
 
 
 def update_words_view(session):
-    engine = session.get_bind()
-    if 'words' in inspect(engine).get_materialized_view_names():
+    if 'words' in get_materialized_view_names(session):
         session.connection().execute(text('''
             REFRESH MATERIALIZED VIEW words
         '''))
@@ -757,8 +756,7 @@ def update_words_view(session):
 
 
 def update_identifiers_view(session):
-    engine = session.get_bind()
-    if 'identifiers' in inspect(engine).get_materialized_view_names():
+    if 'identifiers' in get_materialized_view_names(session):
         session.connection().execute(text('''
             REFRESH MATERIALIZED VIEW identifiers
         '''))
@@ -777,3 +775,12 @@ def update_identifiers_view(session):
             CREATE INDEX ON identifiers(identifier)
         '''))
         logger.debug('create identifiers view')
+
+
+def get_materialized_view_names(session):
+    engine = session.get_bind()
+    try:
+        return inspect(engine).get_materialized_view_names()
+    except AttributeError:
+        # for SQLAlchemy < 2
+        return inspect(engine).get_view_names()
