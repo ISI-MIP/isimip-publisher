@@ -39,6 +39,7 @@ class Dataset(Base):
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     public = Column(Boolean, nullable=False)
+    restricted = Column(Boolean, nullable=False)
     tree_path = Column(Text, nullable=True, index=True)
     rights = Column(Text)
 
@@ -181,7 +182,7 @@ def get_search_vector(dataset):
     return func.setweight(func.to_tsvector(search_string), 'A')
 
 
-def insert_dataset(session, version, rights, name, path, size, specifiers):
+def insert_dataset(session, version, rights, restricted, name, path, size, specifiers):
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -210,6 +211,7 @@ def insert_dataset(session, version, rights, name, path, size, specifiers):
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             public=False,
+            restricted=restricted,
             created=datetime.utcnow()
         )
         session.add(dataset)
@@ -240,7 +242,7 @@ def publish_dataset(session, version, path):
     dataset.published = datetime.utcnow()
 
 
-def update_dataset(session, rights, path, specifiers):
+def update_dataset(session, rights, restricted, path, specifiers):
     # check if the dataset is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -257,11 +259,16 @@ def update_dataset(session, rights, path, specifiers):
     # update the dataset
     logger.debug('update dataset %s', path)
 
-    # update rights on all links
+    # update rights and restricted on all links
     if dataset.rights != rights:
         dataset.rights = rights
         for link in dataset.links:
             link.rights = rights
+
+    if dataset.restricted != restricted:
+        dataset.restricted = restricted
+        for link in dataset.links:
+            link.restricted = restricted
 
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())

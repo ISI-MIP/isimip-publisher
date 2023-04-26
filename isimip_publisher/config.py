@@ -27,6 +27,7 @@ class Settings(ISIMIPSettings):
         super().setup(parser)
 
         self.MOCK = self.MOCK.lower() in ['true', 't', '1']
+        self.RESTRICTED = self.RESTRICTED.lower() in ['true', 't', '1']
         self.DATACITE_TEST_MODE = self.DATACITE_TEST_MODE.lower() in ['true', 't', '1']
 
         if self.ISIMIP_DATA_URL is not None:

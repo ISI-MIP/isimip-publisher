@@ -162,7 +162,7 @@ def insert_datasets():
     session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
-        insert_dataset(session, settings.VERSION, settings.RIGHTS,
+        insert_dataset(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED,
                        dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:
@@ -267,7 +267,7 @@ def update_datasets():
     session = init_database_session(settings.DATABASE)
 
     for dataset in tqdm(datasets, desc='update_datasets'.ljust(18)):
-        update_dataset(session, settings.RIGHTS, dataset.path, dataset.specifiers)
+        update_dataset(session, settings.RIGHTS, settings.RESTRICTED, dataset.path, dataset.specifiers)
 
         for file in dataset.files:
             update_file(session, file.dataset.path, file.path, file.specifiers)

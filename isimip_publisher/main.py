@@ -41,6 +41,9 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('--mock', dest='mock',
                         default='false',
                         help='If set to True, no files are actually copied. Empty mock files are used instead')
+    parser.add_argument('--restricted', dest='restricted',
+                        default='false',
+                        help='If set to True, the files are flaged as restricted in the database.')
     parser.add_argument('--protocol-location', dest='protocol_locations',
                         default='https://protocol.isimip.org https://protocol2.isimip.org',
                         help='URL or file path to the protocol')
