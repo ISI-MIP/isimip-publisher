@@ -3,12 +3,12 @@ from datetime import date
 
 from .commands import (archive_datasets, check, clean, fetch_files, init,
                        insert_datasets, insert_doi, link_datasets, link_files,
-                       list_local, list_public, list_public_links, list_remote,
-                       list_remote_links, match_local, match_public,
-                       match_public_links, match_remote, match_remote_links,
-                       publish_datasets, register_doi, update_datasets,
-                       update_doi, update_index, write_link_jsons,
-                       write_local_jsons, write_public_jsons)
+                       link_links, list_local, list_public, list_public_links,
+                       list_remote, list_remote_links, match_local,
+                       match_public, match_public_links, match_remote,
+                       match_remote_links, publish_datasets, register_doi,
+                       update_datasets, update_doi, update_index,
+                       write_link_jsons, write_local_jsons, write_public_jsons)
 from .config import RIGHTS_CHOICES, settings
 
 
@@ -93,7 +93,7 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser.set_defaults(func=func)
             subparser.add_argument('doi', help='DOI to process')
 
-        for func in [link_files, link_datasets, link]:
+        for func in [link_links, link_files, link_datasets, link]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('target_path', help='path of the files to process')
@@ -127,6 +127,6 @@ def run():
 
 
 def link():
-    link_files()
+    link_links()
     write_link_jsons()
     link_datasets()

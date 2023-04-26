@@ -9,9 +9,8 @@ from .utils.database import (archive_dataset, clean_tree, fetch_resource,
                              insert_dataset_link, insert_file,
                              insert_file_link, insert_resource,
                              publish_dataset, retrieve_datasets,
-                             update_views, update_dataset,
-                             update_file, update_resource, update_search,
-                             update_tree)
+                             update_dataset, update_file, update_resource,
+                             update_search, update_tree, update_views)
 from .utils.dois import upload_doi
 from .utils.files import (copy_files, delete_file, link_file, list_files,
                           list_links, move_file)
@@ -178,10 +177,22 @@ def insert_datasets():
     session.commit()
 
 
-def link_files():
+def link_links():
     remote_links = list_links(settings.REMOTE_PATH, settings.PATH,
                               remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
     datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
+                              include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+
+    for dataset in tqdm(datasets, desc='link_links'.ljust(18)):
+        for file in dataset.files:
+            link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
+
+
+def link_files():
+    remote_files = list_files(settings.REMOTE_PATH, settings.PATH,
+                              remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                               include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
