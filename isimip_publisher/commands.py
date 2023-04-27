@@ -212,7 +212,7 @@ def link_datasets():
 
     for dataset in tqdm(datasets, desc='link_datasets'.ljust(18)):
         target_dataset_path = str(settings.TARGET_PATH / Path(dataset.path).relative_to(settings.PATH))
-        insert_dataset_link(session, settings.VERSION, settings.RIGHTS, target_dataset_path,
+        insert_dataset_link(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED, target_dataset_path,
                             dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:

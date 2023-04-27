@@ -275,7 +275,7 @@ def update_dataset(session, rights, restricted, path, specifiers):
     dataset.updated = datetime.utcnow()
 
 
-def insert_dataset_link(session, version, rights, target_dataset_path, name, path, size, specifiers):
+def insert_dataset_link(session, version, rights, restricted, target_dataset_path, name, path, size, specifiers):
     # get the target_dataset
     target_dataset = session.query(Dataset).filter(
         Dataset.path == target_dataset_path,
@@ -319,6 +319,7 @@ def insert_dataset_link(session, version, rights, target_dataset_path, name, pat
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             public=True,
+            restricted=restricted,
             target=target_dataset,
             created=datetime.utcnow()
         )
