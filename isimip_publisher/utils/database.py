@@ -1,4 +1,5 @@
 import logging
+import re
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +17,8 @@ from sqlalchemy.sql import column
 from .dois import get_doi, get_title
 
 logger = logging.getLogger(__name__)
+
+search_terms_split_pattern = re.compile(r'[\/\_\-\s]')
 
 Base = declarative_base()
 
@@ -152,10 +155,14 @@ def init_database_session(database_settings):
 
 def get_search_terms(dataset):
     terms = list(dataset.specifiers.values())
+    terms += search_terms_split_pattern.split(dataset.id)
+    terms += search_terms_split_pattern.split(dataset.path)
+    terms.append(dataset.version)
+    terms.append(dataset.rights)
 
     # loop over resources to get title, doi, and creators
     for resource in dataset.resources:
-        terms += [resource.title, resource.doi]
+        terms += [resource.title] + resource.doi.split('/')
         if resource.datacite is not None:
             terms += [creator.get('name') for creator in resource.datacite.get('creators', [])]
 
