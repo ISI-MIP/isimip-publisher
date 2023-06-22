@@ -16,7 +16,8 @@ __pycache__/
 /env
 /.env
 /log
-/testing/work
+/testing/remote
+/testing/local
 /testing/public
 /testing/archive
 

@@ -1,14 +1,15 @@
 import argparse
 from datetime import date
 
-from .commands import (archive_datasets, check, clean, fetch_files, init,
+from .commands import (archive_datasets, check, clean, fetch_files,
                        insert_datasets, insert_doi, link_datasets, link_files,
                        link_links, list_local, list_public, list_public_links,
                        list_remote, list_remote_links, match_local,
                        match_public, match_public_links, match_remote,
                        match_remote_links, publish_datasets, register_doi,
-                       update_datasets, update_doi, update_index,
-                       write_link_jsons, write_local_jsons, write_public_jsons)
+                       update_datasets, update_doi, update_search, update_tree,
+                       update_views, write_link_jsons, write_local_jsons,
+                       write_public_jsons)
 from .config import RIGHTS_CHOICES, settings
 
 
@@ -75,7 +76,7 @@ def get_parser(add_path=False, add_subparsers=False):
                      match_remote, match_remote_links, match_local, match_public, match_public_links,
                      fetch_files, write_local_jsons, write_public_jsons, write_link_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
-                     check, clean, update_index, run]:
+                     check, clean, update_search, update_tree, update_views, run]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('path', help='path of the files to process')
@@ -102,7 +103,7 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser.add_argument('target_path', help='path of the files to process')
             subparser.add_argument('path', help='path for the links')
 
-        for func in [init]:
+        for func in [init, update_views]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
 
@@ -120,6 +121,10 @@ def main():
             parser.error(e)
     else:
         parser.print_help()
+
+
+def init():
+    update_views()
 
 
 def run():

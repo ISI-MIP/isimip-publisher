@@ -1,0 +1,75 @@
+{
+  "id": null,
+  "path": "round/product/sector/model/model_lorem_dolor_sit_amet_var_global_monthly_2000_2001.nc",
+  "size": 9673,
+  "checksum": "d85e8bc3ba4d2f23cdf5594182d9a2f39f5fac0b8ca39d6166831b5932e7f044dd18b1f46e550b14725f794436b6452ede12801f4faa8cb2a127ec14b819968c",
+  "checksum_type": "sha512",
+  "specifiers": {
+    "round": "round",
+    "product": "product",
+    "sector": "sector",
+    "model": "model",
+    "modelname": "model",
+    "alpha": "lorem",
+    "beta": "dolor",
+    "gamma": "sit",
+    "delta": "amet",
+    "variable": "var",
+    "region": "global",
+    "timestep": "monthly",
+    "start_year": 2000,
+    "end_year": 2001
+  },
+  "netcdf_header": {
+    "dimensions": {
+      "lon": 720,
+      "lat": 360,
+      "time": 0
+    },
+    "variables": {
+      "lon": {
+        "standard_name": "longitude",
+        "long_name": "longitude",
+        "units": "degrees_east",
+        "axis": "X",
+        "dimensions": [
+          "lon"
+        ]
+      },
+      "lat": {
+        "standard_name": "latitude",
+        "long_name": "latitude",
+        "units": "degrees_north",
+        "axis": "Y",
+        "dimensions": [
+          "lat"
+        ]
+      },
+      "time": {
+        "standard_name": "time",
+        "long_name": "time",
+        "units": "days since 1661-1-1 00:00:00",
+        "calendar": "proleptic_gregorian",
+        "axis": "T",
+        "dimensions": [
+          "time"
+        ]
+      },
+      "var": {
+        "standard_name": "variable",
+        "long_name": "variable",
+        "units": "m",
+        "missing_value": "1.e+20f",
+        "dimensions": [
+          "time",
+          "lat",
+          "lon"
+        ]
+      }
+    },
+    "global_attributes": {
+      "institution": "Institute of applied testing",
+      "contact": "Tony Testing <testing@example.com>"
+    }
+  }
+}
