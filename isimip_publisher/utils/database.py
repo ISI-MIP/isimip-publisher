@@ -155,7 +155,7 @@ def init_database_session(database_settings):
 
 def get_search_terms(dataset):
     terms = list(dataset.specifiers.values())
-    terms += search_terms_split_pattern.split(dataset.id)
+    terms += search_terms_split_pattern.split(str(dataset.id))
     terms += search_terms_split_pattern.split(dataset.path)
     terms.append(dataset.version)
     terms.append(dataset.rights)
