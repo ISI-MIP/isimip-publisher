@@ -1,5 +1,6 @@
-import argparse
 from datetime import date
+
+from isimip_utils.parser import ArgumentParser
 
 from .commands import (archive_datasets, check, clean, fetch_files,
                        insert_datasets, insert_doi, link_datasets, link_files,
@@ -14,7 +15,7 @@ from .config import RIGHTS_CHOICES, settings
 
 
 def get_parser(add_path=False, add_subparsers=False):
-    parser = argparse.ArgumentParser(prog='isimip-publisher')
+    parser = ArgumentParser(prog='isimip-publisher')
 
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
@@ -111,8 +112,9 @@ def get_parser(add_path=False, add_subparsers=False):
 
 
 def main():
-    parser = get_parser(add_path=True, add_subparsers=True)
-    settings.setup(parser)
+    parser = get_parser(add_subparsers=True)
+    args = vars(parser.parse_args())
+    settings.setup(args)
 
     if hasattr(settings, 'FUNC'):
         try:

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-from isimip_utils.config import ISIMIPSettings
+from isimip_utils.config import Settings as BaseSettings
 from isimip_utils.decorators import cached_property
 from isimip_utils.fetch import (fetch_definitions, fetch_pattern, fetch_resource,
                                 fetch_schema, fetch_tree)
@@ -21,10 +21,10 @@ RIGHTS_CHOICES = [
 ]
 
 
-class Settings(ISIMIPSettings):
+class Settings(BaseSettings):
 
-    def setup(self, parser):
-        super().setup(parser)
+    def setup(self, args):
+        super().setup(args)
 
         self.MOCK = self.MOCK.lower() in ['true', 't', '1']
         self.RESTRICTED = self.RESTRICTED.lower() in ['true', 't', '1']
