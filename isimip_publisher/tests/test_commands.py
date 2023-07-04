@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+from datetime import datetime
 
 import pytest
 from dotenv import load_dotenv
@@ -87,7 +88,31 @@ def db():
 
 
 @pytest.fixture()
-def datasets():
+def local_datasets():
+    base_path = Path(__file__).parent.parent.parent
+    session = init_database_session(os.getenv('DATABASE'))
+    engine = session.get_bind()
+
+    version = datetime.now().date().strftime('%Y%m%d')
+
+    with engine.connect() as conn:
+        for file_name in ['datasets.sql', 'files.sql']:
+            with open(base_path / 'testing' / 'sql' / file_name) as fp:
+                conn.execute(text(fp.read()))
+        conn.commit()
+
+    session.commit()
+
+    with engine.connect() as conn:
+        conn.execute(text('UPDATE public.datasets SET public = false;'), {'version': version})
+        conn.execute(text('UPDATE public.datasets SET version = :version;'), {'version': version})
+        conn.commit()
+
+    session.commit()
+
+
+@pytest.fixture()
+def public_datasets():
     base_path = Path(__file__).parent.parent.parent
     session = init_database_session(os.getenv('DATABASE'))
     engine = session.get_bind()
@@ -256,49 +281,49 @@ def test_link_datasets(setup, public_links, script_runner):
     assert response.stderr.strip().startswith('link_datasets')
 
 
-def test_publish_datasets(setup, local_files, db, datasets, script_runner):
+def test_publish_datasets(setup, local_files, db, local_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'publish_datasets', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('publish_datasets')
 
 
-def test_update_datasets(setup, public_files, db, datasets, script_runner):
+def test_update_datasets(setup, public_files, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'update_datasets', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('update_datasets')
 
 
-def test_archive_datasets(setup, db, datasets, script_runner):
+def test_archive_datasets(setup, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('archive_datasets')
 
 
-def test_check(setup, public_files, db, datasets, script_runner):
+def test_check(setup, public_files, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'check', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_tree(setup, db, datasets, script_runner):
+def test_update_tree(setup, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'update_tree', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_search(setup, db, datasets, script_runner):
+def test_update_search(setup, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'update_search', 'round/product/sector')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_views(setup, db, datasets, script_runner):
+def test_update_views(setup, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'update_views')
     assert response.success, response.stderr
     assert not response.stdout
@@ -312,14 +337,14 @@ def test_clean(setup, script_runner):
     assert not response.stderr
 
 
-def test_insert_doi(setup, db, datasets, script_runner):
+def test_insert_doi(setup, db, public_datasets, script_runner):
     response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json', 'round/product/sector/model')
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
-def test_update_doi(setup, db, datasets, resources, script_runner):
+def test_update_doi(setup, db, public_datasets, resources, script_runner):
     response = script_runner.run('isimip-publisher', 'update_doi', 'testing/resources/test1.json')
     assert response.success, response.stderr
     assert not response.stdout
