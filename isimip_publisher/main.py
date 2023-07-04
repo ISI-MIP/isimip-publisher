@@ -111,6 +111,15 @@ def get_parser(add_path=False, add_subparsers=False):
     return parser
 
 
+def init_settings(config_file=None, **kwargs):
+    parser = get_parser()
+    parser.config_file = config_file
+    args = parser.get_defaults()
+    args.update(kwargs)
+    settings.setup(args)
+    return settings
+
+
 def main():
     parser = get_parser(add_subparsers=True)
     args = vars(parser.parse_args())
