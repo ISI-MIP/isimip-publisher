@@ -77,7 +77,7 @@ def get_parser(add_path=False, add_subparsers=False):
                      match_remote, match_remote_links, match_local, match_public, match_public_links,
                      fetch_files, write_local_jsons, write_public_jsons, write_link_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
-                     check, clean, update_search, update_tree, update_views, run]:
+                     check, clean, update_search, update_tree, run]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('path', help='path of the files to process')
