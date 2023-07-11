@@ -51,7 +51,7 @@ usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e E
                         [-v VERSION] [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
                         [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
                         [--archive-dir ARCHIVE_DIR] [--database DATABASE] [--mock MOCK]
-                        [--protocol-location PROTOCOL_LOCATIONS]
+                        [--restricted RESTRICTED] [--protocol-location PROTOCOL_LOCATIONS]
                         [--datacite-username DATACITE_USERNAME]
                         [--datacite-password DATACITE_PASSWORD]
                         [--datacite-prefix DATACITE_PREFIX]
@@ -59,7 +59,7 @@ usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e E
                         [--isimip-data-url ISIMIP_DATA_URL]
                         [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}] [--log-level LOG_LEVEL]
                         [--log-file LOG_FILE]
-                        {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
+                        {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,link_links,link_files,link_datasets,link,init,update_views}
                         ...
 
 optional arguments:
@@ -86,6 +86,8 @@ optional arguments:
                         postgresql+psycopg2://username:password@host:port/dbname
   --mock MOCK           If set to True, no files are actually copied. Empty mock files are used
                         instead
+  --restricted RESTRICTED
+                        If set to True, the files are flaged as restricted in the database.
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --datacite-username DATACITE_USERNAME
@@ -107,7 +109,7 @@ optional arguments:
 subcommands:
   valid subcommands
 
-  {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_index,run,insert_doi,update_doi,register_doi,link_files,link_datasets,link,init}
+  {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,link_links,link_files,link_datasets,link,init,update_views}
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -181,6 +183,27 @@ Default values for the optional arguments are set in the code, but can also be p
 
 * environment variables (in caps and with underscores, e.g. `MOCK`).
 
+
+Scripts/Notebooks
+-----------------
+
+The different functions of the tool can also be used in Python scripts or Jupyter Notebooks. Before any functions are called,
+the global settings object needs to be initialized, e.g.:
+
+```python
+from isimip_publisher.main import init_settings
+from isimip_publisher.utils.database import (init_database_session, retrieve_datasets)
+
+path = 'ISIMIP3b/OutputData/marine-fishery_global'
+
+settings = init_settings(config_file='~/data/isimip/isimip.conf')
+
+session = init_database_session(settings.DATABASE)
+
+datasets = retrieve_datasets(session, path)
+
+...
+```
 
 Test
 ----
