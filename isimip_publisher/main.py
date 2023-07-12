@@ -1,5 +1,6 @@
-import argparse
 from datetime import date
+
+from isimip_utils.parser import ArgumentParser
 
 from .commands import (archive_datasets, check, clean, fetch_files,
                        insert_datasets, insert_doi, link_datasets, link_files,
@@ -14,7 +15,7 @@ from .config import RIGHTS_CHOICES, settings
 
 
 def get_parser(add_path=False, add_subparsers=False):
-    parser = argparse.ArgumentParser(prog='isimip-publisher')
+    parser = ArgumentParser(prog='isimip-publisher')
 
     parser.add_argument('--config-file', dest='config_file',
                         help='File path of the config file')
@@ -76,7 +77,7 @@ def get_parser(add_path=False, add_subparsers=False):
                      match_remote, match_remote_links, match_local, match_public, match_public_links,
                      fetch_files, write_local_jsons, write_public_jsons, write_link_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
-                     check, clean, update_search, update_tree, update_views, run]:
+                     check, clean, update_search, update_tree, run]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('path', help='path of the files to process')
@@ -110,9 +111,19 @@ def get_parser(add_path=False, add_subparsers=False):
     return parser
 
 
+def init_settings(config_file=None, **kwargs):
+    parser = get_parser()
+    parser.config_file = config_file
+    args = parser.get_defaults()
+    args.update(kwargs)
+    settings.setup(args)
+    return settings
+
+
 def main():
-    parser = get_parser(add_path=True, add_subparsers=True)
-    settings.setup(parser)
+    parser = get_parser(add_subparsers=True)
+    args = vars(parser.parse_args())
+    settings.setup(args)
 
     if hasattr(settings, 'FUNC'):
         try:
