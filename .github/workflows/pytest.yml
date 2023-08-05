@@ -4,12 +4,12 @@ on: [push, pull_request]
 
 jobs:
   pytest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
         mock: [true, false]
-        python-version: ['3.6', '3.10']
+        python-version: ['3.7', '3.11']
 
     services:
       postgres:
