@@ -138,20 +138,20 @@ def resources():
 
 
 def test_empty(setup, script_runner):
-    response = script_runner.run('isimip-publisher')
+    response = script_runner.run(['isimip-publisher'])
     assert not response.stderr
     assert response.returncode == 0
 
 
 def test_help(setup, script_runner):
-    response = script_runner.run('isimip-publisher', '--help')
+    response = script_runner.run(['isimip-publisher', '--help'])
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
 
 
 def test_list_remote(setup, remote_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_remote', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'list_remote', 'round/product/sector'])
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -159,7 +159,7 @@ def test_list_remote(setup, remote_files, script_runner):
 
 
 def test_list_remote2(setup, remote_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_remote', 'round/product/sector2')
+    response = script_runner.run(['isimip-publisher', 'list_remote', 'round/product/sector2'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
@@ -167,7 +167,7 @@ def test_list_remote2(setup, remote_links, script_runner):
 
 
 def test_list_remote_links(setup, remote_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_remote_links', 'round/product/sector2')
+    response = script_runner.run(['isimip-publisher', 'list_remote_links', 'round/product/sector2'])
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -175,7 +175,7 @@ def test_list_remote_links(setup, remote_links, script_runner):
 
 
 def test_list_local(setup, local_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_local', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'list_local', 'round/product/sector'])
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -183,7 +183,7 @@ def test_list_local(setup, local_files, script_runner):
 
 
 def test_list_public(setup, public_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'list_public', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'list_public', 'round/product/sector'])
     assert response.success, response.stderr
     assert response.stdout
     assert not response.stderr
@@ -191,161 +191,161 @@ def test_list_public(setup, public_files, script_runner):
 
 
 def test_match_remote(setup, remote_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_remote', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'match_remote', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stderr
     assert len(response.stdout.splitlines()) == 6
 
 
 def test_match_remote_links(setup, remote_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_remote_links', 'round/product/sector2')
+    response = script_runner.run(['isimip-publisher', 'match_remote_links', 'round/product/sector2'])
     assert response.success, response.stderr
     assert not response.stderr
     assert len(response.stdout.splitlines()) == 6
 
 
 def test_match_local(setup, local_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_local', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'match_local', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stderr
     assert len(response.stdout.splitlines()) == 6
 
 
 def test_match_public(setup, public_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_public', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'match_public', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stderr
     assert len(response.stdout.splitlines()) == 6
 
 
 def test_match_public_links(setup, public_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'match_public_links', 'round/product/sector2')
+    response = script_runner.run(['isimip-publisher', 'match_public_links', 'round/product/sector2'])
     assert response.success, response.stderr
     assert not response.stderr
     assert len(response.stdout.splitlines()) == 6
 
 
 def test_fetch_files(setup, remote_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'fetch_files', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'fetch_files', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('fetch_files')
 
 
 def test_write_local_jsons(setup, local_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_local_jsons', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'write_local_jsons', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_local_jsons')
 
 
 def test_write_public_jsons(setup, public_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_public_jsons', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'write_public_jsons', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_public_jsons')
 
 
 def test_write_link_jsons(setup, public_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'write_link_jsons', 'round/product/sector2/model')
+    response = script_runner.run(['isimip-publisher', 'write_link_jsons', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_link_jsons')
 
 
 def test_insert_datasets(setup, local_files, db, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_datasets', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'insert_datasets', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('insert_datasets')
 
 
 def test_link_links(setup, remote_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'link_links', 'round/product/sector/model', 'round/product/sector2/model')
+    response = script_runner.run(['isimip-publisher', 'link_links', 'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_links')
 
 
 def test_link_files(setup, remote_files, script_runner):
-    response = script_runner.run('isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model')
+    response = script_runner.run(['isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_files')
 
 
 def test_link_datasets(setup, public_links, script_runner):
-    response = script_runner.run('isimip-publisher', 'link_datasets', 'round/product/sector/model', 'round/product/sector2/model')
+    response = script_runner.run(['isimip-publisher', 'link_datasets', 'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_datasets')
 
 
 def test_publish_datasets(setup, local_files, db, local_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'publish_datasets', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'publish_datasets', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('publish_datasets')
 
 
 def test_update_datasets(setup, public_files, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_datasets', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'update_datasets', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('update_datasets')
 
 
 def test_archive_datasets(setup, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'archive_datasets', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('archive_datasets')
 
 
 def test_check(setup, public_files, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'check', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'check', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_tree(setup, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_tree', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'update_tree', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_search(setup, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_search', 'round/product/sector')
+    response = script_runner.run(['isimip-publisher', 'update_search', 'round/product/sector'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_views(setup, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_views')
+    response = script_runner.run(['isimip-publisher', 'update_views'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_clean(setup, script_runner):
-    response = script_runner.run('isimip-publisher', 'clean', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'clean', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_insert_doi(setup, db, public_datasets, script_runner):
-    response = script_runner.run('isimip-publisher', 'insert_doi', 'testing/resources/test.json', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'insert_doi', 'testing/resources/test.json', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
 
 
 def test_update_doi(setup, db, public_datasets, resources, script_runner):
-    response = script_runner.run('isimip-publisher', 'update_doi', 'testing/resources/test1.json')
+    response = script_runner.run(['isimip-publisher', 'update_doi', 'testing/resources/test1.json'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr

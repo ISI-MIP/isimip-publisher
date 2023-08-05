@@ -1,4 +1,0 @@
-graft isimip_publisher
-
-global-exclude __pycache__
-global-exclude *.py[co]
