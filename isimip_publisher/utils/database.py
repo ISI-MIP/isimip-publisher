@@ -750,24 +750,8 @@ def update_search(session, path):
 
 
 def update_views(session):
-    update_words_view(session)
     update_identifiers_view(session)
-
-
-def update_words_view(session):
-    if 'words' in get_materialized_view_names(session):
-        session.connection().execute(text('''
-            REFRESH MATERIALIZED VIEW words
-        '''))
-        logger.debug('update words view')
-    else:
-        session.connection().execute(text('''
-            CREATE MATERIALIZED VIEW words AS SELECT word FROM ts_stat('SELECT vector FROM public.search')
-        '''))
-        session.connection().execute(text('''
-            CREATE INDEX ON words USING gin(word gin_trgm_ops)
-        '''))
-        logger.debug('create words view')
+    update_specifiers_view(session)
 
 
 def update_identifiers_view(session):
@@ -782,7 +766,7 @@ def update_identifiers_view(session):
             SELECT specifiers.key AS identifier,
                    JSON_AGG(DISTINCT specifiers.value) AS specifiers
             FROM public.datasets,
-                 jsonb_each(public.datasets.specifiers) AS specifiers
+                 jsonb_each_text(public.datasets.specifiers) AS specifiers
             GROUP BY identifier
             ORDER BY identifier
         '''))
@@ -790,6 +774,26 @@ def update_identifiers_view(session):
             CREATE INDEX ON identifiers(identifier)
         '''))
         logger.debug('create identifiers view')
+
+
+def update_specifiers_view(session):
+    if 'specifiers' in get_materialized_view_names(session):
+        session.connection().execute(text('''
+            REFRESH MATERIALIZED VIEW specifiers
+        '''))
+        logger.debug('update specifiers view')
+    else:
+        session.connection().execute(text('''
+            CREATE MATERIALIZED VIEW specifiers AS
+            SELECT DISTINCT specifiers.value::text as specifier
+            FROM public.datasets,
+                 jsonb_each_text(public.datasets.specifiers) AS specifiers
+            ORDER BY specifier;
+        '''))
+        session.connection().execute(text('''
+            CREATE INDEX ON specifiers USING gin(specifier gin_trgm_ops)
+        '''))
+        logger.debug('create specifiers view')
 
 
 def get_materialized_view_names(session):
