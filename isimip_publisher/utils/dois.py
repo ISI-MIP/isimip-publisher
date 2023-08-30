@@ -16,7 +16,7 @@ def upload_doi(resource, isimip_data_url,
                datacite_username, datacite_password, datacite_prefix, datacite_test_mode):
     # get the doi and the url
     doi = get_doi(resource.datacite)
-    url = '{base}/{doi}'.format(base=isimip_data_url, doi=doi)
+    url = f'{isimip_data_url}/{doi}'
 
     # convert the metadata to xml
     xml = schema43.tostring(resource.datacite)

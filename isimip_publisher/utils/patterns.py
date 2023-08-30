@@ -1,7 +1,7 @@
 import logging
 
-from isimip_utils.patterns import match_dataset_path, match_file_path
 from isimip_utils.exceptions import DidNotMatch
+from isimip_utils.patterns import match_dataset_path, match_file_path
 from isimip_utils.utils import exclude_path, include_path
 
 from ..models import Dataset, File
@@ -66,7 +66,8 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
                 dataset_dict[dataset_path].exclude = True
 
     # sort datasets and files and return
-    dataset_list = sorted([dataset for dataset in dataset_dict.values() if not dataset.exclude], key=lambda dataset: dataset.path)
+    dataset_list = sorted([dataset for dataset in dataset_dict.values()
+                           if not dataset.exclude], key=lambda dataset: dataset.path)
     for dataset in dataset_list:
         dataset.files = sorted(dataset.files, key=lambda file: file.path)
 
@@ -77,8 +78,8 @@ def filter_datasets(db_datasets, include=None, exclude=None):
     datasets = []
     for db_dataset in db_datasets:
         db_files = [file.path for file in db_dataset.files]
-        if any([include_path(include, file) for file in db_files]) \
-                and not any([exclude_path(exclude, file) for file in db_files]):
+        if any(include_path(include, file) for file in db_files) \
+                and not any(exclude_path(exclude, file) for file in db_files):
             datasets.append(db_dataset)
 
     return datasets

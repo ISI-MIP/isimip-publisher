@@ -25,7 +25,7 @@ def list_files(base_path, path, remote_dest=None, suffix=None, find_type='f'):
         args += ['-type', 'f', '-or', '-type', 'l']
 
     if remote_dest:
-        args = ['ssh', remote_dest] + args
+        args = ['ssh', remote_dest, *args]
 
     logger.debug('args = %s', args)
 
@@ -108,8 +108,7 @@ def move_file(source_path, target_path, keep=False):
     if target_path.exists():
         # raise an error if it is a different file!
         if get_checksum(source_path) != get_checksum(target_path):
-            raise RuntimeError('The file %s already exists and has a different checksum than %s' %
-                               (source_path, target_path))
+            raise RuntimeError(f'The file {source_path} already exists and has a different checksum than {target_path}')
 
     # create the directories for the file
     target_path.parent.mkdir(parents=True, exist_ok=True)

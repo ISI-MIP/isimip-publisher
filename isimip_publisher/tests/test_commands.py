@@ -1,7 +1,7 @@
 import os
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from dotenv import load_dotenv
@@ -261,21 +261,24 @@ def test_insert_datasets(setup, local_files, db, script_runner):
 
 
 def test_link_links(setup, remote_links, script_runner):
-    response = script_runner.run(['isimip-publisher', 'link_links', 'round/product/sector/model', 'round/product/sector2/model'])
+    response = script_runner.run(['isimip-publisher', 'link_links',
+                                  'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_links')
 
 
 def test_link_files(setup, remote_files, script_runner):
-    response = script_runner.run(['isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model'])
+    response = script_runner.run(['isimip-publisher', 'link_files',
+                                  'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_files')
 
 
 def test_link_datasets(setup, public_links, script_runner):
-    response = script_runner.run(['isimip-publisher', 'link_datasets', 'round/product/sector/model', 'round/product/sector2/model'])
+    response = script_runner.run(['isimip-publisher', 'link_datasets',
+                                  'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('link_datasets')
@@ -338,7 +341,8 @@ def test_clean(setup, script_runner):
 
 
 def test_insert_doi(setup, db, public_datasets, script_runner):
-    response = script_runner.run(['isimip-publisher', 'insert_doi', 'testing/resources/test.json', 'round/product/sector/model'])
+    response = script_runner.run(['isimip-publisher', 'insert_doi',
+                                  'testing/resources/test.json', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr

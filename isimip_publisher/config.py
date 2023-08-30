@@ -1,12 +1,10 @@
 import logging
-
 from datetime import datetime
 from pathlib import Path
 
 from isimip_utils.config import Settings as BaseSettings
 from isimip_utils.decorators import cached_property
-from isimip_utils.fetch import (fetch_definitions, fetch_pattern, fetch_resource,
-                                fetch_schema, fetch_tree)
+from isimip_utils.fetch import fetch_definitions, fetch_pattern, fetch_resource, fetch_schema, fetch_tree
 from isimip_utils.utils import parse_filelist
 
 logger = logging.getLogger(__name__)
@@ -38,8 +36,8 @@ class Settings(BaseSettings):
 
         try:
             datetime.strptime(self.VERSION, '%Y%m%d')
-        except ValueError:
-            raise AssertionError("Incorrect version format, should be YYYYMMDD")
+        except ValueError as e:
+            raise AssertionError("Incorrect version format, should be YYYYMMDD") from e
 
     @cached_property
     def REMOTE_PATH(self):
@@ -107,7 +105,7 @@ class Settings(BaseSettings):
         return fetch_tree(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
 
-class Store(object):
+class Store:
 
     _shared_state = {}
 

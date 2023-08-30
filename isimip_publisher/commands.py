@@ -208,8 +208,9 @@ def link_datasets():
 
         for file in dataset.files:
             target_file_path = str(settings.TARGET_PATH / Path(file.path).relative_to(settings.PATH))
-            database.insert_file_link(session, settings.VERSION, target_file_path, file.dataset.path, file.name, file.path,
-                                      file.size, file.checksum, file.checksum_type, file.netcdf_header, file.specifiers)
+            database.insert_file_link(session, settings.VERSION, target_file_path, file.dataset.path,
+                                      file.name, file.path, file.size, file.checksum, file.checksum_type,
+                                      file.netcdf_header, file.specifiers)
 
     session.commit()
     database.update_tree(session, settings.PATH, settings.TREE)

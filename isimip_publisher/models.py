@@ -6,15 +6,14 @@ import jsonschema
 
 from isimip_utils.checksum import get_checksum, get_checksum_type
 from isimip_utils.decorators import cached_property
-from isimip_utils.netcdf import (open_dataset_read, get_dimensions,
-                                 get_global_attributes, get_variables)
+from isimip_utils.netcdf import get_dimensions, get_global_attributes, get_variables, open_dataset_read
 
 from .utils.files import get_size
 
 logger = logging.getLogger(__name__)
 
 
-class Dataset(object):
+class Dataset:
 
     def __init__(self, name=None, path=None, specifiers=None):
         self.name = name
@@ -47,7 +46,7 @@ class Dataset(object):
                 raise e
 
 
-class File(object):
+class File:
 
     def __init__(self, dataset=None, name=None, path=None, abspath=None, specifiers=None):
         self.dataset = dataset

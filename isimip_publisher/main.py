@@ -2,15 +2,37 @@ from datetime import date
 
 from isimip_utils.parser import ArgumentParser
 
-from .commands import (archive_datasets, check, clean, fetch_files,
-                       insert_datasets, insert_doi, link_datasets, link_files,
-                       link_links, list_local, list_public, list_public_links,
-                       list_remote, list_remote_links, match_local,
-                       match_public, match_public_links, match_remote,
-                       match_remote_links, publish_datasets, register_doi,
-                       update_datasets, update_doi, update_search, update_tree,
-                       update_views, write_link_jsons, write_local_jsons,
-                       write_public_jsons)
+from .commands import (
+    archive_datasets,
+    check,
+    clean,
+    fetch_files,
+    insert_datasets,
+    insert_doi,
+    link_datasets,
+    link_files,
+    link_links,
+    list_local,
+    list_public,
+    list_public_links,
+    list_remote,
+    list_remote_links,
+    match_local,
+    match_public,
+    match_public_links,
+    match_remote,
+    match_remote_links,
+    publish_datasets,
+    register_doi,
+    update_datasets,
+    update_doi,
+    update_search,
+    update_tree,
+    update_views,
+    write_link_jsons,
+    write_local_jsons,
+    write_public_jsons,
+)
 from .config import RIGHTS_CHOICES, settings
 
 
