@@ -83,7 +83,9 @@ ignore = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["rdmo"]
+known-first-party = [
+    "isimip_publisher"
+]
 section-order = [
     "future",
     "standard-library",
