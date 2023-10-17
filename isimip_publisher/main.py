@@ -62,11 +62,9 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Archive directory')
     parser.add_argument('--database', dest='database',
                         help='Database connection string, e.g. postgresql+psycopg2://username:password@host:port/dbname')
-    parser.add_argument('--mock', dest='mock',
-                        default='false',
+    parser.add_argument('--mock', dest='mock', action='store_true', default=False,
                         help='If set to True, no files are actually copied. Empty mock files are used instead')
-    parser.add_argument('--restricted', dest='restricted',
-                        default='false',
+    parser.add_argument('--restricted', dest='restricted', action='store_true', default=False,
                         help='If set to True, the files are flaged as restricted in the database.')
     parser.add_argument('--protocol-location', dest='protocol_locations',
                         default='https://protocol.isimip.org https://protocol2.isimip.org',
@@ -78,8 +76,7 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('--datacite-prefix', dest='datacite_prefix',
                         default='10.48364',
                         help='Prefix for DataCite')
-    parser.add_argument('--datacite-test-mode', dest='datacite_test_mode',
-                        default='false',
+    parser.add_argument('--datacite-test-mode', dest='datacite_test_mode', action='store_true', default=False,
                         help='If set to True, the test version of DataCite is used')
     parser.add_argument('--isimip-data-url', dest='isimip_data_url',
                         default='https://data.isimip.org/',

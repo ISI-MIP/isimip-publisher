@@ -24,10 +24,6 @@ class Settings(BaseSettings):
     def setup(self, args):
         super().setup(args)
 
-        self.MOCK = self.MOCK.lower() in ['true', 't', '1']
-        self.RESTRICTED = self.RESTRICTED.lower() in ['true', 't', '1']
-        self.DATACITE_TEST_MODE = self.DATACITE_TEST_MODE.lower() in ['true', 't', '1']
-
         if self.ISIMIP_DATA_URL is not None:
             self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')
 
