@@ -8,7 +8,7 @@ from isimip_utils.checksum import get_checksum, get_checksum_type
 from isimip_utils.decorators import cached_property
 from isimip_utils.netcdf import get_dimensions, get_global_attributes, get_variables, open_dataset_read
 
-from .utils.files import get_size
+from .utils.files import get_size, clean_header
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,10 @@ class File:
                     'variables': get_variables(dataset, convert=True),
                     'global_attributes': get_global_attributes(dataset, convert=True)
                 }
+
+    @cached_property
+    def cleaned_header(self):
+        return clean_header(self.netcdf_header)
 
     @cached_property
     def size(self):

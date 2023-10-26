@@ -168,3 +168,21 @@ def mock_file(mock_path):
 
 def get_size(file_abspath):
     return Path(file_abspath).stat().st_size
+
+
+def clean_header(header):
+    # remove key/value pairs with NaN, Inf or -Inf from the header recursively,
+    # since they cannot be stored in a JSONB database field
+    special_values = {float('NaN'), float('Inf'), float('-Inf')}
+    cleaned_header = {}
+    for key, value in header.items():
+        if isinstance(value, dict):
+            cleaned_header[key] = clean_header(value)
+        elif isinstance(value, list):
+            if not special_values.intersection(value):
+                cleaned_header[key] = value
+        else:
+            if value not in special_values:
+                cleaned_header[key] = value
+
+    return cleaned_header
