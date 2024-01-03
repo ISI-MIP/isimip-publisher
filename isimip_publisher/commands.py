@@ -281,8 +281,8 @@ def update_datasets():
 def archive_datasets():
     session = database.init_database_session(settings.DATABASE)
 
-    # # since we have only files, not datasets (patterns could have changed since publication),
-    # # we retrieve all datasets for this path and remove datasets which have no files in public_files
+    # since we have only files, not datasets (patterns could have changed since publication),
+    # we retrieve all datasets for this path and remove datasets which have no files in public_files
     path = Path(settings.PATH)
     like = not bool(path.suffix)
     db_datasets = database.retrieve_datasets(session, path, public=True, like=like)

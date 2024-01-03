@@ -359,24 +359,28 @@ def archive_dataset(session, path):
         return public_dataset.version
 
 
-def retrieve_datasets(session, path, public=None, target=True, like=True):
+def retrieve_datasets(session, path, public=None, follow=False, like=True):
     path = Path(path)
-    datasets = session.query(Dataset)
+    db_datasets = session.query(Dataset)
 
     if like:
         like_path = path.as_posix() + '/%'
-        datasets = datasets.filter(Dataset.path.like(like_path))
+        db_datasets = db_datasets.filter(Dataset.path.like(like_path))
     else:
-        datasets = datasets.join(Dataset.files).filter(File.path == path.as_posix())
+        db_datasets = db_datasets.join(Dataset.files).filter(File.path == path.as_posix())
 
     if public is not None:
-        datasets = datasets.filter(Dataset.public == public)
+        db_datasets = db_datasets.filter(Dataset.public == public)
 
-    if target is None:
-        datasets = datasets.filter(Dataset.target == None)  # noqa: E711
+    datasets = []
+    for dataset in db_datasets.all():
+        if follow and dataset.target:
+            datasets.append(dataset.target)
+        else:
+            datasets.append(dataset)
 
     # sort datasets and files (using python to have a consistant order) and return
-    datasets = sorted(datasets.all(), key=lambda d: d.path)
+    datasets = sorted(datasets, key=lambda d: d.path)
     for dataset in datasets:
         dataset.files = sorted(dataset.files, key=lambda f: f.path)
 
@@ -555,7 +559,7 @@ def insert_resource(session, datacite, paths, datacite_prefix):
     # gather datasets
     datasets = []
     for path in paths:
-        datasets += retrieve_datasets(session, path, public=True, target=None)
+        datasets += retrieve_datasets(session, path, public=True, follow=True)
 
     if not datasets:
         message = f'No datasets found for {doi}.'
@@ -749,16 +753,26 @@ def update_search(session, path):
     ).all()
 
     for dataset in datasets:
-        if dataset.search is None:
-            dataset.search = Search(
-                dataset=dataset,
-                vector=get_search_vector(dataset),
-                created=datetime.utcnow()
-            )
-            session.add(dataset.search)
-        else:
-            dataset.search.vector = get_search_vector(dataset)
-            dataset.search.updated = datetime.utcnow()
+        create_or_update_search(session, dataset)
+
+        if dataset.target:
+            create_or_update_search(session, dataset.target)
+
+        for link in dataset.links:
+            create_or_update_search(session, link)
+
+
+def create_or_update_search(session, dataset):
+    if dataset.search is None:
+        dataset.search = Search(
+            dataset=dataset,
+            vector=get_search_vector(dataset),
+            created=datetime.utcnow()
+        )
+        session.add(dataset.search)
+    else:
+        dataset.search.vector = get_search_vector(dataset)
+        dataset.search.updated = datetime.utcnow()
 
 
 def update_views(session):
