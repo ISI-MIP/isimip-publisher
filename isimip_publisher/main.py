@@ -147,7 +147,7 @@ def main():
     if hasattr(settings, 'FUNC'):
         try:
             settings.FUNC()
-        except AssertionError as e:
+        except RuntimeError as e:
             parser.error(e)
     else:
         parser.print_help()

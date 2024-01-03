@@ -209,14 +209,14 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
 
     if dataset:
         logger.debug('skip dataset %s', path)
-        assert dataset.target is None, \
-            f'Dataset {path} is already stored, but with a target'
-        assert dataset.rights == rights, \
-            f'Dataset {path} is already stored, but with different rights'
-        assert dataset.name == name, \
-            f'Dataset {path} is already stored, but with different name'
-        assert dataset.specifiers == specifiers, \
-            f'Dataset {path} is already stored, but with different specifiers'
+        if dataset.target is not None:
+            raise RuntimeError(f'Dataset {path} is already stored, but with a target')
+        if dataset.rights != rights:
+            raise RuntimeError(f'Dataset {path} is already stored, but with different rights')
+        if dataset.name != name:
+            raise RuntimeError(f'Dataset {path} is already stored, but with different name')
+        if dataset.specifiers != specifiers:
+            raise RuntimeError(f'Dataset {path} is already stored, but with different specifiers')
     else:
         # insert a new row for this dataset
         logger.debug('insert dataset %s', path)
@@ -242,8 +242,8 @@ def publish_dataset(session, version, path):
         Dataset.public == True  # noqa: E712
     ).one_or_none()
 
-    assert public_dataset is None or public_dataset.version == version, \
-        f'A public dataset with the path {path} and the version {public_dataset.version} was found'
+    if public_dataset is not None and public_dataset.version != version:
+        raise RuntimeError(f'A public dataset with the path {path} and the version {public_dataset.version} was found')
 
     # get the dataset
     dataset = session.query(Dataset).filter(
@@ -251,8 +251,8 @@ def publish_dataset(session, version, path):
         Dataset.version == version
     ).one_or_none()
 
-    assert dataset is not None, \
-        f'No dataset with the name {path} and the version {public_dataset.version} found'
+    if dataset is None:
+        raise RuntimeError(f'No dataset with the name {path} and the version {public_dataset.version} found')
 
     # mark this dataset public
     logger.debug('publish dataset %s', path)
@@ -267,12 +267,12 @@ def update_dataset(session, rights, restricted, path, specifiers):
         Dataset.public == True  # noqa: E712
     ).one_or_none()
 
-    assert dataset is not None, \
-        f'No public dataset with the path {path} found.'
+    if dataset is None:
+        raise RuntimeError(f'No public dataset with the path {path} found.')
 
     if dataset.target:
-        assert dataset.target.rights == rights,\
-            f'Target dataset {dataset.target.path} was found, but with different rights'
+        if dataset.target.rights != rights:
+            raise RuntimeError(f'Target dataset {dataset.target.path} was found, but with different rights')
 
     # update the dataset
     logger.debug('update dataset %s', path)
@@ -300,14 +300,14 @@ def insert_dataset_link(session, version, rights, restricted, target_dataset_pat
         Dataset.version == version
     ).one_or_none()
 
-    assert target_dataset is not None, \
-        f'No target dataset for the path {target_dataset_path} with version {version} found'
-    assert target_dataset.rights == rights, \
-        f'Target dataset {target_dataset_path}#{version} was found, but with different rights'
-    assert target_dataset.name == name, \
-        f'Target dataset {target_dataset_path}#{version} was found, but with a different name'
-    assert target_dataset.size == size, \
-        f'Target dataset {target_dataset_path}#{version} was found, but with a different size'
+    if target_dataset is None:
+        raise RuntimeError(f'No target dataset for the path {target_dataset_path} with version {version} found')
+    if target_dataset.rights != rights:
+        raise RuntimeError(f'Target dataset {target_dataset_path}#{version} was found, but with different rights')
+    if target_dataset.name != name:
+        raise RuntimeError(f'Target dataset {target_dataset_path}#{version} was found, but with a different name')
+    if target_dataset.size != size:
+        raise RuntimeError(f'Target dataset {target_dataset_path}#{version} was found, but with a different size')
 
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
@@ -317,14 +317,14 @@ def insert_dataset_link(session, version, rights, restricted, target_dataset_pat
 
     if dataset:
         logger.debug('skip dataset link %s', path)
-        assert dataset.target == target_dataset, \
-            f'Dataset link {path} is already stored, but with a different target'
-        assert dataset.rights == rights, \
-            f'Dataset link {path} is already stored, but with different rights'
-        assert dataset.name == name, \
-            f'Dataset link {path} is already stored, but with a different name'
-        assert dataset.specifiers == specifiers, \
-            f'Dataset link {path} is already stored, but with different specifiers'
+        if dataset.target != target_dataset:
+            raise RuntimeError(f'Dataset link {path} is already stored, but with a different target')
+        if dataset.rights != rights:
+            raise RuntimeError(f'Dataset link {path} is already stored, but with different rights')
+        if dataset.name != name:
+            raise RuntimeError(f'Dataset link {path} is already stored, but with a different name')
+        if dataset.specifiers != specifiers:
+            raise RuntimeError(f'Dataset link {path} is already stored, but with different specifiers')
     else:
         # insert a new row for this dataset
         logger.debug('insert dataset %s', path)
@@ -395,8 +395,8 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
         Dataset.version == version
     ).one_or_none()
 
-    assert dataset is not None, \
-        f'No dataset with the path {dataset_path} found'
+    if dataset is None:
+        raise RuntimeError(f'No dataset with the path {dataset_path} found')
 
     # check if the file is already in the database
     file = session.query(File).filter(
@@ -406,20 +406,20 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
 
     if file:
         logger.debug('skip file %s', path)
-        assert uuid is None or file.id == uuid, \
-            f'File {path} is already stored with the same version, but a different id'
-        assert file.name == name, \
-            f'File {path} is already stored with the same version, but a different name'
-        assert file.size == size, \
-            f'File {path} is already stored with the same version, but a different size'
-        assert file.checksum == checksum, \
-            f'File {path} is already stored with the same version, but a different checksum'
-        assert file.checksum_type == checksum_type, \
-            f'File {path} is already stored with the same version, but a different checksum_type'
-        assert file.netcdf_header == netcdf_header, \
-            f'File {path} is already stored with the same version, but a different netcdf_header'
-        assert file.specifiers == specifiers, \
-            f'File {path} is already stored with the same version, but different specifiers'
+        if uuid is not None and file.id != uuid:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different id')
+        if file.name != name:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different name')
+        if file.size != size:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different size')
+        if file.checksum != checksum:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different checksum')
+        if file.checksum_type != checksum_type:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different checksum_type')
+        if file.netcdf_header != netcdf_header:
+            raise RuntimeError(f'File {path} is already stored with the same version, but a different netcdf_header')
+        if file.specifiers != specifiers:
+            raise RuntimeError(f'File {path} is already stored with the same version, but different specifiers')
     else:
         # insert a new row for this file
         logger.debug('insert file %s', path)
@@ -449,8 +449,8 @@ def update_file(session, dataset_path, path, specifiers):
         Dataset.public == True  # noqa: E712
     ).one_or_none()
 
-    assert dataset is not None, \
-        f'No public dataset with the path {dataset_path} found'
+    if dataset is None:
+        raise RuntimeError(f'No public dataset with the path {dataset_path} found')
 
     # check if the file is already in the database
     file = session.query(File).filter(
@@ -464,7 +464,7 @@ def update_file(session, dataset_path, path, specifiers):
         file.identifiers = list(specifiers.keys())
         file.updated = datetime.utcnow()
     else:
-        raise AssertionError(f'No file with the path {path} found in dataset {dataset_path}')
+        raise RuntimeError(f'No file with the path {path} found in dataset {dataset_path}')
 
 
 def insert_file_link(session, version, target_file_path, dataset_path,
@@ -475,16 +475,16 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         File.version == version
     ).one_or_none()
 
-    assert target_file is not None, \
-        f'No target file for the path {target_file_path} with version {version} found'
-    assert target_file.name == name, \
-        f'Target file {target_file_path}#{version} was found, but with a different name'
-    assert target_file.size == size, \
-        f'Target file {target_file_path}#{version} was found, but with a different size'
-    assert target_file.checksum == checksum, \
-        f'Target file {target_file_path}#{version} was found, but with a different checksum'
-    assert target_file.checksum_type == checksum_type, \
-        f'Target file {target_file_path}#{version} was found, but with a different checksum_type'
+    if target_file is None:
+        raise RuntimeError(f'No target file for the path {target_file_path} with version {version} found')
+    if target_file.name != name:
+        raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different name')
+    if target_file.size != size:
+        raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different size')
+    if target_file.checksum != checksum:
+        raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different checksum')
+    if target_file.checksum_type != checksum_type:
+        raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different checksum_type')
 
     # get the linked dataset for this file from the database
     dataset = session.query(Dataset).filter(
@@ -492,10 +492,10 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         Dataset.version == version
     ).one_or_none()
 
-    assert dataset is not None, \
-        f'No dataset with the path {dataset_path} found'
-    assert dataset.target == target_file.dataset, \
-        f'Dataset for file link does not match dataset for {path}'
+    if dataset is None:
+        raise RuntimeError(f'No dataset with the path {dataset_path} found')
+    if dataset.target != target_file.dataset:
+        raise RuntimeError(f'Dataset for file link does not match dataset for {path}')
 
     # check if the file is already in the database
     file = session.query(File).filter(
@@ -505,18 +505,20 @@ def insert_file_link(session, version, target_file_path, dataset_path,
 
     if file:
         logger.debug('skip file %s', path)
-        assert file.name == name, \
-            f'File link {path} is already stored with the same version, but a different name'
-        assert file.size == size, \
-            f'File link {path} is already stored with the same version, but a different size'
-        assert file.checksum == checksum, \
-            f'File link {path} is already stored with the same version, but a different checksum'
-        assert file.checksum_type == checksum_type, \
-            f'File link {path} is already stored with the same version, but a different checksum_type'
-        assert file.netcdf_header == netcdf_header, \
-            f'File link {path} is already stored with the same version, but a different netcdf_header'
-        assert file.specifiers == specifiers, \
-            f'File link {path} is already stored with the same version, but different specifiers'
+        if file.name != name:
+            raise RuntimeError(f'File link {path} is already stored with the same version, but a different name')
+        if file.size != size:
+            raise RuntimeError(f'File link {path} is already stored with the same version, but a different size')
+        if file.checksum != checksum:
+            raise RuntimeError(f'File link {path} is already stored with the same version, but a different checksum')
+        if file.checksum_type != checksum_type:
+            raise RuntimeError(f'File link {path} is already stored with the same version,'
+                                ' but a different checksum_type')
+        if file.netcdf_header != netcdf_header:
+            raise RuntimeError(f'File link {path} is already stored with the same version,'
+                                ' but a different netcdf_header')
+        if file.specifiers != specifiers:
+            raise RuntimeError(f'File link {path} is already stored with the same version, but different specifiers')
     else:
         # insert a new row for this file
         logger.debug('insert file %s', path)
@@ -542,19 +544,22 @@ def insert_resource(session, datacite, paths, datacite_prefix):
     title = get_title(datacite)
     version = datacite.get('version')
 
-    assert doi is not None, 'No DOI was provided.'
-    assert title is not None, 'No title was provided.'
+    if doi is None:
+        raise RuntimeError('No DOI was provided.')
+    if title is None:
+        raise RuntimeError('No title was provided.')
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
         Resource.doi == doi
     ).one_or_none()
 
-    assert resource is None, \
-        f'A resource with doi={doi} is already in the database.'
+    if resource is not None:
+        raise RuntimeError(f'A resource with doi={doi} is already in the database.')
 
     # get the path
-    assert paths, f'No paths were provided for {doi}.'
+    if not paths:
+        raise RuntimeError(f'No paths were provided for {doi}.')
 
     # gather datasets
     datasets = []
@@ -595,16 +600,18 @@ def update_resource(session, datacite):
     title = get_title(datacite)
     version = datacite.get('version')
 
-    assert doi is not None, 'No DOI was provided.'
-    assert title is not None, 'No title was provided.'
+    if doi is None:
+        raise RuntimeError('No DOI was provided.')
+    if title is None:
+        raise RuntimeError('No title was provided.')
 
     # look for the resource in the database
     resource = session.query(Resource).filter(
         Resource.doi == doi
     ).one_or_none()
 
-    assert resource is not None, \
-        f'A resource with doi={doi} was not found.'
+    if resource is None:
+        raise RuntimeError(f'A resource with doi={doi} was not found.')
 
     # update the datecite metadata
     resource.title = title
@@ -621,8 +628,8 @@ def fetch_resource(session, doi):
         Resource.doi == doi
     ).one_or_none()
 
-    assert resource is not None, \
-        f'A resource with doi={doi} was not found.'
+    if resource is None:
+        raise RuntimeError(f'A resource with doi={doi} was not found.')
 
     return resource
 

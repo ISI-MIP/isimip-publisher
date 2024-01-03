@@ -28,31 +28,35 @@ class Settings(BaseSettings):
             self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')
 
         if self.RIGHTS not in RIGHTS_CHOICES:
-            raise AssertionError('Incorrect rights "%s": choose from %s', self.RIGHTS, RIGHTS_CHOICES)
+            raise RuntimeError('Incorrect rights "%s": choose from %s', self.RIGHTS, RIGHTS_CHOICES)
 
         try:
             datetime.strptime(self.VERSION, '%Y%m%d')
         except ValueError as e:
-            raise AssertionError("Incorrect version format, should be YYYYMMDD") from e
+            raise RuntimeError('Incorrect version format, should be YYYYMMDD') from e
 
     @cached_property
     def REMOTE_PATH(self):
-        assert self.REMOTE_DIR is not None, 'REMOTE_DIR is not set'
+        if self.REMOTE_DIR is None:
+            raise RuntimeError('REMOTE_DIR is not set')
         return Path(self.REMOTE_DIR).expanduser()
 
     @cached_property
     def LOCAL_PATH(self):
-        assert self.LOCAL_DIR is not None, 'LOCAL_DIR is not set'
+        if self.LOCAL_DIR is None:
+            raise RuntimeError('LOCAL_DIR is not set')
         return Path(self.LOCAL_DIR).expanduser()
 
     @cached_property
     def PUBLIC_PATH(self):
-        assert self.PUBLIC_DIR is not None, 'PUBLIC_DIR is not set'
+        if self.PUBLIC_DIR is None:
+            raise RuntimeError('PUBLIC_DIR is not set')
         return Path(self.PUBLIC_DIR).expanduser()
 
     @cached_property
     def ARCHIVE_PATH(self):
-        assert self.ARCHIVE_DIR is not None, 'ARCHIVE_DIR is not set'
+        if self.ARCHIVE_DIR is None:
+            raise RuntimeError('ARCHIVE_DIR is not set')
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @cached_property
@@ -77,27 +81,32 @@ class Settings(BaseSettings):
 
     @cached_property
     def RESOURCE(self):
-        assert self.RESOURCE_LOCATION is not None, 'RESOURCE_LOCATION is not set'
+        if self.RESOURCE_LOCATION is None:
+            raise RuntimeError('RESOURCE_LOCATION is not set')
         return fetch_resource(self.RESOURCE_LOCATION)
 
     @cached_property
     def DEFINITIONS(self):
-        assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+        if self.PROTOCOL_LOCATIONS is None:
+            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
         return fetch_definitions(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
     @cached_property
     def PATTERN(self):
-        assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+        if self.PROTOCOL_LOCATIONS is None:
+            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
         return fetch_pattern(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
     @cached_property
     def SCHEMA(self):
-        assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+        if self.PROTOCOL_LOCATIONS is None:
+            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
         return fetch_schema(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
     @cached_property
     def TREE(self):
-        assert self.PROTOCOL_LOCATIONS is not None, 'PROTOCOL_LOCATIONS is not set'
+        if self.PROTOCOL_LOCATIONS is None:
+            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
         return fetch_tree(self.PROTOCOL_LOCATIONS.split(), self.PATH)
 
 
