@@ -34,21 +34,21 @@ def check_datasets(datasets, db_datasets):
 
                 # check file checksum consitency
                 if computed_checksum != db_file.checksum:
-                    logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} for file {db_file.id}')
+                    logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} for file {db_file.path}')
 
                 # check file path consitency
                 if file.path != db_file.path:
-                    logger.error(f'Path mismatch {file.path} != {db_file.path} for file {db_file.id}')
+                    logger.error(f'Path mismatch {file.path} != {db_file.path} for file {db_file.path}')
 
                 # check file uuid consitency
                 if file.uuid:
                     if str(file.uuid) != db_file.id:
-                        logger.error(f'UUID mismatch {file.uuid} != {db_file.id} for file {db_file.id}')
+                        logger.error(f'UUID mismatch {file.uuid} != {db_file.id} for file {db_file.path}')
 
                 # check file specifiers consitency
                 if file.specifiers != db_file.specifiers:
                     logger.error(f'Specifier mismatch {file.specifiers} != {db_file.specifiers}'
-                                  ' for file {db_file.id}')
+                                  ' for file {db_file.path}')
             else:
                 logger.error(f'{file_path} does not exist')
 
@@ -60,26 +60,26 @@ def check_datasets(datasets, db_datasets):
                 # check json checksum consitency
                 if metadata.get('checksum') != db_file.checksum:
                     logger.error('Checksum mismatch {} != {} for file {}'.format(
-                        metadata.get('checksum'), computed_checksum, db_file.id
+                        metadata.get('checksum'), computed_checksum, db_file.path
                     ))
 
                 # check json path consitency
                 if metadata.get('path') != db_file.path:
                     logger.error('Path mismatch {} != {} for file {}'.format(
-                        metadata.get('path'), db_file.path, db_file.id
+                        metadata.get('path'), db_file.path, db_file.path
                     ))
 
                 # check json uuid consitency
                 if metadata.get('id'):
                     if metadata.get('id') != db_file.id:
                         logger.error('UUID mismatch {} != {} for file {}'.format(
-                            metadata.get('id'), db_file.id, db_file.id
+                            metadata.get('id'), db_file.id, db_file.path
                         ))
 
                 # check json specifiers consitency
                 if metadata.get('specifiers') != db_file.specifiers:
                     logger.error('Specifier mismatch {} != {} for file {}'.format(
-                        metadata.get('specifiers'), db_file.specifiers, db_file.id
+                        metadata.get('specifiers'), db_file.specifiers, db_file.path
                     ))
             else:
                 logger.error(f'{file_path} does not exist')
