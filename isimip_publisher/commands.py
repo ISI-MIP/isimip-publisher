@@ -290,12 +290,29 @@ def archive_datasets():
     # apply include and exclude lists on the datasets from the database
     datasets = patterns.filter_datasets(db_datasets, include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-    for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-        for link in dataset.links:
-            link_version = database.archive_dataset(session, link.path)
-            if link_version:
-                archive_path = settings.ARCHIVE_PATH / link_version
-                for file in link.files:
+    print(f'Archiving {len(datasets)} datasets. Please type "yes" to confirm.')
+    string = input()
+
+    if string.lower() == 'yes':
+        for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
+            for link in dataset.links:
+                link_version = database.archive_dataset(session, link.path)
+                if link_version:
+                    archive_path = settings.ARCHIVE_PATH / link_version
+                    for file in link.files:
+                        source_path = settings.PUBLIC_PATH / file.path
+                        target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
+
+                        if source_path.is_file():
+                            files.move_file(source_path, target_path)
+
+                        if source_path.with_suffix('.json').is_file():
+                            files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
+
+            dataset_version = database.archive_dataset(session, dataset.path)
+            if dataset_version:
+                archive_path = settings.ARCHIVE_PATH / dataset_version
+                for file in dataset.files:
                     source_path = settings.PUBLIC_PATH / file.path
                     target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
@@ -305,26 +322,13 @@ def archive_datasets():
                     if source_path.with_suffix('.json').is_file():
                         files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
-        dataset_version = database.archive_dataset(session, dataset.path)
-        if dataset_version:
-            archive_path = settings.ARCHIVE_PATH / dataset_version
-            for file in dataset.files:
-                source_path = settings.PUBLIC_PATH / file.path
-                target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
+            session.commit()
 
-                if source_path.is_file():
-                    files.move_file(source_path, target_path)
-
-                if source_path.with_suffix('.json').is_file():
-                    files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
-
+        database.update_tree(session, settings.PATH, settings.TREE)
         session.commit()
 
-    database.update_tree(session, settings.PATH, settings.TREE)
-    session.commit()
-
-    database.clean_tree(session)
-    session.commit()
+        database.clean_tree(session)
+        session.commit()
 
 
 def check():
