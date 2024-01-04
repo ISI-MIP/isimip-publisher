@@ -79,7 +79,8 @@ class File:
 
     @cached_property
     def cleaned_header(self):
-        return clean_header(self.netcdf_header)
+        if self.netcdf_header:
+            return clean_header(self.netcdf_header)
 
     @cached_property
     def size(self):
