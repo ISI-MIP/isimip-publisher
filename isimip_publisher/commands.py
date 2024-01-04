@@ -166,6 +166,7 @@ def insert_datasets():
     database.update_views(session)
 
     session.commit()
+    session.close()
 
 
 def link_links():
@@ -222,6 +223,7 @@ def link_datasets():
     database.update_search(session, settings.TARGET_PATH)
     database.update_views(session)
     session.commit()
+    session.close()
 
 
 def publish_datasets():
@@ -250,6 +252,7 @@ def publish_datasets():
     session.commit()
     database.clean_tree(session)
     session.commit()
+    session.close()
 
 
 def update_datasets():
@@ -276,6 +279,7 @@ def update_datasets():
 
     database.clean_tree(session)
     session.commit()
+    session.close()
 
 
 def archive_datasets():
@@ -330,6 +334,8 @@ def archive_datasets():
         database.clean_tree(session)
         session.commit()
 
+    session.close()
+
 
 def check():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
@@ -350,6 +356,8 @@ def check():
 
     validation.check_datasets(datasets, db_datasets)
 
+    session.close()
+
 
 def update_tree():
     session = database.init_database_session(settings.DATABASE)
@@ -359,13 +367,14 @@ def update_tree():
 
     database.clean_tree(session)
     session.commit()
-
+    session.close()
 
 def update_search():
     session = database.init_database_session(settings.DATABASE)
 
     database.update_search(session, settings.PATH)
     session.commit()
+    session.close()
 
 
 def update_views():
@@ -373,6 +382,7 @@ def update_views():
 
     database.update_views(session)
     session.commit()
+    session.close()
 
 
 def clean():
@@ -392,6 +402,7 @@ def insert_doi():
         database.update_search(session, path)
 
     session.commit()
+    session.close()
 
 
 def update_doi():
@@ -403,6 +414,7 @@ def update_doi():
         database.update_search(session, path)
 
     session.commit()
+    session.close()
 
 
 def register_doi():
