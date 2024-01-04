@@ -58,7 +58,6 @@ version = { attr = "isimip_publisher.__version__" }
 
 [tool.pytest.ini_options]
 python_files = "test_*.py"
-script_launch_mode = "subprocess"
 
 [tool.ruff]
 target-version = "py38"
