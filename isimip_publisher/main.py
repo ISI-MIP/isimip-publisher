@@ -94,7 +94,7 @@ def get_parser(add_path=False, add_subparsers=False):
         # add a subparser for each subcommand
         for func in [list_remote, list_remote_links, list_local, list_public, list_public_links,
                      match_remote, match_remote_links, match_local, match_public, match_public_links,
-                     fetch_files, write_local_jsons, write_public_jsons, write_link_jsons,
+                     fetch_files, write_local_jsons, write_public_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
                      check, clean, update_search, update_tree, run]:
             subparser = subparsers.add_parser(func.__name__)
@@ -117,7 +117,7 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser.set_defaults(func=func)
             subparser.add_argument('doi', help='DOI to process')
 
-        for func in [link_links, link_files, link_datasets, link]:
+        for func in [link_links, link_files, link_datasets, link, write_link_jsons]:
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('target_path', help='path of the files to process')

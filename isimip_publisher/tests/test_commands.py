@@ -247,7 +247,8 @@ def test_write_public_jsons(setup, public_files, script_runner):
 
 
 def test_write_link_jsons(setup, public_links, script_runner):
-    response = script_runner.run(['isimip-publisher', 'write_link_jsons', 'round/product/sector2/model'])
+    response = script_runner.run(['isimip-publisher', 'write_link_jsons',
+                                  'round/product/sector/model', 'round/product/sector2/model'])
     assert response.success, response.stderr
     assert not response.stdout
     assert response.stderr.strip().startswith('write_link_jsons')

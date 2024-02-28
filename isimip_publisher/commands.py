@@ -133,7 +133,8 @@ def write_public_jsons():
 
 def write_link_jsons():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+    filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, public_links)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, filtered_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
@@ -172,7 +173,8 @@ def insert_datasets():
 def link_links():
     remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
+    filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, remote_links)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, filtered_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
@@ -184,7 +186,8 @@ def link_links():
 def link_files():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
+    filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, remote_files)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, filtered_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
@@ -196,7 +199,8 @@ def link_files():
 def link_datasets():
     # collect and validate the links
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+    filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, public_links)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, filtered_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 

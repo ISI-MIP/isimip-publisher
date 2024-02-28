@@ -52,6 +52,15 @@ def list_links(base_path, path, remote_dest=None, suffix=None):
     return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type='l')
 
 
+def filter_links(public_path, target_path, path, links):
+    filtered_links = []
+    for link_path in links:
+        target_abspath = public_path / target_path / Path(link_path).relative_to(path)
+        if target_abspath.exists() and not target_abspath.is_symlink():
+            filtered_links.append(link_path)
+    return filtered_links
+
+
 def copy_files(remote_dest, remote_path, local_path, path, datasets):
     # check if path is a file
     if Path(path).suffix:
