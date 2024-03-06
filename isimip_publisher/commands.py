@@ -431,3 +431,17 @@ def register_doi():
         dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+
+
+def check_doi():
+    session = database.init_database_session(settings.DATABASE)
+    datasets = database.retrieve_datasets(session, settings.PATH, public=(not settings.ARCHIVED), like=True)
+    if not datasets:
+        raise RuntimeError(f'no dataset found for {settings.PATH}')
+
+    for dataset in datasets:
+        if not dataset.resources:
+            for file in dataset.files:
+                print(file.path)
+
+    session.close()

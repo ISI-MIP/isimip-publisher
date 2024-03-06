@@ -369,7 +369,7 @@ def retrieve_datasets(session, path, public=None, follow=False, like=True):
     else:
         db_datasets = db_datasets.join(Dataset.files).filter(File.path == path.as_posix())
 
-    if public is not None:
+    if public:
         db_datasets = db_datasets.filter(Dataset.public == public)
 
     datasets = []

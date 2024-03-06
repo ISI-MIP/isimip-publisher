@@ -365,3 +365,17 @@ def test_update_doi(setup, db, public_datasets, resources, script_runner):
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
+
+
+def test_check_doi(setup, db, public_datasets, script_runner):
+    response = script_runner.run(['isimip-publisher', 'check_doi', 'round/product/sector/model'])
+    assert response.success, response.stderr
+    assert response.stdout
+    assert not response.stderr
+
+
+def test_check_doi_with_resources(setup, db, public_datasets, resources, script_runner):
+    response = script_runner.run(['isimip-publisher', 'check_doi', 'round/product/sector/model'])
+    assert response.success, response.stderr
+    assert not response.stdout
+    assert not response.stderr

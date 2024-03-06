@@ -5,6 +5,7 @@ from isimip_utils.parser import ArgumentParser
 from .commands import (
     archive_datasets,
     check,
+    check_doi,
     clean,
     fetch_files,
     insert_datasets,
@@ -83,6 +84,8 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
     parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
                         help='Rights/license for the files [default: None]')
+    parser.add_argument('--archived', dest='archived', action='store_true', default=False,
+                        help='Check also archived files')
     parser.add_argument('--log-level', dest='log_level', default='WARN',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',
@@ -105,7 +108,7 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
-            subparser.add_argument('paths', nargs='+', help='paths of the files to process')
+            subparser.add_argument('paths', nargs='+', help='paths of the datasets to process')
 
         for func in [update_doi]:
             subparser = subparsers.add_parser(func.__name__)
@@ -116,6 +119,11 @@ def get_parser(add_path=False, add_subparsers=False):
             subparser = subparsers.add_parser(func.__name__)
             subparser.set_defaults(func=func)
             subparser.add_argument('doi', help='DOI to process')
+
+        for func in [check_doi]:
+            subparser = subparsers.add_parser(func.__name__)
+            subparser.set_defaults(func=func)
+            subparser.add_argument('path', help='path of the datasets to check')
 
         for func in [link_links, link_files, link_datasets, link, write_link_jsons]:
             subparser = subparsers.add_parser(func.__name__)
