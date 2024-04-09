@@ -36,9 +36,27 @@ def list_public():
 
 
 def list_public_links():
-    public_files = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    for file_path in public_files:
+    public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
+    for file_path in public_links:
         print(file_path)
+
+
+def diff_remote():
+    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
+                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH))
+    for file_path in remote_files:
+        if file_path not in public_files:
+            print(file_path)
+
+
+def diff_remote_links():
+    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
+                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    public_links = set(files.list_links(settings.PUBLIC_PATH, settings.PATH))
+    for file_path in remote_links:
+        if file_path not in public_links:
+            print(file_path)
 
 
 def match_remote():
