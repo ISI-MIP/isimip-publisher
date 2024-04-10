@@ -453,12 +453,14 @@ def register_doi():
 
 def check_doi():
     session = database.init_database_session(settings.DATABASE)
-    datasets = database.retrieve_datasets(session, settings.PATH, public=(not settings.ARCHIVED), like=True)
+    datasets = database.retrieve_datasets(session, settings.PATH,
+                                          public=(not settings.ARCHIVED), like=True, follow=True)
     if not datasets:
         raise RuntimeError(f'no dataset found for {settings.PATH}')
 
     for dataset in datasets:
-        if not dataset.resources:
+        if not dataset.resources or \
+           not any(settings.PATH.startswith(path) for resource in dataset.resources for path in resource.paths):
             for file in dataset.files:
                 print(file.path)
 
