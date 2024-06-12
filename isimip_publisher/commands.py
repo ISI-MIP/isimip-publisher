@@ -459,8 +459,11 @@ def check_doi():
         raise RuntimeError(f'no dataset found for {settings.PATH}')
 
     for dataset in datasets:
-        if not dataset.resources or \
-           not any(settings.PATH.startswith(path) for resource in dataset.resources for path in resource.paths):
+        resources = dataset.target.resources if dataset.target is not None else dataset.resources
+
+        if not resources or not any(
+            dataset.path.startswith(resource_path) for resource in resources for resource_path in resource.paths
+        ):
             for file in dataset.files:
                 print(file.path)
 
