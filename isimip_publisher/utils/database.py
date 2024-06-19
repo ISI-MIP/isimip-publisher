@@ -2,6 +2,7 @@ import logging
 import re
 import warnings
 from datetime import datetime
+from math import isnan
 from pathlib import Path
 from uuid import uuid4
 
@@ -431,7 +432,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             size=size,
             checksum=checksum,
             checksum_type=checksum_type,
-            netcdf_header=netcdf_header,
+            netcdf_header=clean_json(netcdf_header),
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
@@ -529,7 +530,7 @@ def insert_file_link(session, version, target_file_path, dataset_path,
             size=size,
             checksum=checksum,
             checksum_type=checksum_type,
-            netcdf_header=netcdf_header,
+            netcdf_header=clean_json(netcdf_header),
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
@@ -836,3 +837,14 @@ def get_materialized_view_names(session):
     except AttributeError:
         # for SQLAlchemy < 2
         return inspect(engine).get_view_names()
+
+
+def clean_json(data):
+    if isinstance(data, list):
+        return [clean_json(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: clean_json(value) for key, value in data.items()}
+    elif isinstance(data, float) and isnan(data):
+        return 'NaN'
+    else:
+        return data
