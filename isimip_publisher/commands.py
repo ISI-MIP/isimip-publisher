@@ -111,6 +111,48 @@ def match_public_links():
             print(file.path)
 
 
+def count_remote():
+    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
+                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
+                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+    print(len([file for dataset in datasets for file in dataset.files]))
+
+
+def count_remote_links():
+    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
+                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
+                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+    print(len([file for dataset in datasets for file in dataset.files]))
+
+
+def count_local():
+    local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
+                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+    print(len([file for dataset in datasets for file in dataset.files]))
+
+
+def count_public():
+    public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
+                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+    print(len([file for dataset in datasets for file in dataset.files]))
+
+
+def count_public_links():
+    public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
+    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
+                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+    print(len([file for dataset in datasets for file in dataset.files]))
+
+
 def fetch_files():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])

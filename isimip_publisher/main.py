@@ -7,6 +7,11 @@ from .commands import (
     check,
     check_doi,
     clean,
+    count_local,
+    count_public,
+    count_public_links,
+    count_remote,
+    count_remote_links,
     diff_remote,
     diff_remote_links,
     fetch_files,
@@ -99,6 +104,7 @@ def get_parser(add_path=False, add_subparsers=False):
         # add a subparser for each subcommand
         for func in [list_remote, list_remote_links, list_local, list_public, list_public_links,
                      match_remote, match_remote_links, match_local, match_public, match_public_links,
+                     count_remote, count_remote_links, count_local, count_public, count_public_links,
                      fetch_files, write_local_jsons, write_public_jsons,
                      insert_datasets, update_datasets, publish_datasets, archive_datasets,
                      diff_remote, diff_remote_links, check, clean, update_search, update_tree, run]:
