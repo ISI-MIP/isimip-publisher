@@ -496,7 +496,7 @@ def register_doi():
 def check_doi():
     session = database.init_database_session(settings.DATABASE)
     datasets = database.retrieve_datasets(session, settings.PATH,
-                                          public=(not settings.ARCHIVED), like=True, follow=True)
+                                          public=(not settings.ARCHIVED), like=True, follow=False)
     if not datasets:
         raise RuntimeError(f'no dataset found for {settings.PATH}')
 
