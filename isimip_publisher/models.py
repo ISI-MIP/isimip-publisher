@@ -57,11 +57,6 @@ class File:
         self.checksum_type = get_checksum_type()
         self.clean = False
 
-        self._uuid = None
-        self._size = None
-        self._checksum = None
-        self._netcdf_header = None
-
     @cached_property
     def uuid(self):
         if self.netcdf_header:
@@ -97,7 +92,7 @@ class File:
     @cached_property
     def json(self):
         return {
-            'id': self._uuid,
+            'id': self.uuid,
             'path': self.path,
             'size': self.size,
             'checksum': self.checksum,

@@ -42,7 +42,7 @@ def check_datasets(datasets, db_datasets):
 
                 # check file uuid consitency
                 if file.uuid:
-                    if str(file.uuid) != db_file.id:
+                    if str(file.uuid) != str(db_file.id):
                         logger.error(f'UUID mismatch {file.uuid} != {db_file.id} for file {db_file.path}')
 
                 # check file specifiers consitency
