@@ -20,7 +20,7 @@ def validate_datasets(schema, path, datasets):
             file.validate(schema)
 
 
-def check_datasets(datasets, db_datasets):
+def check_datasets(datasets, db_datasets, skip_checksum=False):
     if len(datasets) != len(db_datasets):
         logger.error(f'Length mismatch {len(datasets)} != {len(db_datasets)}')
 
@@ -29,12 +29,13 @@ def check_datasets(datasets, db_datasets):
             # check the actual file
             file_path = Path(file.abspath)
             if file_path.is_file():
-                # compute the checksum
-                computed_checksum = get_checksum(file.abspath, file.checksum_type)
+                if not skip_checksum:
+                    # compute the checksum
+                    computed_checksum = get_checksum(file.abspath, file.checksum_type)
 
-                # check file checksum consitency
-                if computed_checksum != db_file.checksum:
-                    logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} for file {db_file.path}')
+                    # check file checksum consitency
+                    if computed_checksum != db_file.checksum:
+                        logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} for file {db_file.path}')
 
                 # check file path consitency
                 if file.path != db_file.path:
@@ -42,8 +43,9 @@ def check_datasets(datasets, db_datasets):
 
                 # check file uuid consitency
                 if file.uuid:
-                    if str(file.uuid) != str(db_file.id):
-                        logger.error(f'UUID mismatch {file.uuid} != {db_file.id} for file {db_file.path}')
+                    db_uuid = db_file.target_id or db_file.id
+                    if str(file.uuid) != str(db_uuid):
+                        logger.error(f'UUID mismatch {file.uuid} != {db_uuid} for file {db_file.path}')
 
                 # check file specifiers consitency
                 if file.specifiers != db_file.specifiers:
@@ -59,26 +61,27 @@ def check_datasets(datasets, db_datasets):
 
                 # check json checksum consitency
                 if metadata.get('checksum') != db_file.checksum:
-                    logger.error('Checksum mismatch {} != {} for file {}'.format(
-                        metadata.get('checksum'), computed_checksum, db_file.path
+                    logger.error('JSON checksum mismatch {} != {} for file {}'.format(
+                        metadata.get('checksum'), db_file.checksum, db_file.path
                     ))
 
                 # check json path consitency
                 if metadata.get('path') != db_file.path:
-                    logger.error('Path mismatch {} != {} for file {}'.format(
+                    logger.error('JSON path mismatch {} != {} for file {}'.format(
                         metadata.get('path'), db_file.path, db_file.path
                     ))
 
                 # check json uuid consitency
                 if metadata.get('id'):
-                    if metadata.get('id') != db_file.id:
-                        logger.error('UUID mismatch {} != {} for file {}'.format(
-                            metadata.get('id'), db_file.id, db_file.path
+                    db_uuid = db_file.target_id or db_file.id
+                    if metadata.get('id') != str(db_uuid):
+                        logger.error('JSON mismatch {} != {} for file {}'.format(
+                            metadata.get('id'), db_uuid, db_file.path
                         ))
 
                 # check json specifiers consitency
                 if metadata.get('specifiers') != db_file.specifiers:
-                    logger.error('Specifier mismatch {} != {} for file {}'.format(
+                    logger.error('JSON specifier mismatch {} != {} for file {}'.format(
                         metadata.get('specifiers'), db_file.specifiers, db_file.path
                     ))
             else:

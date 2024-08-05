@@ -410,6 +410,9 @@ def check():
     datasets += patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
                                         include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
+    # sort datasets and links (again)
+    datasets = sorted(datasets, key=lambda dataset: dataset.path)
+
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     session = database.init_database_session(settings.DATABASE)
@@ -418,7 +421,7 @@ def check():
     path = Path(settings.PATH)
     db_datasets = database.retrieve_datasets(session, (path.parent if path.suffix else path), public=True)
 
-    validation.check_datasets(datasets, db_datasets)
+    validation.check_datasets(datasets, db_datasets, settings.SKIP_CHECKSUM)
 
     session.close()
 

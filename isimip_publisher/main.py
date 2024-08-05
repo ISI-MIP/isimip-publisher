@@ -93,6 +93,8 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Rights/license for the files [default: None]')
     parser.add_argument('--archived', dest='archived', action='store_true', default=False,
                         help='Check also archived files')
+    parser.add_argument('--skip-checksum', dest='skip_checksum', action='store_true', default=False,
+                         help='Skip the computation of the checksum when checking')
     parser.add_argument('--log-level', dest='log_level', default='WARN',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',
