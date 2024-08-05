@@ -469,12 +469,14 @@ def insert_doi():
         database.update_search(session, path)
 
     session.commit()
-    session.close()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
         dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+
+    session.close()
+
 
 
 def update_doi():
@@ -486,12 +488,13 @@ def update_doi():
         database.update_search(session, path)
 
     session.commit()
-    session.close()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
         dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+
+    session.close()
 
 
 def register_doi():
