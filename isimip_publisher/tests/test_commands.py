@@ -353,7 +353,7 @@ def test_clean(setup, script_runner):
 
 
 def test_insert_doi(setup, db, public_datasets, script_runner):
-    response = script_runner.run(['isimip-publisher', 'insert_doi',
+    response = script_runner.run(['isimip-publisher', '--skip-registration', 'insert_doi',
                                   'testing/resources/test.json', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert not response.stdout
@@ -361,7 +361,8 @@ def test_insert_doi(setup, db, public_datasets, script_runner):
 
 
 def test_update_doi(setup, db, public_datasets, resources, script_runner):
-    response = script_runner.run(['isimip-publisher', 'update_doi', 'testing/resources/test1.json'])
+    response = script_runner.run(['isimip-publisher', '--skip-registration', 'update_doi',
+                                  'testing/resources/test1.json'])
     assert response.success, response.stderr
     assert not response.stdout
     assert not response.stderr
