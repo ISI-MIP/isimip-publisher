@@ -562,10 +562,10 @@ def insert_resource(session, datacite, paths, datacite_prefix):
     if not paths:
         raise RuntimeError(f'No paths were provided for {doi}.')
 
-    # gather datasets
-    datasets = []
+    # gather datasets, use a set to remove duplicate datasets (for links)
+    datasets = set()
     for path in paths:
-        datasets += retrieve_datasets(session, path, public=True, follow=True)
+        datasets.update(retrieve_datasets(session, path, public=True, follow=True))
 
     if not datasets:
         message = f'No datasets found for {doi}.'

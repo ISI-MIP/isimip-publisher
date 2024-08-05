@@ -36,3 +36,8 @@ def upload_doi(resource, isimip_data_url,
     # register the doi
     mds_doi_response = mds_client.doi_post(doi, url)
     print(mds_doi_response)
+
+
+def confirm_upload():
+    print('Registering a DOI with DataCite is permanent. Please type "yes" to confirm.')
+    return input().lower() == 'yes'
