@@ -407,7 +407,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
 
     if file:
         logger.debug('skip file %s', path)
-        if uuid is not None and file.id != uuid:
+        if uuid is not None and str(file.id) != uuid:
             raise RuntimeError(f'File {path} is already stored with the same version, but a different id')
         if file.name != name:
             raise RuntimeError(f'File {path} is already stored with the same version, but a different name')
