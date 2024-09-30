@@ -6,6 +6,7 @@ from math import isnan
 from pathlib import Path
 from uuid import uuid4
 
+from deepdiff import DeepDiff
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -417,7 +418,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             raise RuntimeError(f'File {path} is already stored with the same version, but a different checksum')
         if file.checksum_type != checksum_type:
             raise RuntimeError(f'File {path} is already stored with the same version, but a different checksum_type')
-        if file.netcdf_header != netcdf_header:
+        if DeepDiff(file.netcdf_header, netcdf_header, ignore_numeric_type_changes=False):
             raise RuntimeError(f'File {path} is already stored with the same version, but a different netcdf_header')
         if file.specifiers != specifiers:
             raise RuntimeError(f'File {path} is already stored with the same version, but different specifiers')
@@ -515,7 +516,7 @@ def insert_file_link(session, version, target_file_path, dataset_path,
         if file.checksum_type != checksum_type:
             raise RuntimeError(f'File link {path} is already stored with the same version,'
                                 ' but a different checksum_type')
-        if file.netcdf_header != netcdf_header:
+        if DeepDiff(file.netcdf_header, netcdf_header, ignore_numeric_type_changes=False):
             raise RuntimeError(f'File link {path} is already stored with the same version,'
                                 ' but a different netcdf_header')
         if file.specifiers != specifiers:
