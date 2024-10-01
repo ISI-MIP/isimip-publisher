@@ -389,6 +389,12 @@ def retrieve_datasets(session, path, public=None, follow=False, like=True):
     return datasets
 
 
+def check_file_id(session, path, uuid):
+    file = session.query(File).filter(File.id == uuid).one_or_none()
+    if file:
+        raise RuntimeError(f'File {path} has an id which already exists in the database ({uuid})')
+
+
 def insert_file(session, version, dataset_path, uuid, name, path, size,
                 checksum, checksum_type, netcdf_header, specifiers):
     # get the dataset from the database

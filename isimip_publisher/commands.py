@@ -213,6 +213,10 @@ def insert_datasets():
 
     session = database.init_database_session(settings.DATABASE)
 
+    for dataset in store.datasets:
+        for file in dataset.files:
+            database.check_file_id(session, file.path, file.uuid)
+
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
         database.insert_dataset(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED,
                                 dataset.name, dataset.path, dataset.size, dataset.specifiers)
