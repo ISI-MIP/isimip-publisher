@@ -52,6 +52,10 @@ def list_links(base_path, path, remote_dest=None, suffix=None):
     return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type='l')
 
 
+def list_all(base_path, path, remote_dest=None, suffix=None):
+    return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type=None)
+
+
 def filter_links(public_path, target_path, path, links):
     filtered_links = []
     for link_path in links:

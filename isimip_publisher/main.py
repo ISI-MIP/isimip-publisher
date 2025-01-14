@@ -97,6 +97,8 @@ def get_parser(add_path=False, add_subparsers=False):
                          help='Skip the registration of the DOI when inserting/updating a resource')
     parser.add_argument('--skip-checksum', dest='skip_checksum', action='store_true', default=False,
                          help='Skip the computation of the checksum when checking')
+    parser.add_argument('--resolve-links', dest='resolve_links', action='store_true', default=False,
+                         help='Resolve remote links as if they were files')
     parser.add_argument('--log-level', dest='log_level', default='WARN',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',

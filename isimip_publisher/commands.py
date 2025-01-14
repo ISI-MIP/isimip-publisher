@@ -154,8 +154,13 @@ def count_public_links():
 
 
 def fetch_files():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    if settings.RESOLVE_LINKS:
+        remote_files = files.list_all(settings.REMOTE_PATH, settings.PATH,
+                                      remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    else:
+        remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
+                                        remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
