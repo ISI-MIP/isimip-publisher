@@ -9,7 +9,6 @@ jobs:
     strategy:
       matrix:
         mock: [true, false]
-        python-version: ['3.8', '3.11']
 
     services:
       postgres:
@@ -27,10 +26,10 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.13
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.13
     - name: Set up ssh
       run: |
         ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -C "" -q
@@ -66,7 +65,7 @@ jobs:
         coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+        COVERALLS_FLAG_NAME: 3.13
         COVERALLS_PARALLEL: true
 
   coveralls:
