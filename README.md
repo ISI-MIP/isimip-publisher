@@ -2,7 +2,7 @@ ISIMIP publisher
 ================
 
 [![Latest release](https://shields.io/github/v/release/ISI-MIP/isimip-publisher)](https://github.com/ISI-MIP/isimip-publisher/releases)
-[![Python Version](https://img.shields.io/badge/python->=3.8-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.13-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/ISI-MIP/django-datacite/blob/master/LICENSE)
 [![pytest Workflow Status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ISI-MIP/isimip-publisher/badge.svg?branch=master)](https://coveralls.io/github/ISI-MIP/isimip-publisher?branch=master)
