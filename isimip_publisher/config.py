@@ -54,6 +54,12 @@ class Settings(BaseSettings):
         return Path(self.PUBLIC_DIR).expanduser()
 
     @cached_property
+    def RESTRICTED_PATH(self):
+        if self.RESTRICTED_DIR is None:
+            raise RuntimeError('RESTRICTED_DIR is not set')
+        return Path(self.RESTRICTED_DIR).expanduser()
+
+    @cached_property
     def ARCHIVE_PATH(self):
         if self.ARCHIVE_DIR is None:
             raise RuntimeError('ARCHIVE_DIR is not set')
