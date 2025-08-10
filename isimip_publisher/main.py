@@ -66,6 +66,8 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Local work directory')
     parser.add_argument('--public-dir', dest='public_dir',
                         help='Public directory')
+    parser.add_argument('--restricted-dir', dest='restricted_dir',
+                        help='Restricted directory')
     parser.add_argument('--archive-dir', dest='archive_dir',
                         help='Archive directory')
     parser.add_argument('--database', dest='database',
