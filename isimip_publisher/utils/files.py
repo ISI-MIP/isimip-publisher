@@ -98,7 +98,7 @@ def copy_files(remote_dest, remote_path, local_path, path, datasets):
         destination = (local_path / path).as_posix() + os.path.sep
         args = [
             'rsync', '-aviL',
-            '--include=*/', '--include-from=%s' % include_file, '--exclude=*',
+            '--include=*/', f'--include-from={include_file}', '--exclude=*',
             source, destination
         ]
         logger.debug('args = %s', args)

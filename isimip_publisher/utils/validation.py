@@ -24,8 +24,8 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
     if len(datasets) != len(db_datasets):
         logger.error(f'Length mismatch {len(datasets)} != {len(db_datasets)}')
 
-    for dataset, db_dataset in zip(datasets, db_datasets):
-        for file, db_file in zip(dataset.files, db_dataset.files):
+    for dataset, db_dataset in zip(datasets, db_datasets, strict=True):
+        for file, db_file in zip(dataset.files, db_dataset.files, strict=True):
             # check the actual file
             file_path = Path(file.abspath)
             if file_path.is_file():
@@ -35,7 +35,8 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
 
                     # check file checksum consitency
                     if computed_checksum != db_file.checksum:
-                        logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} for file {db_file.path}')
+                        logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} '
+                                      'for file {db_file.path}')
 
                 # check file path consitency
                 if file.path != db_file.path:
