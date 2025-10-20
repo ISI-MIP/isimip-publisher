@@ -23,10 +23,7 @@ dependencies = [
     "deepdiff>=8.0.0",
     "isimip-utils>=1.2",
     "jsonschema>=3.2.0",
-    "netCDF4>=1.5.6",
     "psycopg2-binary>=2.8.6",
-    "python-dotenv==0.16.0",
-    "requests>=2.25.1",
     "SQLAlchemy>=1.4.2",
     "tqdm>=4.59.0",
 ]
@@ -62,7 +59,7 @@ version = { attr = "isimip_publisher.__version__" }
 python_files = "test_*.py"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py312"
 line-length = 120
 select = [
     "B",    # flake8-bugbear

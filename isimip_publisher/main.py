@@ -1,6 +1,6 @@
 from datetime import date
 
-from isimip_utils.parser import ArgumentParser
+from isimip_utils.cli import ArgumentParser, parse_filelist, parse_version, setup_logs
 
 from .commands import (
     archive_datasets,
@@ -44,18 +44,14 @@ from .commands import (
 from .config import RIGHTS_CHOICES, settings
 
 
-def get_parser(add_path=False, add_subparsers=False):
+def main():
     parser = ArgumentParser(prog='isimip-publisher')
 
-    parser.add_argument('--config-file', dest='config_file',
-                        help='File path of the config file')
-
-    parser.add_argument('-i', '--include', dest='include_file',
+    parser.add_argument('-i', '--include', dest='include', type=parse_filelist,
                         help='Path to a file containing a list of files to include')
-    parser.add_argument('-e', '--exclude', dest='exclude_file',
+    parser.add_argument('-e', '--exclude', dest='exclude', type=parse_filelist,
                         help='Path to a file containing a list of files to exclude')
-    parser.add_argument('-v', '--version', dest='version',
-                        default=date.today().strftime('%Y%m%d'),
+    parser.add_argument('-v', '--version', dest='version', type=parse_version, default=date.today().strftime('%Y%m%d'),
                         help='Version date override [default: today]')
 
     parser.add_argument('--remote-dest', dest='remote_dest',
@@ -83,13 +79,13 @@ def get_parser(add_path=False, add_subparsers=False):
                         help='Username for DataCite')
     parser.add_argument('--datacite-password', dest='datacite_password',
                         help='Password for DataCite')
-    parser.add_argument('--datacite-prefix', dest='datacite_prefix',
+    parser.add_argument('--datacite-prefix', dest='datacite_prefix', type=str,
                         default='10.48364',
                         help='Prefix for DataCite')
     parser.add_argument('--datacite-test-mode', dest='datacite_test_mode', action='store_true', default=False,
                         help='If set to True, the test version of DataCite is used')
-    parser.add_argument('--isimip-data-url', dest='isimip_data_url',
-                        default='https://data.isimip.org/',
+    parser.add_argument('--isimip-data-url', dest='isimip_data_url', type=lambda p: p.rstrip('/'),
+                        default='https://data.isimip.org',
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
     parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
                         help='Rights/license for the files [default: None]')
@@ -106,73 +102,58 @@ def get_parser(add_path=False, add_subparsers=False):
     parser.add_argument('--log-file', dest='log_file',
                         help='Path to the log file')
 
-    if add_subparsers:
-        subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
+    subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
-        # add a subparser for each subcommand
-        for func in [list_remote, list_remote_links, list_local, list_public, list_public_links,
-                     match_remote, match_remote_links, match_local, match_public, match_public_links,
-                     count_remote, count_remote_links, count_local, count_public, count_public_links,
-                     fetch_files, write_local_jsons, write_public_jsons,
-                     insert_datasets, update_datasets, publish_datasets, archive_datasets,
-                     diff_remote, diff_remote_links, check, clean, update_search, update_tree, run]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('path', help='path of the files to process')
+    # add a subparser for each subcommand
+    for command in [list_remote, list_remote_links, list_local, list_public, list_public_links,
+                 match_remote, match_remote_links, match_local, match_public, match_public_links,
+                 count_remote, count_remote_links, count_local, count_public, count_public_links,
+                 fetch_files, write_local_jsons, write_public_jsons,
+                 insert_datasets, update_datasets, publish_datasets, archive_datasets,
+                 diff_remote, diff_remote_links, check, clean, update_search, update_tree, run]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('path', help='path of the files to process')
 
-        for func in [insert_doi]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
-            subparser.add_argument('paths', nargs='+', help='paths of the datasets to process')
+    for command in [insert_doi]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
+        subparser.add_argument('paths', nargs='+', help='paths of the datasets to process')
 
-        for func in [update_doi]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
+    for command in [update_doi]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('RESOURCE_LOCATION', help='JSON file with DataCite metadata')
 
-        for func in [register_doi]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('doi', help='DOI to process')
+    for command in [register_doi]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('doi', help='DOI to process')
 
-        for func in [check_doi]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('path', help='path of the datasets to check')
+    for command in [check_doi]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('path', help='path of the datasets to check')
 
-        for func in [link_links, link_files, link_datasets, link, write_link_jsons]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
-            subparser.add_argument('target_path', help='path of the files to process')
-            subparser.add_argument('path', help='path for the links')
+    for command in [link_links, link_files, link_datasets, link, write_link_jsons]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
+        subparser.add_argument('target_path', help='path of the files to process')
+        subparser.add_argument('path', help='path for the links')
 
-        for func in [init, update_views]:
-            subparser = subparsers.add_parser(func.__name__)
-            subparser.set_defaults(func=func)
+    for command in [init, update_views]:
+        subparser = subparsers.add_parser(command.__name__)
+        subparser.set_defaults(command=command)
 
-    return parser
+    args = parser.parse_args()
 
+    setup_logs(log_level=args.log_level, log_file=args.log_file)
 
-def init_settings(config_file=None, **kwargs):
-    parser = get_parser()
-    parser.config_file = config_file
-    args = parser.get_defaults()
-    args.update(kwargs)
-    settings.setup(args)
-    return settings
+    settings.from_dict(vars(args))
 
-
-def main():
-    parser = get_parser(add_subparsers=True)
-    args = vars(parser.parse_args())
-    settings.setup(args)
-
-    if hasattr(settings, 'FUNC'):
-        try:
-            settings.FUNC()
-        except RuntimeError as e:
-            parser.error(e)
+    if hasattr(args, 'command'):
+        args.command()
     else:
         parser.print_help()
 
