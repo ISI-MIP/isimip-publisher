@@ -34,7 +34,9 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
                     computed_checksum = get_checksum(file.abspath, file.checksum_type)
 
                     # check file checksum consitency
-                    if computed_checksum != db_file.checksum:
+                    if computed_checksum == db_file.checksum:
+                        logger.info(f'Checksum match for file {db_file.path}')
+                    else:
                         logger.error(f'Checksum mismatch {file.checksum} != {computed_checksum} '
                                       'for file {db_file.path}')
 
