@@ -2,6 +2,7 @@ from datetime import date
 
 from isimip_utils.cli import ArgumentParser, parse_filelist, parse_version, setup_logs
 
+from . import VERSION
 from .commands import (
     archive_datasets,
     check,
@@ -101,6 +102,7 @@ def main():
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',
                         help='Path to the log file')
+    parser.add_argument('-V', action='version', version=VERSION)
 
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands')
 
