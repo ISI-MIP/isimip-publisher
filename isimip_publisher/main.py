@@ -1,6 +1,6 @@
 from datetime import date
 
-from isimip_utils.cli import ArgumentParser, parse_filelist, parse_version, setup_logs
+from isimip_utils.cli import ArgumentParser, parse_filelist, parse_locations, parse_version, setup_logs
 
 from . import VERSION
 from .commands import (
@@ -72,8 +72,8 @@ def main():
     parser.add_argument('--mock', dest='mock', action='store_true', default=False,
                         help='If set to True, no files are actually copied. Empty mock files are used instead')
     parser.add_argument('--restricted', dest='restricted', action='store_true', default=False,
-                        help='If set to True, the files are flaged as restricted in the database.')
-    parser.add_argument('--protocol-location', dest='protocol_locations',
+                        help='If set to True, the files are flagged as restricted in the database.')
+    parser.add_argument('--protocol-location', dest='protocol_locations', type=parse_locations,
                         default='https://protocol.isimip.org https://protocol2.isimip.org',
                         help='URL or file path to the protocol')
     parser.add_argument('--datacite-username', dest='datacite_username',

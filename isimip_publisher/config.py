@@ -4,7 +4,7 @@ from pathlib import Path
 from isimip_utils.config import Settings as BaseSettings
 from isimip_utils.config import Singleton
 from isimip_utils.exceptions import ConfigError
-from isimip_utils.fetch import fetch_definitions, fetch_pattern, fetch_resource, fetch_schema, fetch_tree
+from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_resource, fetch_schema, fetch_tree
 from isimip_utils.utils import cached_property
 
 logger = logging.getLogger(__name__)
@@ -72,25 +72,25 @@ class Settings(BaseSettings):
     def DEFINITIONS(self):
         if self.PROTOCOL_LOCATIONS is None:
             raise ConfigError('PROTOCOL_LOCATIONS is not set')
-        return fetch_definitions(self.PATH, self.PROTOCOL_LOCATIONS.split())
+        return fetch_definitions(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def PATTERN(self):
         if self.PROTOCOL_LOCATIONS is None:
             raise ConfigError('PROTOCOL_LOCATIONS is not set')
-        return fetch_pattern(self.PATH, self.PROTOCOL_LOCATIONS.split())
+        return fetch_pattern(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def SCHEMA(self):
         if self.PROTOCOL_LOCATIONS is None:
             raise ConfigError('PROTOCOL_LOCATIONS is not set')
-        return fetch_schema(self.PATH, self.PROTOCOL_LOCATIONS.split())
+        return fetch_schema(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def TREE(self):
         if self.PROTOCOL_LOCATIONS is None:
             raise ConfigError('PROTOCOL_LOCATIONS is not set')
-        return fetch_tree(self.PATH, self.PROTOCOL_LOCATIONS.split())
+        return fetch_tree(self.PATH, self.PROTOCOL_LOCATIONS)
 
 
 class Store(Singleton):
