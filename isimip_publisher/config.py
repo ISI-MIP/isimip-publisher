@@ -4,7 +4,8 @@ from pathlib import Path
 from isimip_utils.config import Settings as BaseSettings
 from isimip_utils.config import Singleton
 from isimip_utils.exceptions import ConfigError
-from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_resource, fetch_schema, fetch_tree
+from isimip_utils.fetch import fetch_json
+from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_schema, fetch_tree
 from isimip_utils.utils import cached_property
 
 logger = logging.getLogger(__name__)
@@ -66,7 +67,12 @@ class Settings(BaseSettings):
     def RESOURCE(self):
         if self.RESOURCE_LOCATION is None:
             raise ConfigError('RESOURCE_LOCATION is not set')
-        return fetch_resource(self.RESOURCE_LOCATION)
+
+        resource = fetch_json(self.RESOURCE_LOCATION)
+        if resource is None:
+            raise ConfigError(f'No resource found at {settings.RESOURCE_LOCATION}.')
+
+        return resource
 
     @cached_property
     def DEFINITIONS(self):
