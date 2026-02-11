@@ -52,8 +52,8 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
 
                 # check file specifiers consistency
                 if file.specifiers != db_file.specifiers:
-                    logger.error(f'Specifier mismatch {file.specifiers} != {db_file.specifiers}'
-                                 f' for file {db_file.path}')
+                    logger.error(f'Specifier mismatch {format_json(file.specifiers)} !='
+                                 f' {format_json(db_file.specifiers)} for file {db_file.path}')
             else:
                 logger.error(f'{file_path} does not exist')
 
@@ -80,8 +80,8 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
 
                 # check json specifiers consistency
                 if metadata.get('specifiers') != db_file.specifiers:
-                    logger.error(f"JSON specifier mismatch {metadata.get('specifiers')} != {db_file.specifiers} "
-                                 f' for file {db_file.path}')
+                    logger.error(f"JSON specifier mismatch {format_json(metadata.get('specifiers'))} !="
+                                 f' {format_json(db_file.specifiers)} for file {db_file.path}')
             else:
                 logger.error(f'{file_path} does not exist')
 
@@ -91,5 +91,9 @@ def check_datasets(datasets, db_datasets, skip_checksum=False):
 
         # check if the specifiers match
         if dict(dataset.specifiers) != dict(db_dataset.specifiers):
-            logger.error(f'Specifier mismatch {dataset.specifiers} != {db_dataset.specifiers}'
-                         f' for dataset {db_dataset.id}')
+            logger.error(f'Specifier mismatch {format_json(dataset.specifiers)} !='
+                         f' {format_json(db_dataset.specifiers)} for dataset {db_dataset.id}')
+
+
+def format_json(data):
+    return json.dumps({key: data[key] for key in sorted(data.keys())}, indent=2)
