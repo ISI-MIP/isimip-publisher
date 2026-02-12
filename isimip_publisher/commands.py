@@ -381,7 +381,7 @@ def archive_datasets():
                         source_path = settings.PUBLIC_PATH / file.path
                         target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
-                        if source_path.is_file():
+                        if source_path.is_symlink():
                             files.move_file(source_path, target_path)
 
                         if source_path.with_suffix('.json').is_file():
