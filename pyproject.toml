@@ -53,6 +53,10 @@ pytest = [
 [project.scripts]
 isimip-publisher = "isimip_publisher.main:main"
 
+[tool.setuptools.packages.find]
+include = ["isimip_publisher*"]
+exclude = ["isimip_publisher.tests*"]
+
 [tool.setuptools_scm]
 version_scheme = "release-branch-semver"
 
