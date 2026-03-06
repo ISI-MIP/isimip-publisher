@@ -3,5 +3,3 @@ prune isimip_publisher/tests
 prune testing
 
 exclude .env*
-exclude .gitignore
-exclude .pre-commit-config.yaml
