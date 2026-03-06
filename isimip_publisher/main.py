@@ -85,7 +85,7 @@ def main():
                         help='Prefix for DataCite')
     parser.add_argument('--datacite-test-mode', dest='datacite_test_mode', action='store_true', default=False,
                         help='If set to True, the test version of DataCite is used')
-    parser.add_argument('--isimip-data-url', dest='isimip_data_url', type=lambda p: p.rstrip('/'),
+    parser.add_argument('--data-url', dest='data_url', type=lambda p: p.rstrip('/'),
                         default='https://data.isimip.org',
                         help='URL of the ISIMIP repository [default: https://data.isimip.org/]')
     parser.add_argument('--rights', dest='rights', choices=RIGHTS_CHOICES,
