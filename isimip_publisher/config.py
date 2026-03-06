@@ -1,10 +1,11 @@
 import logging
 from pathlib import Path
+from urllib.parse import urlparse
 
 from isimip_utils.config import Settings as BaseSettings
 from isimip_utils.config import Singleton
 from isimip_utils.exceptions import ConfigError
-from isimip_utils.fetch import fetch_json
+from isimip_utils.fetch import fetch_json, load_json
 from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_schema, fetch_tree
 from isimip_utils.utils import cached_property
 
@@ -68,7 +69,11 @@ class Settings(BaseSettings):
         if self.RESOURCE_LOCATION is None:
             raise ConfigError('RESOURCE_LOCATION is not set')
 
-        resource = fetch_json(self.RESOURCE_LOCATION)
+        if not isinstance(self.RESOURCE_LOCATION, Path) and urlparse(self.RESOURCE_LOCATION).scheme:
+            resource = fetch_json(self.RESOURCE_LOCATION)
+        else:
+            resource = load_json(self.RESOURCE_LOCATION)
+
         if resource is None:
             raise ConfigError(f'No resource found at {settings.RESOURCE_LOCATION}.')
 
