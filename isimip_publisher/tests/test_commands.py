@@ -19,7 +19,7 @@ def setup():
 def remote_files():
     base_path = Path(__file__).parent.parent.parent
     nc_path = base_path / 'testing' / 'files'
-    remote_path = base_path / 'testing' / os.getenv('REMOTE_DIR')
+    remote_path = base_path / 'testing' / os.getenv('ISIMIP_REMOTE_DIR')
 
     shutil.rmtree(remote_path, ignore_errors=True)
     shutil.copytree(nc_path, remote_path)
@@ -29,7 +29,7 @@ def remote_files():
 def remote_links():
     base_path = Path(__file__).parent.parent.parent
     nc_path = base_path / 'testing' / 'files'
-    remote_path = base_path / 'testing' / os.getenv('REMOTE_DIR')
+    remote_path = base_path / 'testing' / os.getenv('ISIMIP_REMOTE_DIR')
 
     shutil.rmtree(remote_path, ignore_errors=True)
     shutil.copytree(nc_path, remote_path, symlinks=True)
@@ -39,7 +39,7 @@ def remote_links():
 def local_files():
     base_path = Path(__file__).parent.parent.parent
     files_path = base_path / 'testing' / 'files'
-    local_path = base_path / 'testing' / os.getenv('LOCAL_DIR')
+    local_path = base_path / 'testing' / os.getenv('ISIMIP_LOCAL_DIR')
 
     shutil.rmtree(local_path, ignore_errors=True)
     shutil.copytree(files_path, local_path)
@@ -49,7 +49,7 @@ def local_files():
 def public_files():
     base_path = Path(__file__).parent.parent.parent
     files_path = base_path / 'testing' / 'files'
-    public_path = base_path / 'testing' / os.getenv('PUBLIC_DIR')
+    public_path = base_path / 'testing' / os.getenv('ISIMIP_PUBLIC_DIR')
 
     shutil.rmtree(public_path, ignore_errors=True)
     shutil.copytree(files_path, public_path)
@@ -59,7 +59,7 @@ def public_files():
 def public_links():
     base_path = Path(__file__).parent.parent.parent
     files_path = base_path / 'testing' / 'files'
-    public_path = base_path / 'testing' / os.getenv('PUBLIC_DIR')
+    public_path = base_path / 'testing' / os.getenv('ISIMIP_PUBLIC_DIR')
 
     shutil.rmtree(public_path, ignore_errors=True)
     shutil.copytree(files_path, public_path, symlinks=True)
@@ -69,7 +69,7 @@ def public_links():
 def archive_files():
     base_path = Path(__file__).parent.parent.parent
     files_path = base_path / 'testing' / 'files'
-    archive_path = base_path / 'testing' / os.getenv('ARCHIVE_DIR')
+    archive_path = base_path / 'testing' / os.getenv('ISIMIP_ARCHIVE_DIR')
 
     shutil.rmtree(archive_path, ignore_errors=True)
     shutil.copytree(files_path, archive_path)
@@ -77,7 +77,7 @@ def archive_files():
 
 @pytest.fixture()
 def db():
-    session = init_database_session(os.getenv('DATABASE'))
+    session = init_database_session(os.getenv('ISIMIP_DATABASE'))
     engine = session.get_bind()
 
     with engine.connect() as conn:
@@ -90,7 +90,7 @@ def db():
 @pytest.fixture()
 def local_datasets():
     base_path = Path(__file__).parent.parent.parent
-    session = init_database_session(os.getenv('DATABASE'))
+    session = init_database_session(os.getenv('ISIMIP_DATABASE'))
     engine = session.get_bind()
 
     version = datetime.now().date().strftime('%Y%m%d')
@@ -114,7 +114,7 @@ def local_datasets():
 @pytest.fixture()
 def public_datasets():
     base_path = Path(__file__).parent.parent.parent
-    session = init_database_session(os.getenv('DATABASE'))
+    session = init_database_session(os.getenv('ISIMIP_DATABASE'))
     engine = session.get_bind()
 
     with engine.connect() as conn:
@@ -127,7 +127,7 @@ def public_datasets():
 @pytest.fixture()
 def resources():
     base_path = Path(__file__).parent.parent.parent
-    session = init_database_session(os.getenv('DATABASE'))
+    session = init_database_session(os.getenv('ISIMIP_DATABASE'))
     engine = session.get_bind()
 
     with engine.connect() as conn:
@@ -302,7 +302,7 @@ def test_update_datasets(setup, public_files, db, public_datasets, script_runner
 def test_archive_datasets_yes(setup, db, mocker, public_datasets, script_runner):
     mocker.patch('builtins.input', return_value='yes')
 
-    response = script_runner.run('isimip-publisher', 'archive_datasets', 'round/product/sector/model')
+    response = script_runner.run(['isimip-publisher', 'archive_datasets', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert response.stdout.strip().startswith('Archiving')
     assert response.stderr.strip().startswith('archive_datasets')
