@@ -1,7 +1,10 @@
+exclude: \.(svg|sql)$
+
 repos:
   - repo: meta
     hooks:
       - id: check-hooks-apply
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -12,12 +15,12 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.15.5
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.39.2
+    rev: v1.44.0
     hooks:
     - id: typos
