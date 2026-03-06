@@ -9,7 +9,6 @@ ISIMIP publisher
 
 A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
 
-
 Setup
 -----
 
@@ -87,7 +86,7 @@ optional arguments:
   --mock MOCK           If set to True, no files are actually copied. Empty mock files are used
                         instead
   --restricted RESTRICTED
-                        If set to True, the files are flaged as restricted in the database.
+                        If set to True, the files are flagged as restricted in the database.
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --datacite-username DATACITE_USERNAME
@@ -134,7 +133,7 @@ isimip-publisher write_local_jsons <path>
 # finds dataset and file and ingest their metadata into the database
 isimip-publisher ingest_datasets <path>
 
-# copy files from LOCAL_DIR to PUPLIC_DIR
+# copy files from LOCAL_DIR to PUBLIC_DIR
 isimip-publisher publish_datasets <path>
 
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
@@ -157,7 +156,7 @@ isimip-publisher register_doi <DOI>
 isimip-publisher run <path>
 ```
 
-For all commands a list of files with absolute pathes (as line separated txt file) can be provided to restrict the files processed, e.g.:
+For all commands a list of files with absolute paths (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
 isimip-publisher -e exclude.txt -i include.txt run <path>
@@ -295,7 +294,7 @@ The database schema is automatically created when `insert_datasets` or `init` is
  updated  | timestamp without time zone |           |          |
 ```
 
-The many-to-many relation between `datasets` and `resources` is implemented using a seperate table:
+The many-to-many relation between `datasets` and `resources` is implemented using a separate table:
 
 ```
           Table "public.resources_datasets"
