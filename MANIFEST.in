@@ -1,5 +1,0 @@
-prune .github
-prune isimip_publisher/tests
-prune testing
-
-exclude .env*
