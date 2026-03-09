@@ -37,12 +37,6 @@ dynamic = ["version"]
 Repository = "https://github.com/ISI-MIP/isimip-publisher"
 
 [project.optional-dependencies]
-dev = [
-    "build",
-    "pre-commit",
-    "ruff",
-    "twine",
-]
 pytest = [
     "pytest~=7.4.0",
     "pytest-console-scripts~=1.4.1",
