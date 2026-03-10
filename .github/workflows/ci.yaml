@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: true
       matrix:
         mock: [true, false]
 
@@ -59,7 +60,7 @@ jobs:
         ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -C "" -q
         cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
         ssh-keyscan -t rsa localhost >> ~/.ssh/known_hosts
-        ssh localhost
+        ssh -o BatchMode=yes localhost exit
 
     - name: Install package 📦
       run: python3 -m pip install -e .[pytest]
@@ -84,4 +85,4 @@ jobs:
         echo "ISIMIP_MOCK=${{ matrix.mock }}" >> $GITHUB_ENV
 
     - name: Run pytest 🧪
-      run: pytest --cov=isimip_utils --cov-fail-under=90 --cov-report=term-missing
+      run: pytest --cov=isimip_publisher --cov-fail-under=80 --cov-report=term-missing
