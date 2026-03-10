@@ -72,8 +72,6 @@ jobs:
 
     - name: Setup environment file 🏞️
       run: |
-        echo "ISIMIP_LOG_LEVEL=DEBUG" >> $GITHUB_ENV
-        echo "ISIMIP_LOG_FILE=isimip-publisher.log" >> $GITHUB_ENV
         echo "ISIMIP_REMOTE_DEST=localhost" >> $GITHUB_ENV
         echo "ISIMIP_REMOTE_DIR=${GITHUB_WORKSPACE}/testing/remote/" >> $GITHUB_ENV
         echo "ISIMIP_LOCAL_DIR=${GITHUB_WORKSPACE}/testing/local/" >> $GITHUB_ENV
