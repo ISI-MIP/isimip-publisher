@@ -1,4 +1,4 @@
-name: pytest
+name: CI
 
 on:
   push:
@@ -62,11 +62,7 @@ jobs:
         ssh localhost
 
     - name: Install package 📦
-      run: |
-        python3 -m pip install --upgrade pip setuptools
-        python3 -m pip install coveralls
-        python3 -m pip install -e .
-        python3 -m pip install -e .[pytest]
+      run: python3 -m pip install -e .[pytest]
 
     - name: Prepare database 🗄️
       run: |
@@ -88,22 +84,4 @@ jobs:
         echo "ISIMIP_MOCK=${{ matrix.mock }}" >> $GITHUB_ENV
 
     - name: Run pytest 🧪
-      run: |
-        pytest --cov=isimip_publisher
-        coveralls --service=github
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_FLAG_NAME: "${{ env.PYTHON_VERSION }}-mock-${{ matrix.mock }}"
-        COVERALLS_PARALLEL: true
-
-  coveralls:
-    needs: pytest
-    runs-on: ubuntu-latest
-    container: python:3-slim
-    steps:
-    - name: Run coveralls finish
-      run: |
-        pip install coveralls
-        coveralls --service=github --finish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: pytest --cov=isimip_utils --cov-fail-under=90 --cov-report=term-missing
