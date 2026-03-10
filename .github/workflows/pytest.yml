@@ -1,10 +1,29 @@
 name: pytest
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+    - test
+    tags:
+    - "*"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: 1
+  FORCE_COLOR: 1
+  PYTHON_VERSION: "3.11"
 
 jobs:
   pytest:
-    runs-on: ubuntu-22.04
+    name: Run tests 🧪
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -24,48 +43,57 @@ jobs:
           --health-retries 5
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v4
+    - name: Checkout repo 🛎️
+      uses: actions/checkout@v6
       with:
-        python-version: 3.13
-    - name: Set up ssh
+        persist-credentials: false
+
+    - name: Set up Python 🐍
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+
+    - name: Set up ssh 🛜
       run: |
         ssh-keygen -t rsa -f ~/.ssh/id_rsa -N "" -C "" -q
         cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
         ssh-keyscan -t rsa localhost >> ~/.ssh/known_hosts
         ssh localhost
-    - name: Install package
+
+    - name: Install package 📦
       run: |
         python3 -m pip install --upgrade pip setuptools
         python3 -m pip install coveralls
         python3 -m pip install -e .
         python3 -m pip install -e .[pytest]
-    - name: Prepare database
+
+    - name: Prepare database 🗄️
       run: |
         psql postgres://postgres:postgres_password@localhost -c 'CREATE DATABASE test_isimip_metadata;'
         psql postgres://postgres:postgres_password@localhost/test_isimip_metadata -c 'CREATE EXTENSION pg_trgm;'
-    - name: Setup environment file
+
+    - name: Setup environment file 🏞️
       run: |
-        echo "LOG_LEVEL=DEBUG" >> $GITHUB_ENV
-        echo "LOG_FILE=isimip-publisher.log" >> $GITHUB_ENV
-        echo "REMOTE_DEST=localhost" >> $GITHUB_ENV
-        echo "REMOTE_DIR=${GITHUB_WORKSPACE}/testing/remote/" >> $GITHUB_ENV
-        echo "LOCAL_DIR=${GITHUB_WORKSPACE}/testing/local/" >> $GITHUB_ENV
-        echo "PUBLIC_DIR=${GITHUB_WORKSPACE}/testing/public/" >> $GITHUB_ENV
-        echo "ARCHIVE_DIR=${GITHUB_WORKSPACE}/testing/archive/" >> $GITHUB_ENV
-        echo "DATABASE=postgresql+psycopg2://postgres:postgres_password@localhost/test_isimip_metadata" >> $GITHUB_ENV
-        echo "PROTOCOL_LOCATIONS=${GITHUB_WORKSPACE}/testing/protocol/" >> $GITHUB_ENV
+        echo "ISIMIP_LOG_LEVEL=DEBUG" >> $GITHUB_ENV
+        echo "ISIMIP_LOG_FILE=isimip-publisher.log" >> $GITHUB_ENV
+        echo "ISIMIP_REMOTE_DEST=localhost" >> $GITHUB_ENV
+        echo "ISIMIP_REMOTE_DIR=${GITHUB_WORKSPACE}/testing/remote/" >> $GITHUB_ENV
+        echo "ISIMIP_LOCAL_DIR=${GITHUB_WORKSPACE}/testing/local/" >> $GITHUB_ENV
+        echo "ISIMIP_PUBLIC_DIR=${GITHUB_WORKSPACE}/testing/public/" >> $GITHUB_ENV
+        echo "ISIMIP_ARCHIVE_DIR=${GITHUB_WORKSPACE}/testing/archive/" >> $GITHUB_ENV
+        echo "ISIMIP_DATABASE=postgresql+psycopg2://postgres:postgres_password@localhost/test_isimip_metadata" >> $GITHUB_ENV
+        echo "ISIMIP_PROTOCOL_LOCATIONS=${GITHUB_WORKSPACE}/testing/protocol/" >> $GITHUB_ENV
         echo "ISIMIP_DATA_URL=http://localhost:8000/" >> $GITHUB_ENV
-        echo "MOCK=${{ matrix.mock }}" >> $GITHUB_ENV
-    - name: Run pytest
+        echo "ISIMIP_MOCK=${{ matrix.mock }}" >> $GITHUB_ENV
+
+    - name: Run pytest 🧪
       run: |
         pytest --cov=isimip_publisher
         coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_FLAG_NAME: 3.13
+        COVERALLS_FLAG_NAME: "${{ env.PYTHON_VERSION }}-mock-${{ matrix.mock }}"
         COVERALLS_PARALLEL: true
 
   coveralls:

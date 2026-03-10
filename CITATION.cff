@@ -1,12 +1,13 @@
 cff-version: 1.2.0
+message: If you use this software in your research, please cite it using the provided Digital Object Identifier (DOI).
+
 title: ISIMIP publisher
-message: >-
-  If you use this software, please cite it using the
-  metadata from this file.
-type: software
+abstract: A command line tool to publish climate impact data from the ISIMIP project.
+
 authors:
   - family-names: Klar
     given-names: Jochen
     orcid: 'https://orcid.org/0000-0002-5883-4273'
-repository-code: 'https://github.com/ISI-MIP/isimip-publisher'
+
 license: MIT
+repository-code: 'https://github.com/ISI-MIP/isimip-publisher'

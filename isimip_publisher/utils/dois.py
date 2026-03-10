@@ -12,11 +12,11 @@ def get_title(datacite):
                 for item in datacite.get('titles', []))
 
 
-def upload_doi(resource, isimip_data_url,
+def upload_doi(resource, data_url,
                datacite_username, datacite_password, datacite_prefix, datacite_test_mode):
     # get the doi and the url
     doi = get_doi(resource.datacite)
-    url = f'{isimip_data_url}/{doi}'
+    url = f'{data_url}/{doi}'
 
     # convert the metadata to xml
     xml = schema43.tostring(resource.datacite)

@@ -31,7 +31,7 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
                 )
 
     # second path: add files to datasets
-    # the full list is used here to include also files for the dataset which are not explicitely included
+    # the full list is used here to include also files for the dataset which are not explicitly included
     # datasets which
     for file in files:
         # construct absolute path
@@ -47,7 +47,7 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
 
         if dataset_path in dataset_dict:
             if not exclude_path(exclude, file):
-                # if the file is not explicitely excluded, match the file pattern
+                # if the file is not explicitly excluded, match the file pattern
                 file_path, file_specifiers = match_file_path(pattern, file_abspath)
                 logger.debug(dataset_specifiers)
                 logger.debug(file_specifiers)

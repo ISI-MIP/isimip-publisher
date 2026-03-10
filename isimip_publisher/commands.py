@@ -381,7 +381,7 @@ def archive_datasets():
                         source_path = settings.PUBLIC_PATH / file.path
                         target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
-                        if source_path.is_file():
+                        if source_path.is_symlink():
                             files.move_file(source_path, target_path)
 
                         if source_path.with_suffix('.json').is_file():
@@ -481,7 +481,7 @@ def insert_doi():
     session.commit()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
-        dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
+        dois.upload_doi(resource, settings.DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
 
@@ -500,7 +500,7 @@ def update_doi():
     session.commit()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
-        dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
+        dois.upload_doi(resource, settings.DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
 
@@ -511,7 +511,7 @@ def register_doi():
     if dois.confirm_upload():
         session = database.init_database_session(settings.DATABASE)
         resource = database.fetch_resource(session, settings.DOI)
-        dois.upload_doi(resource, settings.ISIMIP_DATA_URL,
+        dois.upload_doi(resource, settings.DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
 

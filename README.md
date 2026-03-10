@@ -1,14 +1,12 @@
 ISIMIP publisher
 ================
 
+[![Python Version](https://img.shields.io/badge/python->=3.11-blue)](https://www.python.org/)
+[![License](https://img.shields.io/github/license/ISI-MIP/isimip-publisher?style=flat)](https://github.com/rdmorganiser/isimip-publisher/blob/main/LICENSE)
+[![CI status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yaml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yaml)
 [![Latest release](https://shields.io/github/v/release/ISI-MIP/isimip-publisher)](https://github.com/ISI-MIP/isimip-publisher/releases)
-[![Python Version](https://img.shields.io/badge/python-3.13-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/ISI-MIP/django-datacite/blob/master/LICENSE)
-[![pytest Workflow Status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/pytest.yml)
-[![Coverage Status](https://coveralls.io/repos/github/ISI-MIP/isimip-publisher/badge.svg?branch=master)](https://coveralls.io/github/ISI-MIP/isimip-publisher?branch=master)
 
 A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
-
 
 Setup
 -----
@@ -47,30 +45,26 @@ Usage
 The publisher has several options which can be inspected using the help option `-h, --help`:
 
 ```
-usage: isimip-publisher [-h] [--config-file CONFIG_FILE] [-i INCLUDE_FILE] [-e EXCLUDE_FILE]
-                        [-v VERSION] [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
-                        [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
-                        [--archive-dir ARCHIVE_DIR] [--database DATABASE] [--mock MOCK]
-                        [--restricted RESTRICTED] [--protocol-location PROTOCOL_LOCATIONS]
+usage: isimip-publisher [-h] [-i INCLUDE] [-e EXCLUDE] [-v VERSION] [--remote-dest REMOTE_DEST]
+                        [--remote-dir REMOTE_DIR] [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
+                        [--restricted-dir RESTRICTED_DIR] [--archive-dir ARCHIVE_DIR]
+                        [--database DATABASE] [--mock] [--restricted]
+                        [--protocol-location PROTOCOL_LOCATIONS]
                         [--datacite-username DATACITE_USERNAME]
-                        [--datacite-password DATACITE_PASSWORD]
-                        [--datacite-prefix DATACITE_PREFIX]
-                        [--datacite-test-mode DATACITE_TEST_MODE]
-                        [--isimip-data-url ISIMIP_DATA_URL]
-                        [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}] [--log-level LOG_LEVEL]
-                        [--log-file LOG_FILE]
-                        {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,link_links,link_files,link_datasets,link,init,update_views}
-                        ...
+                        [--datacite-password DATACITE_PASSWORD] [--datacite-prefix DATACITE_PREFIX]
+                        [--datacite-test-mode] [--data-url DATA_URL]
+                        [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}] [--archived]
+                        [--skip-registration] [--skip-checksum] [--resolve-links]
+                        [--log-level LOG_LEVEL] [--log-file LOG_FILE] [-V]
+                        {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,count_remote,count_remote_links,count_local,count_public,count_public_links,fetch_files,write_local_jsons,write_public_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,diff_remote,diff_remote_links,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,check_doi,link_links,link_files,link_datasets,link,write_link_jsons,init,update_views} ...
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  --config-file CONFIG_FILE
-                        File path of the config file
-  -i INCLUDE_FILE, --include INCLUDE_FILE
+  -i, --include INCLUDE
                         Path to a file containing a list of files to include
-  -e EXCLUDE_FILE, --exclude EXCLUDE_FILE
+  -e, --exclude EXCLUDE
                         Path to a file containing a list of files to exclude
-  -v VERSION, --version VERSION
+  -v, --version VERSION
                         Version date override [default: today]
   --remote-dest REMOTE_DEST
                         Remote destination to fetch files from, e.g. user@example.com
@@ -80,14 +74,15 @@ optional arguments:
                         Local work directory
   --public-dir PUBLIC_DIR
                         Public directory
+  --restricted-dir RESTRICTED_DIR
+                        Restricted directory
   --archive-dir ARCHIVE_DIR
                         Archive directory
   --database DATABASE   Database connection string, e.g.
                         postgresql+psycopg2://username:password@host:port/dbname
-  --mock MOCK           If set to True, no files are actually copied. Empty mock files are used
+  --mock                If set to True, no files are actually copied. Empty mock files are used
                         instead
-  --restricted RESTRICTED
-                        If set to True, the files are flaged as restricted in the database.
+  --restricted          If set to True, the files are flagged as restricted in the database.
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --datacite-username DATACITE_USERNAME
@@ -96,20 +91,23 @@ optional arguments:
                         Password for DataCite
   --datacite-prefix DATACITE_PREFIX
                         Prefix for DataCite
-  --datacite-test-mode DATACITE_TEST_MODE
-                        If set to True, the test version of DataCite is used
-  --isimip-data-url ISIMIP_DATA_URL
-                        URL of the ISIMIP repository [default: https://data.isimip.org/]
+  --datacite-test-mode  If set to True, the test version of DataCite is used
+  --data-url DATA_URL   URL of the ISIMIP repository [default: https://data.isimip.org/]
   --rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}
                         Rights/license for the files [default: None]
+  --archived            Check also archived files
+  --skip-registration   Skip the registration of the DOI when inserting/updating a resource
+  --skip-checksum       Skip the computation of the checksum when checking
+  --resolve-links       Resolve remote links as if they were files
   --log-level LOG_LEVEL
                         Log level (ERROR, WARN, INFO, or DEBUG)
   --log-file LOG_FILE   Path to the log file
+  -V                    show program's version number and exit
 
 subcommands:
   valid subcommands
 
-  {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,fetch_files,write_local_jsons,write_public_jsons,write_link_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,link_links,link_files,link_datasets,link,init,update_views}
+  {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,count_remote,count_remote_links,count_local,count_public,count_public_links,fetch_files,write_local_jsons,write_public_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,diff_remote,diff_remote_links,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,check_doi,link_links,link_files,link_datasets,link,write_link_jsons,init,update_views}
 ```
 
 The different steps of the publication process are covered by subcommands, which can be invoked separately.
@@ -134,7 +132,7 @@ isimip-publisher write_local_jsons <path>
 # finds dataset and file and ingest their metadata into the database
 isimip-publisher ingest_datasets <path>
 
-# copy files from LOCAL_DIR to PUPLIC_DIR
+# copy files from LOCAL_DIR to PUBLIC_DIR
 isimip-publisher publish_datasets <path>
 
 # copy files from PUBLIC_DIR to ARCHIVE_DIR
@@ -157,7 +155,7 @@ isimip-publisher register_doi <DOI>
 isimip-publisher run <path>
 ```
 
-For all commands a list of files with absolute pathes (as line separated txt file) can be provided to restrict the files processed, e.g.:
+For all commands a list of files with absolute paths (as line separated txt file) can be provided to restrict the files processed, e.g.:
 
 ```bash
 isimip-publisher -e exclude.txt -i include.txt run <path>
@@ -165,7 +163,7 @@ isimip-publisher -e exclude.txt -i include.txt run <path>
 
 Default values for the optional arguments are set in the code, but can also be provided via:
 
-* a config file given by `--config-file`, or located at `isimip.conf`, `~/.isimip.conf`, or `/etc/isimip.conf`. The config file needs to have a section `isimip-publisher` and uses lower case variables and underscores, e.g.:
+* a config file given by `--config-file`, or located at `isimip.toml`, `~/.isimip.toml`, or `/etc/isimip.toml`. The config file needs to have a section `isimip-publisher` and uses lower case variables and underscores, e.g.:
     ```
     [isimip-publisher]
     log_level = ERROR
@@ -191,14 +189,15 @@ The different functions of the tool can also be used in Python scripts or Jupyte
 the global settings object needs to be initialized, e.g.:
 
 ```python
-from isimip_publisher.main import init_settings
-from isimip_publisher.utils.database import (init_database_session, retrieve_datasets)
+from pathlib import Path
 
-path = 'ISIMIP3b/OutputData/marine-fishery_global'
+from isimip_publisher.config import settings
+from isimip_publisher.utils import database
 
-settings = init_settings(config_file='~/data/isimip/isimip.conf')
+settings_path = Path('isimip.toml').expanduser()
+settings.from_toml(settings_path, section='isimip-publisher')
 
-session = init_database_session(settings.DATABASE)
+session = database.init_database_session(settings.DATABASE)
 
 datasets = retrieve_datasets(session, path)
 
@@ -211,10 +210,12 @@ Test
 Install test dependencies:
 
 ```
-pip install -r requirements/pytest.txt
+pip install -e .[pytest]
 ```
 
 Copy `.env.pytest` to `.env`. This sets the environment variables to the directories in `testing`.
+
+Run `psql < testing/sql/setup.sql` to setup the test database.
 
 Run:
 
@@ -232,114 +233,4 @@ Run tests with `coverage`:
 
 ```bash
 pytest --cov=isimip_publisher
-```
-
-
-Database schema
----------------
-
-The database schema is automatically created when `insert_datasets` or `init` is used the first time. The tool creates 3 main tables, one for the `datasets`, one for the `files` (in each dataset), and one for the `resources`, for which DOI are created.:
-
-```
-                          Table "public.datasets"
-   Column    |            Type             | Collation | Nullable | Default
--------------+-----------------------------+-----------+----------+---------
- id          | uuid                        |           | not null |
- target_id   | uuid                        |           |          |
- name        | text                        |           | not null |
- path        | text                        |           | not null |
- version     | character varying(8)        |           | not null |
- size        | bigint                      |           | not null |
- specifiers  | jsonb                       |           | not null |
- identifiers | text[]                      |           | not null |
- public      | boolean                     |           | not null |
- tree_path   | text                        |           |          |
- rights      | text                        |           |          |
- created     | timestamp without time zone |           |          |
- updated     | timestamp without time zone |           |          |
- published   | timestamp without time zone |           |          |
- archived    | timestamp without time zone |           |          |
-```
-
-```
-                             Table "public.files"
-    Column     |            Type             | Collation | Nullable | Default
----------------+-----------------------------+-----------+----------+---------
- id            | uuid                        |           | not null |
- dataset_id    | uuid                        |           |          |
- target_id     | uuid                        |           |          |
- name          | text                        |           | not null |
- path          | text                        |           | not null |
- version       | character varying(8)        |           | not null |
- size          | bigint                      |           | not null |
- checksum      | text                        |           | not null |
- checksum_type | text                        |           | not null |
- netcdf_header | jsonb                       |           |          |
- specifiers    | jsonb                       |           | not null |
- identifiers   | text[]                      |           | not null |
- created       | timestamp without time zone |           |          |
- updated       | timestamp without time zone |           |          |
-```
-
-```
-                        Table "public.resources"
-  Column  |            Type             | Collation | Nullable | Default
-----------+-----------------------------+-----------+----------+---------
- id       | uuid                        |           | not null |
- doi      | text                        |           | not null |
- title    | text                        |           | not null |
- version  | text                        |           |          |
- paths    | text[]                      |           | not null |
- datacite | jsonb                       |           | not null |
- created  | timestamp without time zone |           |          |
- updated  | timestamp without time zone |           |          |
-```
-
-The many-to-many relation between `datasets` and `resources` is implemented using a seperate table:
-
-```
-          Table "public.resources_datasets"
-   Column    | Type | Collation | Nullable | Default
--------------+------+-----------+----------+---------
- resource_id | uuid |           |          |
- dataset_id  | uuid |           |          |
-```
-
-Additional tables are created for the search and tree functionality of the repository.
-
-```
-                           Table "public.search"
-   Column   |            Type             | Collation | Nullable | Default
-------------+-----------------------------+-----------+----------+---------
- dataset_id | uuid                        |           | not null |
- vector     | tsvector                    |           | not null |
- created    | timestamp without time zone |           |          |
- updated    | timestamp without time zone |           |          |
-```
-
-```
-                           Table "public.trees"
-  Column   |            Type             | Collation | Nullable | Default
------------+-----------------------------+-----------+----------+---------
- id        | uuid                        |           | not null |
- tree_dict | jsonb                       |           | not null |
- created   | timestamp without time zone |           |          |
- updated   | timestamp without time zone |           |          |
-```
-
-Two materialized views are used to allow a fast lookup to all `identifiers` (with the list of corresponding specifiers), as well as all `words` (the list of tokens for the search):
-
-```
-       Materialized view "public.identifiers"
-   Column   | Type | Collation | Nullable | Default
-------------+------+-----------+----------+---------
- identifier | text |           |          |
- specifiers | json |           |          |
-```
-
-```
-        Materialized view "public.words"
- Column | Type | Collation | Nullable | Default
---------+------+-----------+----------+---------
- word   | text |           |          |
 ```

@@ -381,7 +381,7 @@ def retrieve_datasets(session, path, public=None, follow=False, like=True):
         else:
             datasets.append(dataset)
 
-    # sort datasets and files (using python to have a consistant order) and return
+    # sort datasets and files (using python to have a consistent order) and return
     datasets = sorted(datasets, key=lambda d: d.path)
     for dataset in datasets:
         dataset.files = sorted(dataset.files, key=lambda f: f.path)
@@ -720,13 +720,13 @@ def clean_tree(session):
     # step 1: get the tree
     database_tree = session.query(Tree).one_or_none()
 
-    # step 2: get all dataset tree_pathes as as set
-    tree_pathes = {row[0] for row in session.query(Dataset).filter(
+    # step 2: get all dataset tree_paths as as set
+    tree_paths = {row[0] for row in session.query(Dataset).filter(
         Dataset.public == True  # noqa: E712
     ).values(column('tree_path'))}
 
     clean_tree_dict = {}
-    for tree_path in tree_pathes:
+    for tree_path in tree_paths:
         if tree_path:
             specifiers = Path(tree_path).parts
             clean_tree_dict = build_clean_tree_dict(database_tree.tree_dict, clean_tree_dict, specifiers)

@@ -1,11 +1,13 @@
 import logging
-from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 from isimip_utils.config import Settings as BaseSettings
-from isimip_utils.decorators import cached_property
-from isimip_utils.fetch import fetch_definitions, fetch_pattern, fetch_resource, fetch_schema, fetch_tree
-from isimip_utils.utils import parse_filelist
+from isimip_utils.config import Singleton
+from isimip_utils.exceptions import ConfigError
+from isimip_utils.fetch import fetch_json, load_json
+from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_schema, fetch_tree
+from isimip_utils.utils import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +20,7 @@ RIGHTS_CHOICES = [
     'BY-NC-SA'
 ]
 
-
 class Settings(BaseSettings):
-
-    def setup(self, args):
-        super().setup(args)
-
-        if self.ISIMIP_DATA_URL is not None:
-            self.ISIMIP_DATA_URL = self.ISIMIP_DATA_URL.rstrip('/')
-
-        if self.RIGHTS not in RIGHTS_CHOICES:
-            raise RuntimeError('Incorrect rights "%s": choose from %s', self.RIGHTS, RIGHTS_CHOICES)
-
-        try:
-            datetime.strptime(self.VERSION, '%Y%m%d')
-        except ValueError as e:
-            raise RuntimeError('Incorrect version format, should be YYYYMMDD') from e
 
     @cached_property
     def REMOTE_PATH(self):
@@ -62,16 +49,8 @@ class Settings(BaseSettings):
     @cached_property
     def ARCHIVE_PATH(self):
         if self.ARCHIVE_DIR is None:
-            raise RuntimeError('ARCHIVE_DIR is not set')
+            raise ConfigError('ARCHIVE_DIR is not set')
         return Path(self.ARCHIVE_DIR).expanduser()
-
-    @cached_property
-    def EXCLUDE(self):
-        return parse_filelist(self.EXCLUDE_FILE)
-
-    @cached_property
-    def INCLUDE(self):
-        return parse_filelist(self.INCLUDE_FILE)
 
     @cached_property
     def TARGET_EXCLUDE(self):
@@ -88,41 +67,45 @@ class Settings(BaseSettings):
     @cached_property
     def RESOURCE(self):
         if self.RESOURCE_LOCATION is None:
-            raise RuntimeError('RESOURCE_LOCATION is not set')
-        return fetch_resource(self.RESOURCE_LOCATION)
+            raise ConfigError('RESOURCE_LOCATION is not set')
+
+        if not isinstance(self.RESOURCE_LOCATION, Path) and urlparse(self.RESOURCE_LOCATION).scheme:
+            resource = fetch_json(self.RESOURCE_LOCATION)
+        else:
+            resource = load_json(self.RESOURCE_LOCATION)
+
+        if resource is None:
+            raise ConfigError(f'No resource found at {settings.RESOURCE_LOCATION}.')
+
+        return resource
 
     @cached_property
     def DEFINITIONS(self):
         if self.PROTOCOL_LOCATIONS is None:
-            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
-        return fetch_definitions(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+            raise ConfigError('PROTOCOL_LOCATIONS is not set')
+        return fetch_definitions(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def PATTERN(self):
         if self.PROTOCOL_LOCATIONS is None:
-            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
-        return fetch_pattern(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+            raise ConfigError('PROTOCOL_LOCATIONS is not set')
+        return fetch_pattern(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def SCHEMA(self):
         if self.PROTOCOL_LOCATIONS is None:
-            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
-        return fetch_schema(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+            raise ConfigError('PROTOCOL_LOCATIONS is not set')
+        return fetch_schema(self.PATH, self.PROTOCOL_LOCATIONS)
 
     @cached_property
     def TREE(self):
         if self.PROTOCOL_LOCATIONS is None:
-            raise RuntimeError('PROTOCOL_LOCATIONS is not set')
-        return fetch_tree(self.PROTOCOL_LOCATIONS.split(), self.PATH)
+            raise ConfigError('PROTOCOL_LOCATIONS is not set')
+        return fetch_tree(self.PATH, self.PROTOCOL_LOCATIONS)
 
 
-class Store:
-
-    _shared_state = {}
-
-    def __init__(self):
-        self.__dict__ = self._shared_state
-        self.datasets = []
+class Store(Singleton):
+    datasets = []
 
 
 settings = Settings()
