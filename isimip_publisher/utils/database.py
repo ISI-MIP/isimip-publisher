@@ -482,9 +482,9 @@ def update_file(session, dataset_path, path, specifiers):
 def insert_file_link(session, target_file_path, dataset_path,
                      name, path, size, checksum, checksum_type, netcdf_header, specifiers):
     # get the target file
-    target_file = session.query(File).filter(
+    target_file = session.query(File).join(File.dataset).filter(
         File.path == target_file_path,
-        File.public == True  # noqa: E712
+        Dataset.public == True  # noqa: E712
     ).one_or_none()
 
     if target_file is None:
