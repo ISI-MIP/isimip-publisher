@@ -6,7 +6,7 @@ from isimip_utils.checksum import get_checksum, get_checksum_type
 from isimip_utils.netcdf import get_dimensions, get_global_attributes, get_variables, open_dataset_read
 from isimip_utils.utils import cached_property
 
-from .utils.files import clean_header, get_size
+from .utils.files import clean_header
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class File:
 
     @cached_property
     def size(self):
-        return get_size(self.abspath)
+        return Path(self.abspath).stat().st_size
 
     @cached_property
     def checksum(self):

@@ -179,10 +179,6 @@ def mock_file(mock_path):
         mock_path.write_text('path: ' + mock_path.as_posix() + os.linesep)
 
 
-def get_size(file_abspath):
-    return Path(file_abspath).stat().st_size
-
-
 def clean_header(header):
     # remove key/value pairs with NaN, Inf or -Inf from the header recursively,
     # since they cannot be stored in a JSONB database field
