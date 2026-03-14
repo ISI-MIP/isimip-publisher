@@ -295,15 +295,19 @@ def update_dataset(session, rights, restricted, path, specifiers):
     dataset.updated = datetime.utcnow()
 
 
-def insert_dataset_link(session, version, rights, restricted, target_dataset_path, name, path, size, specifiers):
+def insert_dataset_link(session, rights, restricted, target_dataset_path, name, path, size, specifiers):
     # get the target_dataset
     target_dataset = session.query(Dataset).filter(
         Dataset.path == target_dataset_path,
-        Dataset.version == version
+        Dataset.public == True  # noqa: E712
     ).one_or_none()
 
     if target_dataset is None:
-        raise RuntimeError(f'No target dataset for the path {target_dataset_path} with version {version} found')
+        raise RuntimeError(f'No public target dataset for the path {target_dataset_path} found')
+
+    # get the version from the target dataset
+    version = target_dataset.version
+
     if target_dataset.rights != rights:
         raise RuntimeError(f'Target dataset {target_dataset_path}#{version} was found, but with different rights')
     if target_dataset.name != name:
@@ -475,16 +479,20 @@ def update_file(session, dataset_path, path, specifiers):
         raise RuntimeError(f'No file with the path {path} found in dataset {dataset_path}')
 
 
-def insert_file_link(session, version, target_file_path, dataset_path,
+def insert_file_link(session, target_file_path, dataset_path,
                      name, path, size, checksum, checksum_type, netcdf_header, specifiers):
     # get the target file
     target_file = session.query(File).filter(
         File.path == target_file_path,
-        File.version == version
+        File.public == True  # noqa: E712
     ).one_or_none()
 
     if target_file is None:
-        raise RuntimeError(f'No target file for the path {target_file_path} with version {version} found')
+        raise RuntimeError(f'No public target file for the path {target_file_path} found')
+
+    # get the version from the target dataset
+    version = target_file.version
+
     if target_file.name != name:
         raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different name')
     if target_file.size != size:
