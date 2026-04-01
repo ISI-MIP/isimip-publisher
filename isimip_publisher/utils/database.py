@@ -674,7 +674,7 @@ def update_tree(session, path, tree):
     # step 3: recursively update tree_dict and set the tree_path for the dataset
     for dataset in datasets:
         tree_path = build_tree_dict(database_tree.tree_dict, Path(), tree['identifiers'], dataset.specifiers)
-        dataset.tree_path = tree_path.as_posix()
+        dataset.tree_path = tree_path.as_posix() + '/'
 
     # for some reason we need to flag the field as modified
     flag_modified(database_tree, 'tree_dict')
