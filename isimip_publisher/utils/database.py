@@ -11,6 +11,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Computed,
     DateTime,
     ForeignKey,
     Index,
@@ -40,23 +41,48 @@ resources_datasets = Table('resources_datasets', Base.metadata,
                            Column('resource_id', UUID, ForeignKey('resources.id')),
                            Column('dataset_id', UUID, ForeignKey('datasets.id')))
 
+# kwargs for index creation
+gin = {'postgresql_using': 'gin'}
+root = {'postgresql_where': Column('target_id') == None}  # noqa: E711
+public = {'postgresql_where': Column('public') == True}  # noqa: E712
+public_root = {'postgresql_where': ((Column('public') == True) & (Column('target_id') == None))}  # noqa: E711, E712
+name_ops = {'postgresql_ops': {'name': 'text_pattern_ops'}}
+path_ops = {'postgresql_ops': {'path': 'text_pattern_ops'}}
+tree_path_ops = {'postgresql_ops': {'tree_path': 'text_pattern_ops'}}
+
 
 class Dataset(Base):
 
     __tablename__ = 'datasets'
+    __table_args__ = (
+        Index('datasets_root_id_idx', 'root_id'),
+        Index('datasets_name_idx', 'name', **name_ops),
+        Index('datasets_name_public_idx', 'name', **name_ops, **public),
+        Index('datasets_path_idx', 'path', **path_ops),
+        Index('datasets_path_public_idx', 'path', **path_ops, **public),
+        Index('datasets_path_public_root_idx', 'path', **path_ops, **public_root),
+        Index('datasets_specifiers_idx', 'specifiers', **gin),
+        Index('datasets_specifiers_public_idx', 'specifiers', **gin,  **public),
+        Index('datasets_target_id_idx', 'target_id'),
+        Index('datasets_tree_path_idx', 'tree_path', **tree_path_ops),
+        Index('datasets_tree_path_public_idx', 'tree_path', **tree_path_ops, **public),
+        Index('datasets_version_idx', 'version'),
+        Index('datasets_version_public_idx', 'version', **public),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     target_id = Column(UUID, ForeignKey('datasets.id'), nullable=True)
+    root_id = Column(UUID, Computed('COALESCE(target_id, id)', persisted=True), nullable=False)
 
-    name = Column(Text, nullable=False, index=True)
-    path = Column(Text, nullable=False, index=True)
-    version = Column(String(8), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    path = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
     size = Column(BigInteger, nullable=False)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     public = Column(Boolean, nullable=False)
     restricted = Column(Boolean, nullable=False)
-    tree_path = Column(Text, nullable=True, index=True)
+    tree_path = Column(Text, nullable=True)
     rights = Column(Text)
 
     files = relationship('File', back_populates='dataset')
@@ -76,14 +102,26 @@ class Dataset(Base):
 class File(Base):
 
     __tablename__ = 'files'
+    __table_args__ = (
+        Index('files_root_id_idx', 'root_id'),
+        Index('files_checksum_idx', 'version'),
+        Index('files_dataset_id_idx', 'dataset_id'),
+        Index('files_name_idx', 'name', **name_ops),
+        Index('files_path_idx', 'path', **path_ops),
+        Index('files_path_public_root_idx', 'path', **path_ops, **root),
+        Index('files_specifiers_idx', 'specifiers', **gin),
+        Index('files_target_id_idx', 'target_id'),
+        Index('files_version_idx', 'version'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
     target_id = Column(UUID, ForeignKey('files.id'), nullable=True)
+    root_id = Column(UUID, Computed('COALESCE(target_id, id)', persisted=True), nullable=False)
 
-    name = Column(Text, nullable=False, index=True)
-    path = Column(Text, nullable=False, index=True)
-    version = Column(String(8), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    path = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
     size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
@@ -104,13 +142,17 @@ class File(Base):
 class Resource(Base):
 
     __tablename__ = 'resources'
+    __table_args__ = (
+        Index('resources_doi_idx', 'doi'),
+        Index('resources_paths_idx', 'paths'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
 
-    doi = Column(Text, nullable=False, index=True)
+    doi = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
     version = Column(Text)
-    paths = Column(ARRAY(Text), nullable=False, index=True)
+    paths = Column(ARRAY(Text), nullable=False)
     datacite = Column(JSONB, nullable=False)
 
     created = Column(DateTime)
@@ -141,7 +183,7 @@ class Search(Base):
 
     __tablename__ = 'search'
     __table_args__ = (
-        Index('search_vector_idx', 'vector', postgresql_using='gin'),
+        Index('search_vector_idx', 'vector', **gin),
     )
 
     dataset_id = Column(UUID, ForeignKey('datasets.id'), primary_key=True)
