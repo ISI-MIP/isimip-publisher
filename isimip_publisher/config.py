@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -7,7 +8,6 @@ from isimip_utils.config import Singleton
 from isimip_utils.exceptions import ConfigError
 from isimip_utils.fetch import fetch_json, load_json
 from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_schema, fetch_tree
-from isimip_utils.utils import cached_property
 
 logger = logging.getLogger(__name__)
 
