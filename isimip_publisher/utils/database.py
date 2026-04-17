@@ -1,7 +1,7 @@
 import logging
 import re
 import warnings
-from datetime import datetime
+from datetime import UTC, datetime
 from math import isnan
 from pathlib import Path
 from uuid import uuid4
@@ -11,6 +11,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Computed,
     DateTime,
     ForeignKey,
     Index,
@@ -40,23 +41,48 @@ resources_datasets = Table('resources_datasets', Base.metadata,
                            Column('resource_id', UUID, ForeignKey('resources.id')),
                            Column('dataset_id', UUID, ForeignKey('datasets.id')))
 
+# kwargs for index creation
+gin = {'postgresql_using': 'gin'}
+root = {'postgresql_where': Column('target_id') == None}  # noqa: E711
+public = {'postgresql_where': Column('public') == True}  # noqa: E712
+public_root = {'postgresql_where': ((Column('public') == True) & (Column('target_id') == None))}  # noqa: E711, E712
+name_ops = {'postgresql_ops': {'name': 'text_pattern_ops'}}
+path_ops = {'postgresql_ops': {'path': 'text_pattern_ops'}}
+tree_path_ops = {'postgresql_ops': {'tree_path': 'text_pattern_ops'}}
+
 
 class Dataset(Base):
 
     __tablename__ = 'datasets'
+    __table_args__ = (
+        Index('datasets_root_id_idx', 'root_id'),
+        Index('datasets_name_idx', 'name', **name_ops),
+        Index('datasets_name_public_idx', 'name', **name_ops, **public),
+        Index('datasets_path_idx', 'path', **path_ops),
+        Index('datasets_path_public_idx', 'path', **path_ops, **public),
+        Index('datasets_path_public_root_idx', 'path', **path_ops, **public_root),
+        Index('datasets_specifiers_idx', 'specifiers', **gin),
+        Index('datasets_specifiers_public_idx', 'specifiers', **gin,  **public),
+        Index('datasets_target_id_idx', 'target_id'),
+        Index('datasets_tree_path_idx', 'tree_path', **tree_path_ops),
+        Index('datasets_tree_path_public_idx', 'tree_path', **tree_path_ops, **public),
+        Index('datasets_version_idx', 'version'),
+        Index('datasets_version_public_idx', 'version', **public),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     target_id = Column(UUID, ForeignKey('datasets.id'), nullable=True)
+    root_id = Column(UUID, Computed('COALESCE(target_id, id)', persisted=True), nullable=False)
 
-    name = Column(Text, nullable=False, index=True)
-    path = Column(Text, nullable=False, index=True)
-    version = Column(String(8), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    path = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
     size = Column(BigInteger, nullable=False)
     specifiers = Column(JSONB, nullable=False)
     identifiers = Column(ARRAY(Text), nullable=False)
     public = Column(Boolean, nullable=False)
     restricted = Column(Boolean, nullable=False)
-    tree_path = Column(Text, nullable=True, index=True)
+    tree_path = Column(Text, nullable=True)
     rights = Column(Text)
 
     files = relationship('File', back_populates='dataset')
@@ -69,6 +95,8 @@ class Dataset(Base):
     published = Column(DateTime)
     archived = Column(DateTime)
 
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated, published, archived)', persisted=True))
+
     def __repr__(self):
         return str(self.id)
 
@@ -76,14 +104,26 @@ class Dataset(Base):
 class File(Base):
 
     __tablename__ = 'files'
+    __table_args__ = (
+        Index('files_root_id_idx', 'root_id'),
+        Index('files_checksum_idx', 'version'),
+        Index('files_dataset_id_idx', 'dataset_id'),
+        Index('files_name_idx', 'name', **name_ops),
+        Index('files_path_idx', 'path', **path_ops),
+        Index('files_path_public_root_idx', 'path', **path_ops, **root),
+        Index('files_specifiers_idx', 'specifiers', **gin),
+        Index('files_target_id_idx', 'target_id'),
+        Index('files_version_idx', 'version'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
     dataset_id = Column(UUID, ForeignKey('datasets.id'))
     target_id = Column(UUID, ForeignKey('files.id'), nullable=True)
+    root_id = Column(UUID, Computed('COALESCE(target_id, id)', persisted=True), nullable=False)
 
-    name = Column(Text, nullable=False, index=True)
-    path = Column(Text, nullable=False, index=True)
-    version = Column(String(8), nullable=False, index=True)
+    name = Column(Text, nullable=False)
+    path = Column(Text, nullable=False)
+    version = Column(String(8), nullable=False)
     size = Column(BigInteger, nullable=False)
     checksum = Column(Text, nullable=False)
     checksum_type = Column(Text, nullable=False)
@@ -93,6 +133,8 @@ class File(Base):
 
     created = Column(DateTime)
     updated = Column(DateTime)
+
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
 
     dataset = relationship('Dataset', back_populates='files')
     links = relationship('File', backref=backref('target', remote_side=id))
@@ -104,17 +146,23 @@ class File(Base):
 class Resource(Base):
 
     __tablename__ = 'resources'
+    __table_args__ = (
+        Index('resources_doi_idx', 'doi'),
+        Index('resources_paths_idx', 'paths'),
+    )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
 
-    doi = Column(Text, nullable=False, index=True)
+    doi = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
     version = Column(Text)
-    paths = Column(ARRAY(Text), nullable=False, index=True)
+    paths = Column(ARRAY(Text), nullable=False)
     datacite = Column(JSONB, nullable=False)
 
     created = Column(DateTime)
     updated = Column(DateTime)
+
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
 
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
 
@@ -141,7 +189,7 @@ class Search(Base):
 
     __tablename__ = 'search'
     __table_args__ = (
-        Index('search_vector_idx', 'vector', postgresql_using='gin'),
+        Index('search_vector_idx', 'vector', **gin),
     )
 
     dataset_id = Column(UUID, ForeignKey('datasets.id'), primary_key=True)
@@ -232,7 +280,7 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
             identifiers=list(specifiers.keys()),
             public=False,
             restricted=restricted,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset)
 
@@ -259,7 +307,7 @@ def publish_dataset(session, version, path):
     # mark this dataset public
     logger.debug('publish dataset %s', path)
     dataset.public = True
-    dataset.published = datetime.utcnow()
+    dataset.published = datetime.now(UTC)
 
 
 def update_dataset(session, rights, restricted, path, specifiers):
@@ -292,7 +340,7 @@ def update_dataset(session, rights, restricted, path, specifiers):
 
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
-    dataset.updated = datetime.utcnow()
+    dataset.updated = datetime.now(UTC)
 
 
 def insert_dataset_link(session, rights, restricted, target_dataset_path, name, path, size, specifiers):
@@ -345,7 +393,7 @@ def insert_dataset_link(session, rights, restricted, target_dataset_path, name, 
             public=True,
             restricted=restricted,
             target=target_dataset,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset)
 
@@ -361,7 +409,7 @@ def archive_dataset(session, path):
         # mark this dataset archived
         logger.debug('unpublish dataset %s', path)
         public_dataset.public = False
-        public_dataset.archived = datetime.utcnow()
+        public_dataset.archived = datetime.now(UTC)
         return public_dataset.version
 
 
@@ -447,7 +495,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(file)
 
@@ -474,7 +522,7 @@ def update_file(session, dataset_path, path, specifiers):
         logger.debug('update file %s', path)
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
-        file.updated = datetime.utcnow()
+        file.updated = datetime.now(UTC)
     else:
         raise RuntimeError(f'No file with the path {path} found in dataset {dataset_path}')
 
@@ -550,7 +598,7 @@ def insert_file_link(session, target_file_path, dataset_path,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
             target=target_file,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(file)
 
@@ -593,7 +641,7 @@ def insert_resource(session, datacite, paths, datacite_prefix):
         title=title,
         version=version,
         paths=paths,
-        created=datetime.utcnow()
+        created=datetime.now(UTC)
     )
 
     # only add the metadata if this is a "native" DOI, not an external one
@@ -633,7 +681,7 @@ def update_resource(session, datacite):
     resource.title = title
     resource.version = version
     resource.datacite = datacite
-    resource.updated = datetime.utcnow()
+    resource.updated = datetime.now(UTC)
 
     return resource
 
@@ -674,7 +722,7 @@ def update_tree(session, path, tree):
     # step 3: recursively update tree_dict and set the tree_path for the dataset
     for dataset in datasets:
         tree_path = build_tree_dict(database_tree.tree_dict, Path(), tree['identifiers'], dataset.specifiers)
-        dataset.tree_path = tree_path.as_posix()
+        dataset.tree_path = tree_path.as_posix() + '/'
 
     # for some reason we need to flag the field as modified
     flag_modified(database_tree, 'tree_dict')
@@ -731,7 +779,7 @@ def clean_tree(session):
     # step 2: get all dataset tree_paths as as set
     tree_paths = {row[0] for row in session.query(Dataset).filter(
         Dataset.public == True  # noqa: E712
-    ).values(column('tree_path'))}
+    ).with_entities(column('tree_path'))}
 
     clean_tree_dict = {}
     for tree_path in tree_paths:
@@ -790,12 +838,12 @@ def create_or_update_search(session, dataset):
         dataset.search = Search(
             dataset=dataset,
             vector=get_search_vector(dataset),
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset.search)
     else:
         dataset.search.vector = get_search_vector(dataset)
-        dataset.search.updated = datetime.utcnow()
+        dataset.search.updated = datetime.now(UTC)
 
 
 def update_views(session):
