@@ -779,7 +779,7 @@ def clean_tree(session):
     # step 2: get all dataset tree_paths as as set
     tree_paths = {row[0] for row in session.query(Dataset).filter(
         Dataset.public == True  # noqa: E712
-    ).values(column('tree_path'))}
+    ).with_entities(column('tree_path'))}
 
     clean_tree_dict = {}
     for tree_path in tree_paths:
