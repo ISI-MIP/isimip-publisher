@@ -95,6 +95,8 @@ class Dataset(Base):
     published = Column(DateTime)
     archived = Column(DateTime)
 
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated, published, archived)', persisted=True))
+
     def __repr__(self):
         return str(self.id)
 
@@ -132,6 +134,8 @@ class File(Base):
     created = Column(DateTime)
     updated = Column(DateTime)
 
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
+
     dataset = relationship('Dataset', back_populates='files')
     links = relationship('File', backref=backref('target', remote_side=id))
 
@@ -157,6 +161,8 @@ class Resource(Base):
 
     created = Column(DateTime)
     updated = Column(DateTime)
+
+    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
 
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
 
