@@ -5,7 +5,7 @@ ISIMIP publisher
 [![License](https://img.shields.io/github/license/ISI-MIP/isimip-publisher?style=flat)](https://github.com/ISI-MIP/isimip-publisher/blob/main/LICENSE)
 [![CI status](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/ci.yaml/badge.svg)](https://github.com/ISI-MIP/isimip-publisher/actions/workflows/ci.yaml)
 [![Latest release](https://shields.io/github/v/release/ISI-MIP/isimip-publisher)](https://github.com/ISI-MIP/isimip-publisher/releases)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18938718.svg)](https://doi.org/10.5281/zenodo.18938718)
+[![DOI](https://img.shields.io/badge/DOI-10.5281/zenodo.18938718-blue)](https://doi.org/10.5281/zenodo.18938718)
 
 A command line tool to publish climate impact data from the ISIMIP project. This tool is used for the [ISIMIP repository](https://data.isimip.org).
 
