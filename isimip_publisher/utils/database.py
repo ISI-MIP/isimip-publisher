@@ -1,7 +1,7 @@
 import logging
 import re
 import warnings
-from datetime import datetime
+from datetime import UTC, datetime
 from math import isnan
 from pathlib import Path
 from uuid import uuid4
@@ -280,7 +280,7 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
             identifiers=list(specifiers.keys()),
             public=False,
             restricted=restricted,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset)
 
@@ -307,7 +307,7 @@ def publish_dataset(session, version, path):
     # mark this dataset public
     logger.debug('publish dataset %s', path)
     dataset.public = True
-    dataset.published = datetime.utcnow()
+    dataset.published = datetime.now(UTC)
 
 
 def update_dataset(session, rights, restricted, path, specifiers):
@@ -340,7 +340,7 @@ def update_dataset(session, rights, restricted, path, specifiers):
 
     dataset.specifiers = specifiers
     dataset.identifiers = list(specifiers.keys())
-    dataset.updated = datetime.utcnow()
+    dataset.updated = datetime.now(UTC)
 
 
 def insert_dataset_link(session, rights, restricted, target_dataset_path, name, path, size, specifiers):
@@ -393,7 +393,7 @@ def insert_dataset_link(session, rights, restricted, target_dataset_path, name, 
             public=True,
             restricted=restricted,
             target=target_dataset,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset)
 
@@ -409,7 +409,7 @@ def archive_dataset(session, path):
         # mark this dataset archived
         logger.debug('unpublish dataset %s', path)
         public_dataset.public = False
-        public_dataset.archived = datetime.utcnow()
+        public_dataset.archived = datetime.now(UTC)
         return public_dataset.version
 
 
@@ -495,7 +495,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(file)
 
@@ -522,7 +522,7 @@ def update_file(session, dataset_path, path, specifiers):
         logger.debug('update file %s', path)
         file.specifiers = specifiers
         file.identifiers = list(specifiers.keys())
-        file.updated = datetime.utcnow()
+        file.updated = datetime.now(UTC)
     else:
         raise RuntimeError(f'No file with the path {path} found in dataset {dataset_path}')
 
@@ -598,7 +598,7 @@ def insert_file_link(session, target_file_path, dataset_path,
             identifiers=list(specifiers.keys()),
             dataset=dataset,
             target=target_file,
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(file)
 
@@ -641,7 +641,7 @@ def insert_resource(session, datacite, paths, datacite_prefix):
         title=title,
         version=version,
         paths=paths,
-        created=datetime.utcnow()
+        created=datetime.now(UTC)
     )
 
     # only add the metadata if this is a "native" DOI, not an external one
@@ -681,7 +681,7 @@ def update_resource(session, datacite):
     resource.title = title
     resource.version = version
     resource.datacite = datacite
-    resource.updated = datetime.utcnow()
+    resource.updated = datetime.now(UTC)
 
     return resource
 
@@ -838,12 +838,12 @@ def create_or_update_search(session, dataset):
         dataset.search = Search(
             dataset=dataset,
             vector=get_search_vector(dataset),
-            created=datetime.utcnow()
+            created=datetime.now(UTC)
         )
         session.add(dataset.search)
     else:
         dataset.search.vector = get_search_vector(dataset)
-        dataset.search.updated = datetime.utcnow()
+        dataset.search.updated = datetime.now(UTC)
 
 
 def update_views(session):
