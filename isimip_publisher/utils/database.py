@@ -36,10 +36,24 @@ search_terms_split_pattern = re.compile(r'[\/\_\-\s]')
 
 Base = declarative_base()
 
+# association table between datasets and files
+datasets_files = Table(
+    'datasets_files',
+    Base.metadata,
+    Column('dataset_id', UUID, ForeignKey('datasets.id', ondelete='CASCADE'), primary_key=True),
+    Column('file_id', UUID, ForeignKey('files.id', ondelete='CASCADE'), primary_key=True),
+    Index('datasets_files_file_id_idx', 'file_id'),
+)
+
+
 # association table between resources and datasets
-resources_datasets = Table('resources_datasets', Base.metadata,
-                           Column('resource_id', UUID, ForeignKey('resources.id')),
-                           Column('dataset_id', UUID, ForeignKey('datasets.id')))
+resources_datasets = Table(
+    'resources_datasets',
+    Base.metadata,
+    Column('resource_id', UUID, ForeignKey('resources.id', ondelete='CASCADE'), primary_key=True),
+    Column('dataset_id', UUID, ForeignKey('datasets.id', ondelete='CASCADE'), primary_key=True),
+    Index('resources_datasets_dataset_id_idx', 'dataset_id'),
+)
 
 # kwargs for index creation
 gin = {'postgresql_using': 'gin'}
@@ -85,7 +99,7 @@ class Dataset(Base):
     tree_path = Column(Text, nullable=True)
     rights = Column(Text)
 
-    files = relationship('File', back_populates='dataset')
+    files = relationship('File', secondary=datasets_files, back_populates='datasets')
     links = relationship('Dataset', backref=backref('target', remote_side=id))
     resources = relationship('Resource', secondary=resources_datasets, back_populates='datasets')
     search = relationship('Search', back_populates='dataset', uselist=False)
@@ -107,7 +121,6 @@ class File(Base):
     __table_args__ = (
         Index('files_root_id_idx', 'root_id'),
         Index('files_checksum_idx', 'version'),
-        Index('files_dataset_id_idx', 'dataset_id'),
         Index('files_name_idx', 'name', **name_ops),
         Index('files_path_idx', 'path', **path_ops),
         Index('files_path_public_root_idx', 'path', **path_ops, **root),
@@ -117,7 +130,6 @@ class File(Base):
     )
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
-    dataset_id = Column(UUID, ForeignKey('datasets.id'))
     target_id = Column(UUID, ForeignKey('files.id'), nullable=True)
     root_id = Column(UUID, Computed('COALESCE(target_id, id)', persisted=True), nullable=False)
 
@@ -136,7 +148,7 @@ class File(Base):
 
     last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
 
-    dataset = relationship('Dataset', back_populates='files')
+    datasets = relationship('Dataset', secondary=datasets_files, back_populates='files')
     links = relationship('File', backref=backref('target', remote_side=id))
 
     def __repr__(self):
@@ -494,7 +506,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             netcdf_header=clean_json(netcdf_header),
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            dataset=dataset,
+            datasets=[dataset],
             created=datetime.now(UTC)
         )
         session.add(file)
@@ -513,9 +525,9 @@ def update_file(session, dataset_path, path, specifiers):
         raise RuntimeError(f'No public dataset with the path {dataset_path} found')
 
     # check if the file is already in the database
-    file = session.query(File).filter(
+    file = session.query(File).join(File.datasets).filter(
         File.path == path,
-        File.dataset == dataset
+        Dataset.id == dataset.id
     ).one_or_none()
 
     if file:
@@ -530,7 +542,7 @@ def update_file(session, dataset_path, path, specifiers):
 def insert_file_link(session, target_file_path, dataset_path,
                      name, path, size, checksum, checksum_type, netcdf_header, specifiers):
     # get the target file
-    target_file = session.query(File).join(File.dataset).filter(
+    target_file = session.query(File).join(File.datasets).filter(
         File.path == target_file_path,
         Dataset.public == True  # noqa: E712
     ).one_or_none()
@@ -558,7 +570,7 @@ def insert_file_link(session, target_file_path, dataset_path,
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the path {dataset_path} found')
-    if dataset.target != target_file.dataset:
+    if dataset.target not in target_file.datasets:
         raise RuntimeError(f'Dataset for file link does not match dataset for {path}')
 
     # check if the file is already in the database
@@ -596,7 +608,7 @@ def insert_file_link(session, target_file_path, dataset_path,
             netcdf_header=clean_json(netcdf_header),
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
-            dataset=dataset,
+            datasets=[dataset],
             target=target_file,
             created=datetime.now(UTC)
         )
