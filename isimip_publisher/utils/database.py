@@ -551,10 +551,7 @@ def update_file(session, dataset_path, path, specifiers):
         raise RuntimeError(f'No public dataset with the path {dataset_path} found')
 
     # check if the file is already in the database
-    file = session.query(File).join(File.datasets).filter(
-        File.path == path,
-        Dataset.id == dataset.id
-    ).one_or_none()
+    file = next((file for file in dataset.files if file.path == path), None)
 
     if file:
         logger.debug('update file %s', path)
