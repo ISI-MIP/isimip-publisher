@@ -336,8 +336,7 @@ def publish_datasets():
         for file in dataset.files:
             if file.path not in published_files:
                 source_path = Path(file.abspath)
-                public_path = Path(settings.PUBLIC_PATH) if not settings.RESTRICTED else Path(settings.RESTRICTED_PATH)
-                target_path = Path(public_path) / Path(source_path).relative_to(settings.LOCAL_PATH)
+                target_path = settings.PUBLISHED_PATH / Path(source_path).relative_to(settings.LOCAL_PATH)
 
                 files.move_file(source_path, target_path)
                 files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
