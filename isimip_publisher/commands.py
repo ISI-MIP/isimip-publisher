@@ -53,8 +53,14 @@ def diff_remote_links():
 def match_remote():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+
+    if settings.APPEND:
+        public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+        remote_files = [file_path for file_path in remote_files if file_path not in public_files]
+
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
+
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
     cli.print_datasets_files(datasets)
 
@@ -142,6 +148,10 @@ def fetch_files():
         remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                         remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
+    if settings.APPEND:
+        public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+        remote_files = [file_path for file_path in remote_files if file_path not in public_files]
+
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
@@ -156,6 +166,11 @@ def fetch_files():
 def write_local_jsons():
     if not store.datasets:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
+
+        if settings.APPEND:
+            public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+            local_files = [file_path for file_path in local_files if file_path not in public_files]
+
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
@@ -190,26 +205,40 @@ def write_link_jsons():
 
 
 def insert_datasets():
-    if not store.datasets:
+    public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH) if settings.APPEND else []
+
+    if not store.datasets or settings.APPEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
+        insert_files = local_files + public_files
+
+        datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, insert_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
+
+        if settings.APPEND:
+            for dataset in datasets:
+                for file in dataset.files:
+                    if file.path in public_files:
+                        file.abspath = settings.PUBLIC_PATH / file.path
 
     session = database.init_database_session(settings.DATABASE)
 
     for dataset in store.datasets:
         for file in dataset.files:
-            database.check_file_id(session, file.path, file.uuid)
+            if file.path not in public_files:
+                database.check_file_id(session, file.path, file.uuid)
 
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
         database.insert_dataset(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED,
                                 dataset.name, dataset.path, dataset.size, dataset.specifiers)
 
         for file in dataset.files:
-            database.insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
-                                file.size, file.checksum, file.checksum_type, file.cleaned_header, file.specifiers)
+            if file.path in public_files:
+                database.append_file(session, settings.VERSION, file.dataset.path, file.path)
+            else:
+                database.insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
+                                     file.size, file.checksum, file.checksum_type, file.cleaned_header, file.specifiers)
 
         session.commit()
 
@@ -281,6 +310,8 @@ def link_datasets():
 
 
 def publish_datasets():
+    public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH) if settings.APPEND else []
+
     if not store.datasets:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
@@ -291,15 +322,19 @@ def publish_datasets():
     session = database.init_database_session(settings.DATABASE)
 
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
+        if settings.APPEND:
+            database.archive_dataset(session, dataset.path)
+
         database.publish_dataset(session, settings.VERSION, dataset.path)
 
         for file in dataset.files:
-            source_path = Path(file.abspath)
-            public_path = Path(settings.PUBLIC_PATH) if not settings.RESTRICTED else Path(settings.RESTRICTED_PATH)
-            target_path = Path(public_path) / Path(source_path).relative_to(settings.LOCAL_PATH)
+            if file.path not in public_files:
+                source_path = Path(file.abspath)
+                public_path = Path(settings.PUBLIC_PATH) if not settings.RESTRICTED else Path(settings.RESTRICTED_PATH)
+                target_path = Path(public_path) / Path(source_path).relative_to(settings.LOCAL_PATH)
 
-            files.move_file(source_path, target_path)
-            files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
+                files.move_file(source_path, target_path)
+                files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
         session.commit()
 

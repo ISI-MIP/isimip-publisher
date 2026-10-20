@@ -512,6 +512,32 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
         session.add(file)
 
 
+def append_file(session, version, dataset_path, path):
+    logger.info('append_file %s', path)
+
+    # get the dataset with the given database_path and version from the database
+    dataset = session.query(Dataset).filter(
+        Dataset.path == dataset_path,
+        Dataset.version == version
+    ).one_or_none()
+
+    if dataset is None:
+        raise RuntimeError(f'No dataset with the path {dataset_path} and version {version} found')
+
+    # get the public file with the given path from the database
+    file = session.query(File).join(File.datasets).filter(
+        File.path == path,
+        Dataset.public == True  # noqa: E712
+    ).one_or_none()
+
+    if file is None:
+        raise RuntimeError(f'No public file with the path {path} found')
+
+    # append file to datasets, if it is not already part of it
+    if file not in dataset.files:
+        dataset.files.append(file)
+
+
 def update_file(session, dataset_path, path, specifiers):
     logger.info('update_file %s', path)
 
