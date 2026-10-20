@@ -214,14 +214,18 @@ def insert_datasets():
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, insert_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
-        validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-        store.datasets = datasets
 
         if settings.APPEND:
+            # only create new versions for datasets which have at least one file which is not public yet
+            datasets = [dataset for dataset in datasets if any(file.path not in public_files for file in dataset.files)]
+
             for dataset in datasets:
                 for file in dataset.files:
                     if file.path in public_files:
-                        file.abspath = settings.PUBLIC_PATH / file.path
+                        file.abspath = (settings.PUBLIC_PATH / file.path).as_posix()
+
+        validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
+        store.datasets = datasets
 
     session = database.init_database_session(settings.DATABASE)
 
