@@ -84,6 +84,7 @@ def db():
         conn.execute(text('TRUNCATE datasets, datasets_files, files, resources, resources_datasets CASCADE;'))
         conn.commit()
 
+
 @pytest.fixture()
 def local_datasets():
     base_path = Path(__file__).parent.parent.parent
