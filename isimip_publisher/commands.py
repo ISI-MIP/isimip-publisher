@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .config import settings, store
-from .utils import database, dois, files, json, patterns, validation
+from .utils import cli, database, dois, files, json, patterns, validation
 
 logger = logging.getLogger(__name__)
 
@@ -12,51 +12,42 @@ logger = logging.getLogger(__name__)
 def list_remote():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    for file_path in remote_files:
-        print(file_path)
+    cli.print_files(remote_files)
 
 
 def list_remote_links():
     remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    for link_path in remote_links:
-        print(link_path)
+    cli.print_files(remote_links)
 
 
 def list_local():
     local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-    for file_path in local_files:
-        print(file_path)
+    cli.print_files(local_files)
 
 
 def list_public():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    for file_path in public_files:
-        print(file_path)
+    cli.print_files(public_files)
 
 
 def list_public_links():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    for file_path in public_links:
-        print(file_path)
+    cli.print_files(public_links)
 
 
 def diff_remote():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
     public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH))
-    for file_path in remote_files:
-        if file_path not in public_files:
-            print(file_path)
+    cli.print_files(remote_files, exclude=public_files)
 
 
 def diff_remote_links():
     remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
     public_links = set(files.list_links(settings.PUBLIC_PATH, settings.PATH))
-    for file_path in remote_links:
-        if file_path not in public_links:
-            print(file_path)
+    cli.print_files(remote_links, exclude=public_links)
 
 
 def match_remote():
@@ -65,9 +56,7 @@ def match_remote():
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_remote_links():
@@ -76,9 +65,7 @@ def match_remote_links():
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_local():
@@ -86,9 +73,7 @@ def match_local():
     datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_public():
@@ -96,9 +81,7 @@ def match_public():
     datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_public_links():
@@ -106,9 +89,7 @@ def match_public_links():
     datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def count_remote():
@@ -117,7 +98,7 @@ def count_remote():
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_remote_links():
@@ -126,7 +107,7 @@ def count_remote_links():
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_local():
@@ -134,7 +115,7 @@ def count_local():
     datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_public():
@@ -142,7 +123,7 @@ def count_public():
     datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_public_links():
@@ -150,7 +131,7 @@ def count_public_links():
     datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def fetch_files():
