@@ -165,7 +165,7 @@ def write_local_jsons():
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
 
         if settings.AMEND:
-            local_files = files.filter_amend(settings.REMOTE_PATH, local_files)
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
