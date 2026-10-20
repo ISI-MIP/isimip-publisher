@@ -314,7 +314,7 @@ def publish_dataset(session, version, path):
     ).one_or_none()
 
     if dataset is None:
-        raise RuntimeError(f'No dataset with the name {path} and the version {public_dataset.version} found')
+        raise RuntimeError(f'No dataset with the name {path} and the version {version} found')
 
     # mark this dataset public
     logger.debug('publish dataset %s', path)
