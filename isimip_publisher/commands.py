@@ -205,7 +205,6 @@ def insert_datasets():
 
     if not store.datasets or settings.AMEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        insert_files = local_files
 
         if settings.AMEND:
             local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
@@ -213,7 +212,9 @@ def insert_datasets():
             # already published files which are not amended are reused unchanged in the new dataset versions
             published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
             unchanged_files = published_files - set(local_files)
-            insert_files += list(unchanged_files)
+            insert_files = local_files + list(unchanged_files)
+        else:
+            insert_files = local_files
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, insert_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
