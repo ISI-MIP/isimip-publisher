@@ -53,6 +53,10 @@ class Settings(BaseSettings):
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @cached_property
+    def PUBLISHED_PATH(self):
+        return self.RESTRICTED_PATH if self.RESTRICTED else self.PUBLIC_PATH
+
+    @cached_property
     def TARGET_EXCLUDE(self):
         return [
             file.replace(self.PATH, self.TARGET_PATH) for file in self.EXCLUDE
