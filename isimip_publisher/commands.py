@@ -223,7 +223,7 @@ def insert_datasets():
             for dataset in datasets:
                 for file in dataset.files:
                     if file.path in published_files:
-                        file.abspath = (settings.PUBLIC_PATH / file.path).as_posix()
+                        file.abspath = (settings.PUBLISHED_PATH / file.path).as_posix()
 
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
