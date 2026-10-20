@@ -149,7 +149,7 @@ def fetch_files():
                                         remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
     if settings.APPEND:
-        public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+        public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH))
         remote_files = [file_path for file_path in remote_files if file_path not in public_files]
 
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
@@ -168,7 +168,7 @@ def write_local_jsons():
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
 
         if settings.APPEND:
-            public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
+            public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH))
             local_files = [file_path for file_path in local_files if file_path not in public_files]
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
@@ -205,11 +205,12 @@ def write_link_jsons():
 
 
 def insert_datasets():
-    public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH) if settings.APPEND else []
+    public_path = settings.RESTRICTED_PATH if settings.RESTRICTED else settings.PUBLIC_PATH
+    public_files = set(files.list_files(public_path, settings.PATH) if settings.APPEND else [])
 
     if not store.datasets or settings.APPEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        insert_files = local_files + public_files
+        insert_files = local_files + sorted(public_files - set(local_files))
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, insert_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
@@ -310,7 +311,7 @@ def link_datasets():
 
 
 def publish_datasets():
-    public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH) if settings.APPEND else []
+    public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH) if settings.APPEND else [])
 
     if not store.datasets:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
