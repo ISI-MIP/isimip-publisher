@@ -56,6 +56,14 @@ def list_all(base_path, path, remote_dest=None, suffix=None):
     return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type=None)
 
 
+def filter_amend(base_path, files):
+    amend = set(settings.AMEND)
+    files = [file_path for file_path in files if file_path in amend]
+    if amend - set(files):
+        raise RuntimeError(f'Some of the files given by --amend were not found in {base_path}')
+    return files
+
+
 def filter_links(public_path, target_path, path, links):
     filtered_links = []
     for link_path in links:

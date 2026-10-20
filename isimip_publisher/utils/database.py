@@ -262,7 +262,7 @@ def get_search_vector(dataset):
     return func.setweight(func.to_tsvector(search_string), 'A')
 
 
-def insert_dataset(session, version, rights, restricted, name, path, size, specifiers):
+def insert_dataset(session, version, rights, restricted, name, path, size, specifiers, allow_public=True):
     # check if the dataset with this version is already in the database
     dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -271,6 +271,8 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
 
     if dataset:
         logger.debug('skip dataset %s', path)
+        if dataset.public and not allow_public:
+            raise RuntimeError(f'Dataset {path} is already public with the version {version}')
         if dataset.target is not None:
             raise RuntimeError(f'Dataset {path} is already stored, but with a target')
         if dataset.rights != rights:
@@ -297,7 +299,7 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
         session.add(dataset)
 
 
-def publish_dataset(session, version, path):
+def publish_dataset(session, version, path, allow_public=True):
     # check that there is no public dataset with the same path
     public_dataset = session.query(Dataset).filter(
         Dataset.path == path,
@@ -315,6 +317,8 @@ def publish_dataset(session, version, path):
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the name {path} and the version {version} found')
+    if dataset.public and not allow_public:
+        raise RuntimeError(f'Dataset {path} is already public with the version {version}')
 
     # mark this dataset public
     logger.debug('publish dataset %s', path)
@@ -410,14 +414,14 @@ def insert_dataset_link(session, rights, restricted, target_dataset_path, name, 
         session.add(dataset)
 
 
-def archive_dataset(session, path):
+def archive_dataset(session, path, exclude_version=None):
     # find the public version of this dataset
     public_dataset = session.query(Dataset).filter(
         Dataset.path == path,
         Dataset.public == True  # noqa: E712
     ).one_or_none()
 
-    if public_dataset:
+    if public_dataset and public_dataset.version != exclude_version:
         # mark this dataset archived
         logger.debug('unpublish dataset %s', path)
         public_dataset.public = False

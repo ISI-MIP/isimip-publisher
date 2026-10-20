@@ -54,13 +54,11 @@ def match_remote():
     remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                     remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
-    if settings.APPEND:
-        published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
-        remote_files = [file_path for file_path in remote_files if file_path not in published_files]
+    if settings.AMEND:
+        remote_files = files.filter_amend(settings.REMOTE_PATH, remote_files)
 
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
-
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
     cli.print_datasets_files(datasets)
 
@@ -148,9 +146,8 @@ def fetch_files():
         remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
                                         remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
 
-    if settings.APPEND:
-        published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
-        remote_files = [file_path for file_path in remote_files if file_path not in published_files]
+    if settings.AMEND:
+        remote_files = files.filter_amend(settings.REMOTE_PATH, remote_files)
 
     datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
@@ -167,9 +164,8 @@ def write_local_jsons():
     if not store.datasets:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
 
-        if settings.APPEND:
-            published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
-            local_files = [file_path for file_path in local_files if file_path not in published_files]
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.REMOTE_PATH, local_files)
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
@@ -205,24 +201,30 @@ def write_link_jsons():
 
 
 def insert_datasets():
-    published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH) if settings.APPEND else [])
+    unchanged_files = set()
 
-    if not store.datasets or settings.APPEND:
+    if not store.datasets or settings.AMEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        insert_files = local_files + sorted(published_files - set(local_files))
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
+
+            # already published files which are not amended are reused unchanged in the new dataset versions
+            published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
+            unchanged_files = published_files - set(local_files)
+            insert_files = local_files + list(unchanged_files)
 
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, insert_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
 
-        if settings.APPEND:
-            # only create new versions for datasets which have at least one file which is not public yet
+        if settings.AMEND:
+            # only create new versions for datasets which contain at least one amended file
             datasets = [
-                dataset for dataset in datasets if any(file.path not in published_files for file in dataset.files)
+                dataset for dataset in datasets if any(file.path not in unchanged_files for file in dataset.files)
             ]
 
             for dataset in datasets:
                 for file in dataset.files:
-                    if file.path in published_files:
+                    if file.path in unchanged_files:
                         file.abspath = (settings.PUBLISHED_PATH / file.path).as_posix()
 
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
@@ -232,15 +234,16 @@ def insert_datasets():
 
     for dataset in store.datasets:
         for file in dataset.files:
-            if file.path not in published_files:
+            if file.path not in unchanged_files:
                 database.check_file_id(session, file.path, file.uuid)
 
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
         database.insert_dataset(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED,
-                                dataset.name, dataset.path, dataset.size, dataset.specifiers)
+                                dataset.name, dataset.path, dataset.size, dataset.specifiers,
+                                allow_public=not settings.AMEND)
 
         for file in dataset.files:
-            if file.path in published_files:
+            if file.path in unchanged_files:
                 database.append_file(session, settings.VERSION, file.dataset.path, file.path)
             else:
                 database.insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
@@ -316,10 +319,17 @@ def link_datasets():
 
 
 def publish_datasets():
-    published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH) if settings.APPEND else [])
+    replaced_files = set()
 
-    if not store.datasets:
+    if not store.datasets or settings.AMEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
+
+            # amended files which are already published replace the published files
+            published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
+            replaced_files = published_files & set(local_files)
+
         datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
                                            include=settings.INCLUDE, exclude=settings.EXCLUDE)
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
@@ -327,22 +337,32 @@ def publish_datasets():
 
     session = database.init_database_session(settings.DATABASE)
 
+    archived_versions = {}
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
-        if settings.APPEND:
-            database.archive_dataset(session, dataset.path)
+        if settings.AMEND:
+            archived_versions[dataset.path] = database.archive_dataset(session, dataset.path,
+                                                                       exclude_version=settings.VERSION)
 
-        database.publish_dataset(session, settings.VERSION, dataset.path)
+        database.publish_dataset(session, settings.VERSION, dataset.path, allow_public=not settings.AMEND)
+
+    # move the files to the public or restricted directory
+    for dataset in store.datasets:
+        archived_version = archived_versions.get(dataset.path)
 
         for file in dataset.files:
-            if file.path not in published_files:
-                source_path = Path(file.abspath)
-                target_path = settings.PUBLISHED_PATH / Path(source_path).relative_to(settings.LOCAL_PATH)
+            source_path = Path(file.abspath)
+            target_path = settings.PUBLISHED_PATH / source_path.relative_to(settings.LOCAL_PATH)
 
-                files.move_file(source_path, target_path)
-                files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
+            if file.path in replaced_files and archived_version:
+                # move the replaced file to the archive of the previous version
+                archive_path = settings.ARCHIVE_PATH / archived_version / file.path
+                files.move_file(target_path, archive_path)
+                files.move_file(target_path.with_suffix('.json'), archive_path.with_suffix('.json'))
 
-        session.commit()
+            files.move_file(source_path, target_path)
+            files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
+    session.commit()
     database.update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     database.clean_tree(session)

@@ -98,8 +98,9 @@ def main():
                          help='Skip the computation of the checksum when checking')
     parser.add_argument('--resolve-links', dest='resolve_links', action='store_true', default=False,
                          help='Resolve remote links as if they were files')
-    parser.add_argument('--append', dest='append', action='store_true', default=False,
-                         help='Append files which are not public yet to new versions of already public datasets')
+    parser.add_argument('--amend', dest='amend', type=parse_filelist, default=None,
+                         help='Publish new versions of the affected datasets with the files in this list '
+                              'added or replaced')
     parser.add_argument('--log-level', dest='log_level', default='WARN',
                         help='Log level (ERROR, WARN, INFO, or DEBUG)')
     parser.add_argument('--log-file', dest='log_file',
