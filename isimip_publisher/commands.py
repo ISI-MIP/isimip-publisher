@@ -4,179 +4,192 @@ from pathlib import Path
 from tqdm import tqdm
 
 from .config import settings, store
-from .utils import database, dois, files, json, patterns, validation
+from .utils import cli, database, dois, files, json, patterns, validation
 
 logger = logging.getLogger(__name__)
 
 
 def list_remote():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    for file_path in remote_files:
-        print(file_path)
+    remote_files = files.list_files(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+    cli.print_files(remote_files)
 
 
 def list_remote_links():
-    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    for link_path in remote_links:
-        print(link_path)
+    remote_links = files.list_links(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+    cli.print_files(remote_links)
 
 
 def list_local():
     local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-    for file_path in local_files:
-        print(file_path)
+    cli.print_files(local_files)
 
 
 def list_public():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    for file_path in public_files:
-        print(file_path)
+    cli.print_files(public_files)
 
 
 def list_public_links():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    for file_path in public_links:
-        print(file_path)
+    cli.print_files(public_links)
 
 
 def diff_remote():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    remote_files = files.list_files(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
     public_files = set(files.list_files(settings.PUBLIC_PATH, settings.PATH))
-    for file_path in remote_files:
-        if file_path not in public_files:
-            print(file_path)
+    cli.print_files(remote_files, exclude=public_files)
 
 
 def diff_remote_links():
-    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    remote_links = files.list_links(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
     public_links = set(files.list_links(settings.PUBLIC_PATH, settings.PATH))
-    for file_path in remote_links:
-        if file_path not in public_links:
-            print(file_path)
+    cli.print_files(remote_links, exclude=public_links)
 
 
 def match_remote():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = files.list_files(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+
+    if settings.AMEND:
+        remote_files = files.filter_amend(settings.REMOTE_PATH, remote_files)
+
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, remote_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_remote_links():
-    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_links = files.list_links(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, remote_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_local():
     local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_public():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def match_public_links():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    for dataset in datasets:
-        for file in dataset.files:
-            print(file.path)
+    cli.print_datasets_files(datasets)
 
 
 def count_remote():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_files = files.list_files(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, remote_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_remote_links():
-    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    remote_links = files.list_links(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, remote_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_local():
     local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_public():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def count_public_links():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
-    print(len([file for dataset in datasets for file in dataset.files]))
+    cli.print_datasets_files_count(datasets)
 
 
 def fetch_files():
     if settings.RESOLVE_LINKS:
-        remote_files = files.list_all(settings.REMOTE_PATH, settings.PATH,
-                                      remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+        remote_files = files.list_all(
+            settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+        )
     else:
-        remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                        remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+        remote_files = files.list_files(
+            settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+        )
 
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, remote_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    if settings.AMEND:
+        remote_files = files.filter_amend(settings.REMOTE_PATH, remote_files)
+
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, remote_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     c = sum([len(dataset.files) for dataset in datasets])
     t = tqdm(total=c, desc='fetch_files'.ljust(18))
-    for n in files.copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH,
-                              settings.PATH, datasets):
+    for n in files.copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, settings.PATH, datasets):
         t.update(n)
 
 
 def write_local_jsons():
     if not store.datasets:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
-                                           include=settings.INCLUDE, exclude=settings.EXCLUDE)
+
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
+
+        datasets = patterns.match_datasets(
+            settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+        )
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
 
@@ -187,8 +200,9 @@ def write_local_jsons():
 
 def write_public_jsons():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     for dataset in tqdm(datasets, desc='write_public_jsons'.ljust(18)):
@@ -199,8 +213,9 @@ def write_public_jsons():
 def write_link_jsons():
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
     filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, public_links)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, filtered_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, filtered_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     for dataset in tqdm(datasets, desc='write_link_jsons'.ljust(18)):
@@ -209,10 +224,36 @@ def write_link_jsons():
 
 
 def insert_datasets():
-    if not store.datasets:
+    unchanged_files = set()
+
+    if not store.datasets or settings.AMEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
-                                           include=settings.INCLUDE, exclude=settings.EXCLUDE)
+
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
+
+            # already published files which are not amended are reused unchanged in the new dataset versions
+            published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
+            unchanged_files = published_files - set(local_files)
+            insert_files = local_files + list(unchanged_files)
+        else:
+            insert_files = local_files
+
+        datasets = patterns.match_datasets(
+            settings.PATTERN, settings.LOCAL_PATH, insert_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+        )
+
+        if settings.AMEND:
+            # only create new versions for datasets which contain at least one amended file
+            datasets = [
+                dataset for dataset in datasets if any(file.path not in unchanged_files for file in dataset.files)
+            ]
+
+            for dataset in datasets:
+                for file in dataset.files:
+                    if file.path in unchanged_files:
+                        file.abspath = (settings.PUBLISHED_PATH / file.path).as_posix()
+
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
 
@@ -220,15 +261,39 @@ def insert_datasets():
 
     for dataset in store.datasets:
         for file in dataset.files:
-            database.check_file_id(session, file.path, file.uuid)
+            if file.path not in unchanged_files:
+                database.check_file_id(session, file.path, file.uuid)
 
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
-        database.insert_dataset(session, settings.VERSION, settings.RIGHTS, settings.RESTRICTED,
-                                dataset.name, dataset.path, dataset.size, dataset.specifiers)
+        database.insert_dataset(
+            session,
+            settings.VERSION,
+            settings.RIGHTS,
+            settings.RESTRICTED,
+            dataset.name,
+            dataset.path,
+            dataset.size,
+            dataset.specifiers,
+            allow_public=not settings.AMEND,
+        )
 
         for file in dataset.files:
-            database.insert_file(session, settings.VERSION, file.dataset.path, file.uuid, file.name, file.path,
-                                file.size, file.checksum, file.checksum_type, file.cleaned_header, file.specifiers)
+            if file.path in unchanged_files:
+                database.append_file(session, settings.VERSION, file.dataset.path, file.path)
+            else:
+                database.insert_file(
+                    session,
+                    settings.VERSION,
+                    file.dataset.path,
+                    file.uuid,
+                    file.name,
+                    file.path,
+                    file.size,
+                    file.checksum,
+                    file.checksum_type,
+                    file.cleaned_header,
+                    file.specifiers,
+                )
 
         session.commit()
 
@@ -240,11 +305,13 @@ def insert_datasets():
 
 
 def link_links():
-    remote_links = files.list_links(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    remote_links = files.list_links(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
     filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, remote_links)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, filtered_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, filtered_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     for dataset in tqdm(datasets, desc='link_links'.ljust(18)):
@@ -253,11 +320,13 @@ def link_links():
 
 
 def link_files():
-    remote_files = files.list_files(settings.REMOTE_PATH, settings.PATH,
-                                    remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix'])
+    remote_files = files.list_files(
+        settings.REMOTE_PATH, settings.PATH, remote_dest=settings.REMOTE_DEST, suffix=settings.PATTERN['suffix']
+    )
     filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, remote_files)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.REMOTE_PATH, filtered_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.REMOTE_PATH, filtered_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     for dataset in tqdm(datasets, desc='link_files'.ljust(18)):
@@ -269,22 +338,40 @@ def link_datasets():
     # collect and validate the links
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
     filtered_links = files.filter_links(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, public_links)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, filtered_links,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, filtered_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     session = database.init_database_session(settings.DATABASE)
 
     for dataset in tqdm(datasets, desc='link_datasets'.ljust(18)):
         target_dataset_path = str(settings.TARGET_PATH / Path(dataset.path).relative_to(settings.PATH))
-        database.insert_dataset_link(session, settings.RIGHTS, settings.RESTRICTED,
-                                     target_dataset_path, dataset.name, dataset.path, dataset.size, dataset.specifiers)
+        database.insert_dataset_link(
+            session,
+            settings.RIGHTS,
+            settings.RESTRICTED,
+            target_dataset_path,
+            dataset.name,
+            dataset.path,
+            dataset.size,
+            dataset.specifiers,
+        )
 
         for file in dataset.files:
             target_file_path = str(settings.TARGET_PATH / Path(file.path).relative_to(settings.PATH))
-            database.insert_file_link(session, target_file_path, file.dataset.path,
-                                      file.name, file.path, file.size, file.checksum, file.checksum_type,
-                                      file.cleaned_header, file.specifiers)
+            database.insert_file_link(
+                session,
+                target_file_path,
+                file.dataset.path,
+                file.name,
+                file.path,
+                file.size,
+                file.checksum,
+                file.checksum_type,
+                file.cleaned_header,
+                file.specifiers,
+            )
 
     session.commit()
     database.update_tree(session, settings.PATH, settings.TREE)
@@ -300,28 +387,52 @@ def link_datasets():
 
 
 def publish_datasets():
-    if not store.datasets:
+    replaced_files = set()
+
+    if not store.datasets or settings.AMEND:
         local_files = files.list_files(settings.LOCAL_PATH, settings.PATH)
-        datasets = patterns.match_datasets(settings.PATTERN, settings.LOCAL_PATH, local_files,
-                                           include=settings.INCLUDE, exclude=settings.EXCLUDE)
+        if settings.AMEND:
+            local_files = files.filter_amend(settings.LOCAL_PATH, local_files)
+
+            # amended files which are already published replace the published files
+            published_files = set(files.list_files(settings.PUBLISHED_PATH, settings.PATH))
+            replaced_files = published_files & set(local_files)
+
+        datasets = patterns.match_datasets(
+            settings.PATTERN, settings.LOCAL_PATH, local_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+        )
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
 
     session = database.init_database_session(settings.DATABASE)
 
+    archived_versions = {}
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
-        database.publish_dataset(session, settings.VERSION, dataset.path)
+        if settings.AMEND:
+            archived_versions[dataset.path] = database.archive_dataset(
+                session, dataset.path, exclude_version=settings.VERSION
+            )
+
+        database.publish_dataset(session, settings.VERSION, dataset.path, allow_public=not settings.AMEND)
+
+    # move the files to the public or restricted directory
+    for dataset in store.datasets:
+        archived_version = archived_versions.get(dataset.path)
 
         for file in dataset.files:
             source_path = Path(file.abspath)
-            public_path = Path(settings.PUBLIC_PATH) if not settings.RESTRICTED else Path(settings.RESTRICTED_PATH)
-            target_path = Path(public_path) / Path(source_path).relative_to(settings.LOCAL_PATH)
+            target_path = settings.PUBLISHED_PATH / source_path.relative_to(settings.LOCAL_PATH)
+
+            if file.path in replaced_files and archived_version:
+                # move the replaced file to the archive of the previous version
+                archive_path = settings.ARCHIVE_PATH / archived_version / file.path
+                files.move_file(target_path, archive_path)
+                files.move_file(target_path.with_suffix('.json'), archive_path.with_suffix('.json'))
 
             files.move_file(source_path, target_path)
             files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
-        session.commit()
-
+    session.commit()
     database.update_tree(session, settings.PATH, settings.TREE)
     session.commit()
     database.clean_tree(session)
@@ -331,8 +442,9 @@ def publish_datasets():
 
 def update_datasets():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     session = database.init_database_session(settings.DATABASE)
@@ -413,12 +525,14 @@ def archive_datasets():
 
 def check():
     public_files = files.list_files(settings.PUBLIC_PATH, settings.PATH)
-    datasets = patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_files,
-                                       include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets = patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_files, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
 
     public_links = files.list_links(settings.PUBLIC_PATH, settings.PATH)
-    datasets += patterns.match_datasets(settings.PATTERN, settings.PUBLIC_PATH, public_links,
-                                        include=settings.INCLUDE, exclude=settings.EXCLUDE)
+    datasets += patterns.match_datasets(
+        settings.PATTERN, settings.PUBLIC_PATH, public_links, include=settings.INCLUDE, exclude=settings.EXCLUDE
+    )
 
     # sort datasets and links (again)
     datasets = sorted(datasets, key=lambda dataset: dataset.path)
@@ -445,6 +559,7 @@ def update_tree():
     database.clean_tree(session)
     session.commit()
     session.close()
+
 
 def update_search():
     session = database.init_database_session(settings.DATABASE)
@@ -481,12 +596,16 @@ def insert_doi():
     session.commit()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
-        dois.upload_doi(resource, settings.DATA_URL,
-                        settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
-                        settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+        dois.upload_doi(
+            resource,
+            settings.DATA_URL,
+            settings.DATACITE_USERNAME,
+            settings.DATACITE_PASSWORD,
+            settings.DATACITE_PREFIX,
+            settings.DATACITE_TEST_MODE,
+        )
 
     session.close()
-
 
 
 def update_doi():
@@ -500,9 +619,14 @@ def update_doi():
     session.commit()
 
     if not settings.SKIP_REGISTRATION and dois.confirm_upload():
-        dois.upload_doi(resource, settings.DATA_URL,
-                        settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
-                        settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+        dois.upload_doi(
+            resource,
+            settings.DATA_URL,
+            settings.DATACITE_USERNAME,
+            settings.DATACITE_PASSWORD,
+            settings.DATACITE_PREFIX,
+            settings.DATACITE_TEST_MODE,
+        )
 
     session.close()
 
@@ -511,15 +635,22 @@ def register_doi():
     if dois.confirm_upload():
         session = database.init_database_session(settings.DATABASE)
         resource = database.fetch_resource(session, settings.DOI)
-        dois.upload_doi(resource, settings.DATA_URL,
-                        settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
-                        settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+        dois.upload_doi(
+            resource,
+            settings.DATA_URL,
+            settings.DATACITE_USERNAME,
+            settings.DATACITE_PASSWORD,
+            settings.DATACITE_PREFIX,
+            settings.DATACITE_TEST_MODE,
+        )
+        session.close()
 
 
 def check_doi():
     session = database.init_database_session(settings.DATABASE)
-    datasets = database.retrieve_datasets(session, settings.PATH,
-                                          public=(not settings.ARCHIVED), like=True, follow=False)
+    datasets = database.retrieve_datasets(
+        session, settings.PATH, public=(not settings.ARCHIVED), like=True, follow=False
+    )
     if not datasets:
         raise RuntimeError(f'no dataset found for {settings.PATH}')
 
