@@ -27,7 +27,7 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
                 dataset_dict[dataset_path] = Dataset(
                     name=dataset_path.name,
                     path=dataset_path.as_posix(),
-                    specifiers=dataset_specifiers
+                    specifiers=dataset_specifiers,
                 )
 
     # second path: add files to datasets
@@ -53,21 +53,24 @@ def match_datasets(pattern, base_path, files, include=None, exclude=None):
                 logger.debug(file_specifiers)
 
                 # append file to dataset
-                dataset_dict[dataset_path].files.append(File(
-                    dataset=dataset_dict[dataset_path],
-                    name=file_path.name,
-                    path=file_path.as_posix(),
-                    abspath=file_abspath.as_posix(),
-                    specifiers=file_specifiers
-                ))
+                dataset_dict[dataset_path].files.append(
+                    File(
+                        dataset=dataset_dict[dataset_path],
+                        name=file_path.name,
+                        path=file_path.as_posix(),
+                        abspath=file_abspath.as_posix(),
+                        specifiers=file_specifiers,
+                    )
+                )
 
             else:
                 # remove datasets which have files which are excluded
                 dataset_dict[dataset_path].exclude = True
 
     # sort datasets and files and return
-    dataset_list = sorted([dataset for dataset in dataset_dict.values()
-                           if not dataset.exclude], key=lambda dataset: dataset.path)
+    dataset_list = sorted(
+        [dataset for dataset in dataset_dict.values() if not dataset.exclude], key=lambda dataset: dataset.path
+    )
     for dataset in dataset_list:
         dataset.files = sorted(dataset.files, key=lambda file: file.path)
 
@@ -78,8 +81,9 @@ def filter_datasets(db_datasets, include=None, exclude=None):
     datasets = []
     for db_dataset in db_datasets:
         db_files = [file.path for file in db_dataset.files]
-        if any(include_path(include, file) for file in db_files) \
-                and not any(exclude_path(exclude, file) for file in db_files):
+        if any(include_path(include, file) for file in db_files) and not any(
+            exclude_path(exclude, file) for file in db_files
+        ):
             datasets.append(db_dataset)
 
     return datasets

@@ -3,6 +3,7 @@ from functools import cached_property
 from pathlib import Path
 
 import jsonschema
+
 from isimip_utils.checksum import get_checksum, get_checksum_type
 from isimip_utils.netcdf import get_dimensions, get_global_attributes, get_variables, open_dataset_read
 
@@ -12,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class Dataset:
-
     def __init__(self, name=None, path=None, specifiers=None):
         self.name = name
         self.path = path
@@ -34,7 +34,7 @@ class Dataset:
             return self.clean
         else:
             instance = {
-                'specifiers': dict(self.specifiers)
+                'specifiers': dict(self.specifiers),
             }
             try:
                 jsonschema.validate(schema=schema, instance=instance)
@@ -45,7 +45,6 @@ class Dataset:
 
 
 class File:
-
     def __init__(self, dataset=None, name=None, path=None, abspath=None, specifiers=None):
         self.dataset = dataset
         self.name = name
@@ -67,7 +66,7 @@ class File:
                 return {
                     'dimensions': get_dimensions(dataset),
                     'variables': get_variables(dataset, convert=True),
-                    'global_attributes': get_global_attributes(dataset, convert=True)
+                    'global_attributes': get_global_attributes(dataset, convert=True),
                 }
 
     @cached_property
@@ -92,7 +91,7 @@ class File:
             'checksum': self.checksum,
             'checksum_type': self.checksum_type,
             'specifiers': dict(self.specifiers),
-            'netcdf_header': self.netcdf_header
+            'netcdf_header': self.netcdf_header,
         }
 
     def validate(self, schema):
@@ -101,7 +100,7 @@ class File:
             return self.clean
         else:
             instance = {
-                'specifiers': dict(self.specifiers)
+                'specifiers': dict(self.specifiers),
             }
             try:
                 jsonschema.validate(schema=schema, instance=instance)

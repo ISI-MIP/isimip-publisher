@@ -34,6 +34,7 @@ def db():
 @pytest.fixture
 def empty_store():
     from isimip_publisher.config import store
+
     store.datasets = []
     yield
     store.datasets = []

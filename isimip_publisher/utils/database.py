@@ -66,7 +66,6 @@ tree_path_ops = {'postgresql_ops': {'tree_path': 'text_pattern_ops'}}
 
 
 class Dataset(Base):
-
     __tablename__ = 'datasets'
     __table_args__ = (
         Index('datasets_root_id_idx', 'root_id'),
@@ -76,7 +75,7 @@ class Dataset(Base):
         Index('datasets_path_public_idx', 'path', **path_ops, **public),
         Index('datasets_path_public_root_idx', 'path', **path_ops, **public_root),
         Index('datasets_specifiers_idx', 'specifiers', **gin),
-        Index('datasets_specifiers_public_idx', 'specifiers', **gin,  **public),
+        Index('datasets_specifiers_public_idx', 'specifiers', **gin, **public),
         Index('datasets_target_id_idx', 'target_id'),
         Index('datasets_tree_path_idx', 'tree_path', **tree_path_ops),
         Index('datasets_tree_path_public_idx', 'tree_path', **tree_path_ops, **public),
@@ -109,14 +108,13 @@ class Dataset(Base):
     published = Column(DateTime)
     archived = Column(DateTime)
 
-    last_changed = Column(DateTime,Computed('GREATEST(created, updated, published, archived)', persisted=True))
+    last_changed = Column(DateTime, Computed('GREATEST(created, updated, published, archived)', persisted=True))
 
     def __repr__(self):
         return str(self.id)
 
 
 class File(Base):
-
     __tablename__ = 'files'
     __table_args__ = (
         Index('files_root_id_idx', 'root_id'),
@@ -146,7 +144,7 @@ class File(Base):
     created = Column(DateTime)
     updated = Column(DateTime)
 
-    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
+    last_changed = Column(DateTime, Computed('GREATEST(created, updated)', persisted=True))
 
     datasets = relationship('Dataset', secondary=datasets_files, back_populates='files')
     links = relationship('File', backref=backref('target', remote_side=id))
@@ -156,7 +154,6 @@ class File(Base):
 
 
 class Resource(Base):
-
     __tablename__ = 'resources'
     __table_args__ = (
         Index('resources_doi_idx', 'doi'),
@@ -174,7 +171,7 @@ class Resource(Base):
     created = Column(DateTime)
     updated = Column(DateTime)
 
-    last_changed = Column(DateTime,Computed('GREATEST(created, updated)', persisted=True))
+    last_changed = Column(DateTime, Computed('GREATEST(created, updated)', persisted=True))
 
     datasets = relationship('Dataset', secondary=resources_datasets, back_populates='resources')
 
@@ -183,7 +180,6 @@ class Resource(Base):
 
 
 class Tree(Base):
-
     __tablename__ = 'trees'
 
     id = Column(UUID, nullable=False, primary_key=True, default=lambda: uuid4().hex)
@@ -198,11 +194,8 @@ class Tree(Base):
 
 
 class Search(Base):
-
     __tablename__ = 'search'
-    __table_args__ = (
-        Index('search_vector_idx', 'vector', **gin),
-    )
+    __table_args__ = (Index('search_vector_idx', 'vector', **gin),)
 
     dataset_id = Column(UUID, ForeignKey('datasets.id'), primary_key=True)
     vector = Column(TSVECTOR, nullable=False)
@@ -264,10 +257,14 @@ def get_search_vector(dataset):
 
 def insert_dataset(session, version, rights, restricted, name, path, size, specifiers, allow_public=True):
     # check if the dataset with this version is already in the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset:
         logger.debug('skip dataset %s', path)
@@ -294,26 +291,34 @@ def insert_dataset(session, version, rights, restricted, name, path, size, speci
             identifiers=list(specifiers.keys()),
             public=False,
             restricted=restricted,
-            created=datetime.now(UTC)
+            created=datetime.now(UTC),
         )
         session.add(dataset)
 
 
 def publish_dataset(session, version, path, allow_public=True):
     # check that there is no public dataset with the same path
-    public_dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    public_dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if public_dataset is not None and public_dataset.version != version:
         raise RuntimeError(f'A public dataset with the path {path} and the version {public_dataset.version} was found')
 
     # get the dataset
-    dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the name {path} and the version {version} found')
@@ -328,10 +333,14 @@ def publish_dataset(session, version, path, allow_public=True):
 
 def update_dataset(session, rights, restricted, path, specifiers):
     # check if the dataset is already in the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No public dataset with the path {path} found.')
@@ -361,10 +370,14 @@ def update_dataset(session, rights, restricted, path, specifiers):
 
 def insert_dataset_link(session, rights, restricted, target_dataset_path, name, path, size, specifiers):
     # get the target_dataset
-    target_dataset = session.query(Dataset).filter(
-        Dataset.path == target_dataset_path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    target_dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == target_dataset_path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if target_dataset is None:
         raise RuntimeError(f'No public target dataset for the path {target_dataset_path} found')
@@ -380,10 +393,14 @@ def insert_dataset_link(session, rights, restricted, target_dataset_path, name, 
         raise RuntimeError(f'Target dataset {target_dataset_path}#{version} was found, but with a different size')
 
     # check if the dataset with this version is already in the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset:
         logger.debug('skip dataset link %s', path)
@@ -409,17 +426,21 @@ def insert_dataset_link(session, rights, restricted, target_dataset_path, name, 
             public=True,
             restricted=restricted,
             target=target_dataset,
-            created=datetime.now(UTC)
+            created=datetime.now(UTC),
         )
         session.add(dataset)
 
 
 def archive_dataset(session, path, exclude_version=None):
     # find the public version of this dataset
-    public_dataset = session.query(Dataset).filter(
-        Dataset.path == path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    public_dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if public_dataset and public_dataset.version != exclude_version:
         # mark this dataset archived
@@ -463,22 +484,31 @@ def check_file_id(session, path, uuid):
         raise RuntimeError(f'File {path} has an id which already exists in the database ({uuid})')
 
 
-def insert_file(session, version, dataset_path, uuid, name, path, size,
-                checksum, checksum_type, netcdf_header, specifiers):
+def insert_file(
+    session, version, dataset_path, uuid, name, path, size, checksum, checksum_type, netcdf_header, specifiers
+):
     # get the dataset from the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == dataset_path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the path {dataset_path} found')
 
     # check if the file is already in the database
-    file = session.query(File).filter(
-        File.path == path,
-        File.version == version
-    ).one_or_none()
+    file = (
+        session.query(File)
+        .filter(
+            File.path == path,
+            File.version == version,
+        )
+        .one_or_none()
+    )
 
     if file:
         logger.debug('skip file %s', path)
@@ -511,7 +541,7 @@ def insert_file(session, version, dataset_path, uuid, name, path, size,
             specifiers=specifiers,
             identifiers=list(specifiers.keys()),
             datasets=[dataset],
-            created=datetime.now(UTC)
+            created=datetime.now(UTC),
         )
         session.add(file)
 
@@ -520,19 +550,28 @@ def append_file(session, version, dataset_path, path):
     logger.info('append_file %s', path)
 
     # get the dataset with the given database_path and version from the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == dataset_path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the path {dataset_path} and version {version} found')
 
     # get the public file with the given path from the database
-    file = session.query(File).join(File.datasets).filter(
-        File.path == path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    file = (
+        session.query(File)
+        .join(File.datasets)
+        .filter(
+            File.path == path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if file is None:
         raise RuntimeError(f'No public file with the path {path} found')
@@ -546,10 +585,14 @@ def update_file(session, dataset_path, path, specifiers):
     logger.info('update_file %s', path)
 
     # get the dataset from the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == dataset_path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No public dataset with the path {dataset_path} found')
@@ -566,13 +609,28 @@ def update_file(session, dataset_path, path, specifiers):
         raise RuntimeError(f'No file with the path {path} found in dataset {dataset_path}')
 
 
-def insert_file_link(session, target_file_path, dataset_path,
-                     name, path, size, checksum, checksum_type, netcdf_header, specifiers):
+def insert_file_link(
+    session,
+    target_file_path,
+    dataset_path,
+    name,
+    path,
+    size,
+    checksum,
+    checksum_type,
+    netcdf_header,
+    specifiers,
+):
     # get the target file
-    target_file = session.query(File).join(File.datasets).filter(
-        File.path == target_file_path,
-        Dataset.public == True  # noqa: E712
-    ).one_or_none()
+    target_file = (
+        session.query(File)
+        .join(File.datasets)
+        .filter(
+            File.path == target_file_path,
+            Dataset.public == True,  # noqa: E712
+        )
+        .one_or_none()
+    )
 
     if target_file is None:
         raise RuntimeError(f'No public target file for the path {target_file_path} found')
@@ -590,10 +648,14 @@ def insert_file_link(session, target_file_path, dataset_path,
         raise RuntimeError(f'Target file {target_file_path}#{version} was found, but with a different checksum_type')
 
     # get the linked dataset for this file from the database
-    dataset = session.query(Dataset).filter(
-        Dataset.path == dataset_path,
-        Dataset.version == version
-    ).one_or_none()
+    dataset = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path == dataset_path,
+            Dataset.version == version,
+        )
+        .one_or_none()
+    )
 
     if dataset is None:
         raise RuntimeError(f'No dataset with the path {dataset_path} found')
@@ -601,10 +663,14 @@ def insert_file_link(session, target_file_path, dataset_path,
         raise RuntimeError(f'Dataset for file link does not match dataset for {path}')
 
     # check if the file is already in the database
-    file = session.query(File).filter(
-        File.path == path,
-        File.version == version
-    ).one_or_none()
+    file = (
+        session.query(File)
+        .filter(
+            File.path == path,
+            File.version == version,
+        )
+        .one_or_none()
+    )
 
     if file:
         logger.debug('skip file %s', path)
@@ -615,11 +681,13 @@ def insert_file_link(session, target_file_path, dataset_path,
         if file.checksum != checksum:
             raise RuntimeError(f'File link {path} is already stored with the same version, but a different checksum')
         if file.checksum_type != checksum_type:
-            raise RuntimeError(f'File link {path} is already stored with the same version,'
-                                ' but a different checksum_type')
+            raise RuntimeError(
+                f'File link {path} is already stored with the same version, but a different checksum_type'
+            )
         if DeepDiff(file.netcdf_header, netcdf_header, ignore_numeric_type_changes=True):
-            raise RuntimeError(f'File link {path} is already stored with the same version,'
-                                ' but a different netcdf_header')
+            raise RuntimeError(
+                f'File link {path} is already stored with the same version, but a different netcdf_header'
+            )
         if file.specifiers != specifiers:
             raise RuntimeError(f'File link {path} is already stored with the same version, but different specifiers')
     else:
@@ -637,7 +705,7 @@ def insert_file_link(session, target_file_path, dataset_path,
             identifiers=list(specifiers.keys()),
             datasets=[dataset],
             target=target_file,
-            created=datetime.now(UTC)
+            created=datetime.now(UTC),
         )
         session.add(file)
 
@@ -653,9 +721,13 @@ def insert_resource(session, datacite, paths, datacite_prefix):
         raise RuntimeError('No title was provided.')
 
     # look for the resource in the database
-    resource = session.query(Resource).filter(
-        Resource.doi == doi
-    ).one_or_none()
+    resource = (
+        session.query(Resource)
+        .filter(
+            Resource.doi == doi,
+        )
+        .one_or_none()
+    )
 
     if resource is not None:
         raise RuntimeError(f'A resource with doi={doi} is already in the database.')
@@ -680,7 +752,7 @@ def insert_resource(session, datacite, paths, datacite_prefix):
         title=title,
         version=version,
         paths=paths,
-        created=datetime.now(UTC)
+        created=datetime.now(UTC),
     )
 
     # only add the metadata if this is a "native" DOI, not an external one
@@ -709,9 +781,13 @@ def update_resource(session, datacite):
         raise RuntimeError('No title was provided.')
 
     # look for the resource in the database
-    resource = session.query(Resource).filter(
-        Resource.doi == doi
-    ).one_or_none()
+    resource = (
+        session.query(Resource)
+        .filter(
+            Resource.doi == doi,
+        )
+        .one_or_none()
+    )
 
     if resource is None:
         raise RuntimeError(f'A resource with doi={doi} was not found.')
@@ -727,9 +803,13 @@ def update_resource(session, datacite):
 
 def fetch_resource(session, doi):
     # look for the resource in the database
-    resource = session.query(Resource).filter(
-        Resource.doi == doi
-    ).one_or_none()
+    resource = (
+        session.query(Resource)
+        .filter(
+            Resource.doi == doi,
+        )
+        .one_or_none()
+    )
 
     if resource is None:
         raise RuntimeError(f'A resource with doi={doi} was not found.')
@@ -744,10 +824,14 @@ def update_tree(session, path, tree):
 
     # step 1: get the public datasets for this path
     like_path = f'{path}%'
-    datasets = session.query(Dataset).filter(
-        Dataset.path.like(like_path),
-        Dataset.public == True  # noqa: E712
-    ).all()
+    datasets = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path.like(like_path),
+            Dataset.public == True,  # noqa: E712
+        )
+        .all()
+    )
 
     # step 2: get the tree
     database_tree = session.query(Tree).one_or_none()
@@ -798,7 +882,7 @@ def build_tree_dict(tree_dict, tree_path, identifiers, specifiers):
             tree_dict[specifier] = {
                 'identifier': identifier,
                 'specifier': specifier,
-                'items': {}
+                'items': {},
             }
 
         # update tree_path
@@ -816,9 +900,14 @@ def clean_tree(session):
     database_tree = session.query(Tree).one_or_none()
 
     # step 2: get all dataset tree_paths as as set
-    tree_paths = {row[0] for row in session.query(Dataset).filter(
-        Dataset.public == True  # noqa: E712
-    ).with_entities(column('tree_path'))}
+    tree_paths = {
+        row[0]
+        for row in session.query(Dataset)
+        .filter(
+            Dataset.public == True  # noqa: E712
+        )
+        .with_entities(column('tree_path'))
+    }
 
     clean_tree_dict = {}
     for tree_path in tree_paths:
@@ -840,13 +929,15 @@ def build_clean_tree_dict(tree_dict, clean_tree_dict, specifiers):
         clean_tree_dict[specifier] = {
             'identifier': tree_dict[specifier]['identifier'],
             'specifier': tree_dict[specifier]['specifier'],
-            'items': {}
+            'items': {},
         }
 
     if len(specifiers) > 1:
-        clean_tree_dict[specifier]['items'] = build_clean_tree_dict(tree_dict[specifier]['items'],
-                                                                    clean_tree_dict[specifier]['items'],
-                                                                    specifiers[1:])
+        clean_tree_dict[specifier]['items'] = build_clean_tree_dict(
+            tree_dict[specifier]['items'],
+            clean_tree_dict[specifier]['items'],
+            specifiers[1:],
+        )
 
     return clean_tree_dict
 
@@ -858,9 +949,13 @@ def update_search(session, path):
 
     # step 1: get the all datasets for this path
     like_path = f'{path}%'
-    datasets = session.query(Dataset).filter(
-        Dataset.path.like(like_path)
-    ).all()
+    datasets = (
+        session.query(Dataset)
+        .filter(
+            Dataset.path.like(like_path),
+        )
+        .all()
+    )
 
     for dataset in datasets:
         create_or_update_search(session, dataset)
@@ -877,7 +972,7 @@ def create_or_update_search(session, dataset):
         dataset.search = Search(
             dataset=dataset,
             vector=get_search_vector(dataset),
-            created=datetime.now(UTC)
+            created=datetime.now(UTC),
         )
         session.add(dataset.search)
     else:
@@ -892,12 +987,15 @@ def update_views(session):
 
 def update_identifiers_view(session):
     if 'identifiers' in get_materialized_view_names(session):
-        session.connection().execute(text('''
+        session.connection().execute(
+            text("""
             REFRESH MATERIALIZED VIEW identifiers
-        '''))
+        """)
+        )
         logger.debug('update identifiers view')
     else:
-        session.connection().execute(text('''
+        session.connection().execute(
+            text("""
             CREATE MATERIALIZED VIEW identifiers AS
             SELECT specifiers.key AS identifier,
                    JSON_AGG(DISTINCT specifiers.value) AS specifiers
@@ -905,30 +1003,39 @@ def update_identifiers_view(session):
                  jsonb_each_text(public.datasets.specifiers) AS specifiers
             GROUP BY identifier
             ORDER BY identifier
-        '''))
-        session.connection().execute(text('''
+        """)
+        )
+        session.connection().execute(
+            text("""
             CREATE INDEX ON identifiers(identifier)
-        '''))
+        """)
+        )
         logger.debug('create identifiers view')
 
 
 def update_specifiers_view(session):
     if 'specifiers' in get_materialized_view_names(session):
-        session.connection().execute(text('''
+        session.connection().execute(
+            text("""
             REFRESH MATERIALIZED VIEW specifiers
-        '''))
+        """)
+        )
         logger.debug('update specifiers view')
     else:
-        session.connection().execute(text('''
+        session.connection().execute(
+            text("""
             CREATE MATERIALIZED VIEW specifiers AS
             SELECT DISTINCT specifiers.value::text as specifier
             FROM public.datasets,
                  jsonb_each_text(public.datasets.specifiers) AS specifiers
             ORDER BY specifier;
-        '''))
-        session.connection().execute(text('''
+        """)
+        )
+        session.connection().execute(
+            text("""
             CREATE INDEX ON specifiers USING gin(specifier gin_trgm_ops)
-        '''))
+        """)
+        )
         logger.debug('create specifiers view')
 
 
