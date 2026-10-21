@@ -46,17 +46,20 @@ Usage
 The publisher has several options which can be inspected using the help option `-h, --help`:
 
 ```
-usage: isimip-publisher [-h] [-i INCLUDE] [-e EXCLUDE] [-v VERSION] [--remote-dest REMOTE_DEST]
-                        [--remote-dir REMOTE_DIR] [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
+usage: isimip-publisher [-h] [-i INCLUDE] [-e EXCLUDE] [-v VERSION]
+                        [--remote-dest REMOTE_DEST] [--remote-dir REMOTE_DIR]
+                        [--local-dir LOCAL_DIR] [--public-dir PUBLIC_DIR]
                         [--restricted-dir RESTRICTED_DIR] [--archive-dir ARCHIVE_DIR]
                         [--database DATABASE] [--mock] [--restricted]
                         [--protocol-location PROTOCOL_LOCATIONS]
                         [--datacite-username DATACITE_USERNAME]
-                        [--datacite-password DATACITE_PASSWORD] [--datacite-prefix DATACITE_PREFIX]
-                        [--datacite-test-mode] [--data-url DATA_URL]
+                        [--datacite-password DATACITE_PASSWORD]
+                        [--datacite-prefix DATACITE_PREFIX] [--datacite-test-mode]
+                        [--data-url DATA_URL]
                         [--rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}] [--archived]
                         [--skip-registration] [--skip-checksum] [--resolve-links]
-                        [--log-level LOG_LEVEL] [--log-file LOG_FILE] [-V]
+                        [--amend AMEND] [--log-level LOG_LEVEL] [--log-file LOG_FILE]
+                        [-V]
                         {list_remote,list_remote_links,list_local,list_public,list_public_links,match_remote,match_remote_links,match_local,match_public,match_public_links,count_remote,count_remote_links,count_local,count_public,count_public_links,fetch_files,write_local_jsons,write_public_jsons,insert_datasets,update_datasets,publish_datasets,archive_datasets,diff_remote,diff_remote_links,check,clean,update_search,update_tree,run,insert_doi,update_doi,register_doi,check_doi,link_links,link_files,link_datasets,link,write_link_jsons,init,update_views} ...
 
 options:
@@ -81,9 +84,10 @@ options:
                         Archive directory
   --database DATABASE   Database connection string, e.g.
                         postgresql+psycopg2://username:password@host:port/dbname
-  --mock                If set to True, no files are actually copied. Empty mock files are used
-                        instead
-  --restricted          If set to True, the files are flagged as restricted in the database.
+  --mock                If set to True, no files are actually copied. Empty mock files
+                        are used instead
+  --restricted          If set to True, the files are flagged as restricted in the
+                        database.
   --protocol-location PROTOCOL_LOCATIONS
                         URL or file path to the protocol
   --datacite-username DATACITE_USERNAME
@@ -93,13 +97,17 @@ options:
   --datacite-prefix DATACITE_PREFIX
                         Prefix for DataCite
   --datacite-test-mode  If set to True, the test version of DataCite is used
-  --data-url DATA_URL   URL of the ISIMIP repository [default: https://data.isimip.org/]
+  --data-url DATA_URL   URL of the ISIMIP repository [default:
+                        https://data.isimip.org/]
   --rights {None,CC0,BY,BY-SA,BY-NC,BY-NC-SA}
                         Rights/license for the files [default: None]
   --archived            Check also archived files
-  --skip-registration   Skip the registration of the DOI when inserting/updating a resource
+  --skip-registration   Skip the registration of the DOI when inserting/updating a
+                        resource
   --skip-checksum       Skip the computation of the checksum when checking
   --resolve-links       Resolve remote links as if they were files
+  --amend AMEND         Publish new versions of the affected datasets with the files
+                        in this list added or replaced
   --log-level LOG_LEVEL
                         Log level (ERROR, WARN, INFO, or DEBUG)
   --log-file LOG_FILE   Path to the log file
@@ -130,8 +138,8 @@ isimip-publisher fetch_files <path>
 # create a JSON file with metadata for each dataset and file
 isimip-publisher write_local_jsons <path>
 
-# finds dataset and file and ingest their metadata into the database
-isimip-publisher ingest_datasets <path>
+# finds dataset and file and insert their metadata into the database
+isimip-publisher insert_datasets <path>
 
 # copy files from LOCAL_DIR to PUBLIC_DIR
 isimip-publisher publish_datasets <path>
@@ -140,7 +148,7 @@ isimip-publisher publish_datasets <path>
 isimip-publisher archive_datasets <path>
 
 # insert a new doi resource
-isimip-publisher ingest_doi <resource-path>
+isimip-publisher insert_doi <resource-path> <path> [<path> ...]
 
 # register a DOI resource with datacite
 isimip-publisher register_doi <DOI>
@@ -150,7 +158,7 @@ isimip-publisher register_doi <DOI>
 
 `<resource-path>` is the path to a JSON file containing metadata on the local disk.
 
-`match_remote`, `fetch_files`, `write_jsons`, `ingest_datasets`, and `publish_datasets` can be combined using `run`:
+`fetch_files`, `write_local_jsons`, `insert_datasets`, and `publish_datasets` can be combined using `run`:
 
 ```bash
 isimip-publisher run <path>
@@ -218,10 +226,20 @@ Copy `.env.pytest` to `.env`. This sets the environment variables to the directo
 
 Run `psql < testing/sql/setup.sql` to setup the test database.
 
+Some tests fetch files from `localhost` using `ssh` and `rsync`, so `ssh localhost` needs to work without a password prompt (e.g. using a key in `~/.ssh/authorized_keys`).
+
 Run:
 
 ```bash
 pytest
+```
+
+The tests are grouped by subcommand in `isimip_publisher/tests/test_commands_<name>.py` (e.g. `test_commands_insert.py` for `insert_datasets` or `test_commands_list.py` for all `list_*` subcommands), while general tests are in `test_commands.py`. The fixtures are in `isimip_publisher/tests/conftest.py`.
+
+Run the tests for one subcommand, e.g.:
+
+```bash
+pytest isimip_publisher/tests/test_commands_publish.py
 ```
 
 Run a specific test, e.g.:
