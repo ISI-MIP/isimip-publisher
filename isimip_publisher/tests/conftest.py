@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 from sqlalchemy import text
+from sqlalchemy.orm import close_all_sessions
 
 from isimip_publisher.utils.database import init_database_session
 
@@ -23,6 +24,11 @@ def db():
     with engine.connect() as conn:
         conn.execute(text('TRUNCATE datasets, datasets_files, files, resources, resources_datasets CASCADE;'))
         conn.commit()
+
+    yield
+
+    # commands which fail leave their session open, which would block the next truncate
+    close_all_sessions()
 
 
 @pytest.fixture
