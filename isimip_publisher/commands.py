@@ -558,6 +558,7 @@ def register_doi():
         dois.upload_doi(resource, settings.DATA_URL,
                         settings.DATACITE_USERNAME, settings.DATACITE_PASSWORD,
                         settings.DATACITE_PREFIX, settings.DATACITE_TEST_MODE)
+        session.close()
 
 
 def check_doi():
