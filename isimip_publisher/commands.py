@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from .config import settings, store
 from .utils import cli, database, dois, files, json, patterns, validation
+from .utils.version import get_version
 
 logger = logging.getLogger(__name__)
 
@@ -265,9 +266,11 @@ def insert_datasets():
                 database.check_file_id(session, file.path, file.uuid)
 
     for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
+        version = get_version(dataset, settings.VERSION)
+
         database.insert_dataset(
             session,
-            settings.VERSION,
+            version,
             settings.RIGHTS,
             settings.RESTRICTED,
             dataset.name,
@@ -279,11 +282,11 @@ def insert_datasets():
 
         for file in dataset.files:
             if file.path in unchanged_files:
-                database.append_file(session, settings.VERSION, file.dataset.path, file.path)
+                database.append_file(session, version, file.dataset.path, file.path)
             else:
                 database.insert_file(
                     session,
-                    settings.VERSION,
+                    version,
                     file.dataset.path,
                     file.uuid,
                     file.name,
@@ -408,12 +411,12 @@ def publish_datasets():
 
     archived_versions = {}
     for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
-        if settings.AMEND:
-            archived_versions[dataset.path] = database.archive_dataset(
-                session, dataset.path, exclude_version=settings.VERSION
-            )
+        version = get_version(dataset, settings.VERSION)
 
-        database.publish_dataset(session, settings.VERSION, dataset.path, allow_public=not settings.AMEND)
+        if settings.AMEND:
+            archived_versions[dataset.path] = database.archive_dataset(session, dataset.path, exclude_version=version)
+
+        database.publish_dataset(session, version, dataset.path, allow_public=not settings.AMEND)
 
     # move the files to the public or restricted directory
     for dataset in store.datasets:

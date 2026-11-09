@@ -60,6 +60,11 @@ class File:
             return self.netcdf_header.get('global_attributes', {}).get('isimip_id')
 
     @cached_property
+    def version(self):
+        if self.netcdf_header:
+            return self.netcdf_header.get('global_attributes', {}).get('isimip_version')
+
+    @cached_property
     def netcdf_header(self):
         if Path(self.path).suffix.startswith('.nc'):
             with open_dataset_read(self.abspath) as dataset:
