@@ -1,10 +1,9 @@
 import logging
 from pathlib import Path
 
-from tqdm import tqdm
-
 from .config import settings, store
 from .utils import cli, database, dois, files, json, patterns, validation
+from .utils.progress import progress
 from .utils.version import get_version
 
 logger = logging.getLogger(__name__)
@@ -176,9 +175,12 @@ def fetch_files():
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
     c = sum([len(dataset.files) for dataset in datasets])
-    t = tqdm(total=c, desc='fetch_files'.ljust(18))
-    for n in files.copy_files(settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, settings.PATH, datasets):
-        t.update(n)
+    with progress:
+        task_id = progress.add_task('fetch_files', total=c)
+        for n in files.copy_files(
+            settings.REMOTE_DEST, settings.REMOTE_PATH, settings.LOCAL_PATH, settings.PATH, datasets
+        ):
+            progress.advance(task_id, n)
 
 
 def write_local_jsons():
@@ -194,9 +196,10 @@ def write_local_jsons():
         validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
         store.datasets = datasets
 
-    for dataset in tqdm(store.datasets, desc='write_local_jsons'.ljust(18)):
-        for file in dataset.files:
-            json.write_json_file(file.abspath, file.json)
+    with progress:
+        for dataset in progress.track(store.datasets, description='write_local_jsons'):
+            for file in dataset.files:
+                json.write_json_file(file.abspath, file.json)
 
 
 def write_public_jsons():
@@ -206,9 +209,10 @@ def write_public_jsons():
     )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
-    for dataset in tqdm(datasets, desc='write_public_jsons'.ljust(18)):
-        for file in dataset.files:
-            json.write_json_file(file.abspath, file.json)
+    with progress:
+        for dataset in progress.track(datasets, description='write_public_jsons'):
+            for file in dataset.files:
+                json.write_json_file(file.abspath, file.json)
 
 
 def write_link_jsons():
@@ -219,9 +223,10 @@ def write_link_jsons():
     )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
-    for dataset in tqdm(datasets, desc='write_link_jsons'.ljust(18)):
-        for file in dataset.files:
-            json.write_json_file(file.abspath, file.json)
+    with progress:
+        for dataset in progress.track(datasets, description='write_link_jsons'):
+            for file in dataset.files:
+                json.write_json_file(file.abspath, file.json)
 
 
 def insert_datasets():
@@ -265,40 +270,41 @@ def insert_datasets():
             if file.path not in unchanged_files:
                 database.check_file_id(session, file.path, file.uuid)
 
-    for dataset in tqdm(store.datasets, desc='insert_datasets'.ljust(18)):
-        version = get_version(dataset, settings.VERSION)
+    with progress:
+        for dataset in progress.track(store.datasets, description='insert_datasets'):
+            version = get_version(dataset, settings.VERSION)
 
-        database.insert_dataset(
-            session,
-            version,
-            settings.RIGHTS,
-            settings.RESTRICTED,
-            dataset.name,
-            dataset.path,
-            dataset.size,
-            dataset.specifiers,
-            allow_public=not settings.AMEND,
-        )
+            database.insert_dataset(
+                session,
+                version,
+                settings.RIGHTS,
+                settings.RESTRICTED,
+                dataset.name,
+                dataset.path,
+                dataset.size,
+                dataset.specifiers,
+                allow_public=not settings.AMEND,
+            )
 
-        for file in dataset.files:
-            if file.path in unchanged_files:
-                database.append_file(session, version, file.dataset.path, file.path)
-            else:
-                database.insert_file(
-                    session,
-                    version,
-                    file.dataset.path,
-                    file.uuid,
-                    file.name,
-                    file.path,
-                    file.size,
-                    file.checksum,
-                    file.checksum_type,
-                    file.cleaned_header,
-                    file.specifiers,
-                )
+            for file in dataset.files:
+                if file.path in unchanged_files:
+                    database.append_file(session, version, file.dataset.path, file.path)
+                else:
+                    database.insert_file(
+                        session,
+                        version,
+                        file.dataset.path,
+                        file.uuid,
+                        file.name,
+                        file.path,
+                        file.size,
+                        file.checksum,
+                        file.checksum_type,
+                        file.cleaned_header,
+                        file.specifiers,
+                    )
 
-        session.commit()
+            session.commit()
 
     database.update_search(session, settings.PATH)
     database.update_views(session)
@@ -317,9 +323,10 @@ def link_links():
     )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
-    for dataset in tqdm(datasets, desc='link_links'.ljust(18)):
-        for file in dataset.files:
-            files.link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
+    with progress:
+        for dataset in progress.track(datasets, description='link_links'):
+            for file in dataset.files:
+                files.link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
 
 
 def link_files():
@@ -332,9 +339,10 @@ def link_files():
     )
     validation.validate_datasets(settings.SCHEMA, settings.PATH, datasets)
 
-    for dataset in tqdm(datasets, desc='link_files'.ljust(18)):
-        for file in dataset.files:
-            files.link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
+    with progress:
+        for dataset in progress.track(datasets, description='link_files'):
+            for file in dataset.files:
+                files.link_file(settings.PUBLIC_PATH, settings.TARGET_PATH, settings.PATH, file.path)
 
 
 def link_datasets():
@@ -348,33 +356,34 @@ def link_datasets():
 
     session = database.init_database_session(settings.DATABASE)
 
-    for dataset in tqdm(datasets, desc='link_datasets'.ljust(18)):
-        target_dataset_path = str(settings.TARGET_PATH / Path(dataset.path).relative_to(settings.PATH))
-        database.insert_dataset_link(
-            session,
-            settings.RIGHTS,
-            settings.RESTRICTED,
-            target_dataset_path,
-            dataset.name,
-            dataset.path,
-            dataset.size,
-            dataset.specifiers,
-        )
-
-        for file in dataset.files:
-            target_file_path = str(settings.TARGET_PATH / Path(file.path).relative_to(settings.PATH))
-            database.insert_file_link(
+    with progress:
+        for dataset in progress.track(datasets, description='link_datasets'):
+            target_dataset_path = str(settings.TARGET_PATH / Path(dataset.path).relative_to(settings.PATH))
+            database.insert_dataset_link(
                 session,
-                target_file_path,
-                file.dataset.path,
-                file.name,
-                file.path,
-                file.size,
-                file.checksum,
-                file.checksum_type,
-                file.cleaned_header,
-                file.specifiers,
+                settings.RIGHTS,
+                settings.RESTRICTED,
+                target_dataset_path,
+                dataset.name,
+                dataset.path,
+                dataset.size,
+                dataset.specifiers,
             )
+
+            for file in dataset.files:
+                target_file_path = str(settings.TARGET_PATH / Path(file.path).relative_to(settings.PATH))
+                database.insert_file_link(
+                    session,
+                    target_file_path,
+                    file.dataset.path,
+                    file.name,
+                    file.path,
+                    file.size,
+                    file.checksum,
+                    file.checksum_type,
+                    file.cleaned_header,
+                    file.specifiers,
+                )
 
     session.commit()
     database.update_tree(session, settings.PATH, settings.TREE)
@@ -410,13 +419,16 @@ def publish_datasets():
     session = database.init_database_session(settings.DATABASE)
 
     archived_versions = {}
-    for dataset in tqdm(store.datasets, desc='publish_datasets'.ljust(18)):
-        version = get_version(dataset, settings.VERSION)
+    with progress:
+        for dataset in progress.track(store.datasets, description='publish_datasets'):
+            version = get_version(dataset, settings.VERSION)
 
-        if settings.AMEND:
-            archived_versions[dataset.path] = database.archive_dataset(session, dataset.path, exclude_version=version)
+            if settings.AMEND:
+                archived_versions[dataset.path] = database.archive_dataset(
+                    session, dataset.path, exclude_version=version
+                )
 
-        database.publish_dataset(session, version, dataset.path, allow_public=not settings.AMEND)
+            database.publish_dataset(session, version, dataset.path, allow_public=not settings.AMEND)
 
     # move the files to the public or restricted directory
     for dataset in store.datasets:
@@ -452,13 +464,14 @@ def update_datasets():
 
     session = database.init_database_session(settings.DATABASE)
 
-    for dataset in tqdm(datasets, desc='update_datasets'.ljust(18)):
-        database.update_dataset(session, settings.RIGHTS, settings.RESTRICTED, dataset.path, dataset.specifiers)
+    with progress:
+        for dataset in progress.track(datasets, description='update_datasets'):
+            database.update_dataset(session, settings.RIGHTS, settings.RESTRICTED, dataset.path, dataset.specifiers)
 
-        for file in dataset.files:
-            database.update_file(session, file.dataset.path, file.path, file.specifiers)
+            for file in dataset.files:
+                database.update_file(session, file.dataset.path, file.path, file.specifiers)
 
-        session.commit()
+            session.commit()
 
     database.update_search(session, settings.PATH)
     session.commit()
@@ -487,35 +500,36 @@ def archive_datasets():
     string = input()
 
     if string.lower() == 'yes':
-        for dataset in tqdm(datasets, desc='archive_datasets'.ljust(18)):
-            for link in dataset.links:
-                link_version = database.archive_dataset(session, link.path)
-                if link_version:
-                    archive_path = settings.ARCHIVE_PATH / link_version
-                    for file in link.files:
+        with progress:
+            for dataset in progress.track(datasets, description='archive_datasets'):
+                for link in dataset.links:
+                    link_version = database.archive_dataset(session, link.path)
+                    if link_version:
+                        archive_path = settings.ARCHIVE_PATH / link_version
+                        for file in link.files:
+                            source_path = settings.PUBLIC_PATH / file.path
+                            target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
+
+                            if source_path.is_symlink():
+                                files.move_file(source_path, target_path)
+
+                            if source_path.with_suffix('.json').is_file():
+                                files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
+
+                dataset_version = database.archive_dataset(session, dataset.path)
+                if dataset_version:
+                    archive_path = settings.ARCHIVE_PATH / dataset_version
+                    for file in dataset.files:
                         source_path = settings.PUBLIC_PATH / file.path
                         target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
 
-                        if source_path.is_symlink():
+                        if source_path.is_file():
                             files.move_file(source_path, target_path)
 
                         if source_path.with_suffix('.json').is_file():
                             files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
 
-            dataset_version = database.archive_dataset(session, dataset.path)
-            if dataset_version:
-                archive_path = settings.ARCHIVE_PATH / dataset_version
-                for file in dataset.files:
-                    source_path = settings.PUBLIC_PATH / file.path
-                    target_path = archive_path / Path(source_path).relative_to(settings.PUBLIC_PATH)
-
-                    if source_path.is_file():
-                        files.move_file(source_path, target_path)
-
-                    if source_path.with_suffix('.json').is_file():
-                        files.move_file(source_path.with_suffix('.json'), target_path.with_suffix('.json'))
-
-            session.commit()
+                session.commit()
 
         database.update_tree(session, settings.PATH, settings.TREE)
         session.commit()
