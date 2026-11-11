@@ -41,8 +41,7 @@ def list_files(base_path, path, remote_dest=None, suffix=None, find_type='f'):
         file_abspath = line.decode()
         file_path = Path(file_abspath).relative_to(base_path)
 
-        if not (file_path.suffix == '.json') and \
-           not (suffix and file_path.suffix not in suffix):
+        if not (file_path.suffix == '.json') and not (suffix and file_path.suffix not in suffix):
             files.append(file_path.as_posix())
 
     return files
@@ -54,6 +53,14 @@ def list_links(base_path, path, remote_dest=None, suffix=None):
 
 def list_all(base_path, path, remote_dest=None, suffix=None):
     return list_files(base_path, path, remote_dest=remote_dest, suffix=suffix, find_type=None)
+
+
+def filter_amend(base_path, files):
+    amend = set(settings.AMEND)
+    files = [file_path for file_path in files if file_path in amend]
+    if amend - set(files):
+        raise RuntimeError(f'Some of the files given by --amend were not found in {base_path}')
+    return files
 
 
 def filter_links(public_path, target_path, path, links):
@@ -96,11 +103,7 @@ def copy_files(remote_dest, remote_path, local_path, path, datasets):
 
         source = remote_dest + ':' + (remote_path / path).as_posix() + os.path.sep
         destination = (local_path / path).as_posix() + os.path.sep
-        args = [
-            'rsync', '-aviL',
-            '--include=*/', f'--include-from={include_file}', '--exclude=*',
-            source, destination
-        ]
+        args = ['rsync', '-aviL', '--include=*/', f'--include-from={include_file}', '--exclude=*', source, destination]
         logger.debug('args = %s', args)
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -172,9 +175,12 @@ def mock_file(mock_path):
 
     if mock_path.suffix.startswith('.nc'):
         with open_dataset_write(mock_path) as dataset:
-            update_global_attributes(dataset, {
-                'path': mock_path
-            })
+            update_global_attributes(
+                dataset,
+                {
+                    'path': mock_path,
+                },
+            )
     else:
         mock_path.write_text('path: ' + mock_path.as_posix() + os.linesep)
 

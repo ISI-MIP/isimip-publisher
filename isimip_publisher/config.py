@@ -11,17 +11,17 @@ from isimip_utils.protocol import fetch_definitions, fetch_pattern, fetch_schema
 
 logger = logging.getLogger(__name__)
 
-RIGHTS_CHOICES = [
+RIGHTS_CHOICES = (
     None,
     'CC0',
     'BY',
     'BY-SA',
     'BY-NC',
-    'BY-NC-SA'
-]
+    'BY-NC-SA',
+)
+
 
 class Settings(BaseSettings):
-
     @cached_property
     def REMOTE_PATH(self):
         if self.REMOTE_DIR is None:
@@ -53,16 +53,16 @@ class Settings(BaseSettings):
         return Path(self.ARCHIVE_DIR).expanduser()
 
     @cached_property
+    def PUBLISHED_PATH(self):
+        return self.RESTRICTED_PATH if self.RESTRICTED else self.PUBLIC_PATH
+
+    @cached_property
     def TARGET_EXCLUDE(self):
-        return [
-            file.replace(self.PATH, self.TARGET_PATH) for file in self.EXCLUDE
-        ] if self.EXCLUDE else None
+        return [file.replace(self.PATH, self.TARGET_PATH) for file in self.EXCLUDE] if self.EXCLUDE else None
 
     @cached_property
     def TARGET_INCLUDE(self):
-        return [
-            file.replace(self.PATH, self.TARGET_PATH) for file in self.INCLUDE
-        ] if self.INCLUDE else None
+        return [file.replace(self.PATH, self.TARGET_PATH) for file in self.INCLUDE] if self.INCLUDE else None
 
     @cached_property
     def RESOURCE(self):
@@ -105,7 +105,7 @@ class Settings(BaseSettings):
 
 
 class Store(Singleton):
-    datasets = []
+    datasets = []  # noqa: RUF012
 
 
 settings = Settings()
