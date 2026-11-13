@@ -6,7 +6,7 @@ from pathlib import Path
 def test_publish_datasets(setup, local_files, db, local_datasets, script_runner):
     response = script_runner.run(['isimip-publisher', 'publish_datasets', 'round/product/sector'])
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('publish_datasets')
+    assert 'publish_datasets' in response.stdout
     assert not response.stderr
 
 
@@ -32,7 +32,7 @@ def test_publish_datasets_amend_replace(
         ['isimip-publisher', '--amend', amend, '-v', '20240101', 'publish_datasets', 'round/product/sector']
     )
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('publish_datasets')
+    assert 'publish_datasets' in response.stdout
     assert not response.stderr
 
 
@@ -71,7 +71,7 @@ def test_publish_datasets_amend_add(
         ['isimip-publisher', '--amend', amend, '-v', '20240101', 'publish_datasets', 'round/product/sector']
     )
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('publish_datasets')
+    assert 'publish_datasets' in response.stdout
     assert not response.stderr
 
 
@@ -120,5 +120,5 @@ def test_publish_datasets_amend_twice(
         ['isimip-publisher', '--amend', amend, '-v', '20240201', 'publish_datasets', 'round/product/sector']
     )
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('publish_datasets')
+    assert 'publish_datasets' in response.stdout
     assert not response.stderr

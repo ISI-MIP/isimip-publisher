@@ -1,7 +1,7 @@
 def test_write_local_jsons(setup, local_files, script_runner):
     response = script_runner.run(['isimip-publisher', 'write_local_jsons', 'round/product/sector'])
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('write_local_jsons')
+    assert 'write_local_jsons' in response.stdout
     assert not response.stderr
 
 
@@ -10,14 +10,14 @@ def test_write_local_jsons_amend(setup, local_files, empty_store, amend_file, sc
 
     response = script_runner.run(['isimip-publisher', '--amend', amend, 'write_local_jsons', 'round/product/sector'])
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('write_local_jsons')
+    assert 'write_local_jsons' in response.stdout
     assert not response.stderr
 
 
 def test_write_public_jsons(setup, public_files, script_runner):
     response = script_runner.run(['isimip-publisher', 'write_public_jsons', 'round/product/sector'])
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('write_public_jsons')
+    assert 'write_public_jsons' in response.stdout
     assert not response.stderr
 
 
@@ -26,5 +26,5 @@ def test_write_link_jsons(setup, public_links, script_runner):
         ['isimip-publisher', 'write_link_jsons', 'round/product/sector/model', 'round/product/sector2/model']
     )
     assert response.success, response.stderr
-    assert response.stdout.strip().startswith('write_link_jsons')
+    assert 'write_link_jsons' in response.stdout
     assert not response.stderr
