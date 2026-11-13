@@ -6,8 +6,8 @@ from pathlib import Path
 def test_insert_datasets(setup, local_files, db, script_runner):
     response = script_runner.run(['isimip-publisher', 'insert_datasets', 'round/product/sector'])
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('insert_datasets')
+    assert response.stdout.strip().startswith('insert_datasets')
+    assert not response.stderr
 
 
 def test_insert_datasets_amend_missing(
@@ -30,8 +30,8 @@ def test_insert_datasets_amend_replace(
         ['isimip-publisher', '--amend', amend, '-v', '20240101', 'insert_datasets', 'round/product/sector']
     )
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('insert_datasets')
+    assert response.stdout.strip().startswith('insert_datasets')
+    assert not response.stderr
 
 
 def test_insert_datasets_amend_already_public(

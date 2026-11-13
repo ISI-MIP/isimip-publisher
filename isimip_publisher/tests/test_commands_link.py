@@ -3,7 +3,8 @@ def test_link(setup, remote_links, public_links, db, public_datasets, script_run
         ['isimip-publisher', 'link', 'round/product/sector/model', 'round/product/sector2/model']
     )
     assert response.success, response.stderr
-    assert not response.stdout
+    assert response.stdout
+    assert not response.stderr
 
 
 def test_link_links(setup, remote_links, script_runner):
@@ -11,8 +12,8 @@ def test_link_links(setup, remote_links, script_runner):
         ['isimip-publisher', 'link_links', 'round/product/sector/model', 'round/product/sector2/model']
     )
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('link_links')
+    assert response.stdout.strip().startswith('link_links')
+    assert not response.stderr
 
 
 def test_link_files(setup, remote_files, script_runner):
@@ -20,8 +21,8 @@ def test_link_files(setup, remote_files, script_runner):
         ['isimip-publisher', 'link_files', 'round/product/sector/model', 'round/product/sector2/model']
     )
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('link_files')
+    assert response.stdout.strip().startswith('link_files')
+    assert not response.stderr
 
 
 def test_link_datasets(setup, db, public_datasets, public_links, script_runner):
@@ -29,5 +30,5 @@ def test_link_datasets(setup, db, public_datasets, public_links, script_runner):
         ['isimip-publisher', 'link_datasets', 'round/product/sector/model', 'round/product/sector2/model']
     )
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('link_datasets')
+    assert response.stdout.strip().startswith('link_datasets')
+    assert not response.stderr

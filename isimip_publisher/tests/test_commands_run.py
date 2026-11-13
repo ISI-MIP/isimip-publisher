@@ -1,7 +1,8 @@
 def test_run(setup, remote_files, empty_local, empty_public, db, empty_store, script_runner):
     response = script_runner.run(['isimip-publisher', 'run', 'round/product/sector'])
     assert response.success, response.stderr
-    assert not response.stdout
+    assert response.stdout
+    assert not response.stderr
 
 
 def test_run_amend(
@@ -22,4 +23,5 @@ def test_run_amend(
         ['isimip-publisher', '--amend', amend, '-v', '20240101', 'run', 'round/product/sector']
     )
     assert response.success, response.stderr
-    assert not response.stdout
+    assert response.stdout
+    assert not response.stderr

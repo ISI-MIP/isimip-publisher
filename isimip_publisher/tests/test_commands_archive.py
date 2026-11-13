@@ -4,7 +4,8 @@ def test_archive_datasets_yes(setup, db, mocker, public_datasets, script_runner)
     response = script_runner.run(['isimip-publisher', 'archive_datasets', 'round/product/sector/model'])
     assert response.success, response.stderr
     assert response.stdout.strip().startswith('Archiving')
-    assert response.stderr.strip().startswith('archive_datasets')
+    assert 'archive_datasets' in response.stdout
+    assert not response.stderr
 
 
 def test_archive_datasets_no(setup, db, mocker, public_datasets, script_runner):

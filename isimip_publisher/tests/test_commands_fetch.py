@@ -1,8 +1,8 @@
 def test_fetch_files(setup, remote_files, script_runner):
     response = script_runner.run(['isimip-publisher', 'fetch_files', 'round/product/sector'])
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('fetch_files')
+    assert response.stdout.strip().startswith('fetch_files')
+    assert not response.stderr
 
 
 def test_fetch_files_amend(setup, remote_files, empty_local, amend_file, script_runner):
@@ -10,5 +10,5 @@ def test_fetch_files_amend(setup, remote_files, empty_local, amend_file, script_
 
     response = script_runner.run(['isimip-publisher', '--amend', amend, 'fetch_files', 'round/product/sector'])
     assert response.success, response.stderr
-    assert not response.stdout
-    assert response.stderr.strip().startswith('fetch_files')
+    assert response.stdout.strip().startswith('fetch_files')
+    assert not response.stderr
